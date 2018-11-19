@@ -4,8 +4,8 @@ This is a series of batch scripts that deploys an AWS Batch compute environment 
 To run:
 Make sure docker, awscli, and git are installed on your machine (macOS or Linux only for now)
 
-git clone https://github.com/mjzapata/BLJBatchAWS.git
-./deployBLJBatchEnv.sh
+'''git clone https://github.com/mjzapata/BLJBatchAWS.git'''
+'''./deployBLJBatchEnv.sh'''
 
 **Note, this currently creates a custom sized AMI which will use storage space and create charges to your AWS account.
 
