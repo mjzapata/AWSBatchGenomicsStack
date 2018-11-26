@@ -9,7 +9,6 @@ To run:
 
 3.) Run the following command from a command prompt to login to your AWS account from the console
 
-**Note, this currently creates a custom sized AMI which will use storage space and create charges to your AWS account. Delete this AMI and all associated volume snapshots when you are done.**  This is for developent purposes, in the future a publicly available AMI will be provided.
 ```
 aws configure
 AWS Access Key ID []:myaccesskeyID
@@ -18,6 +17,7 @@ Default region name []:us-east-1
 Default output format []:text
 ```
 4.) run the following commands to deploy a computing environment and all associated AWS resources necessary for submitting AWS Batch computing jobs.
+**Note, this step currently creates a custom sized AMI which will use storage space and create charges to your AWS account. Delete this AMI and all associated volume snapshots when you are done.**  This is for developent purposes, in the future a publicly available AMI will be provided.
 ```
 git clone https://github.com/mjzapata/BLJBatchAWS.git
 cd BLJBatchAWS
