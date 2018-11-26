@@ -28,7 +28,7 @@ cd BLJBatchAWS
 
 ## AWS Batch Environment
 #### AMI - Amazon Machine Image
-This is a custom virtual machine which contains Docker and some of the pre-requisite software for Nextflow, including AWSCLI
+-This is a custom virtual machine which contains Docker and some of the pre-requisite software for Nextflow, including AWSCLI
 #### AWS Batch Compute Environment:
 	-maximum vCPUs (virtual CPUs)
 	-Amazon Machine Image (AMI) definition or creation
