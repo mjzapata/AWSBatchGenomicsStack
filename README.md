@@ -3,8 +3,11 @@ This is a series of batch scripts that deploys an AWS Batch compute environment 
 
 To run:
 1.) Make sure docker, awscli, and git are installed on your computer or virtual environment (macOS or Linux only for now).
+
 2.) Create an Amazon Web Services Account and create a root key pair.  Write them down, as you will not be able to retrieve them later.
+
 3.) Run the following command from a command prompt to login to your AWS account from the console
+
 **Note, this currently creates a custom sized AMI which will use storage space and create charges to your AWS account. Delete this AMI and all associated volume snapshots when you are done.**  This is for developent purposes, in the future a publicly available AMI will be provided.
 ```
 aws configure
