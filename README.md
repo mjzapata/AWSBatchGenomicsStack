@@ -28,40 +28,41 @@ cd BLJBatchAWS
 
 ## AWS Batch Environment
 #### AMI - Amazon Machine Image
--This is a custom virtual machine which contains Docker and some of the pre-requisite software for Nextflow, including AWSCLI blah blah blah blah blah
+-This is a custom virtual machine which contains Docker and some of the pre-requisite software for Nextflow, including AWSCLI blah blah blah blah blah <br />
 #### AWS Batch Compute Environment:
-	-maximum vCPUs (virtual CPUs)
-	-Amazon Machine Image (AMI) definition or creation
-	-Spot Price – the percent at which to bid on available EC2 instances
+-maximum vCPUs (virtual CPUs) <br />
+-Amazon Machine Image (AMI) definition or creation <br />
+-Spot Price – the percent at which to bid on available EC2 instances <br />
 #### AWS Batch Job Queue:
-	-defines the priority
-	-one or more compute environments
+-defines the priority <br />
+-one or more compute environments <br />
 #### AWS Batch Job definitions: 
-	-defines Docker images and scripts
-	-defines how jobs are run
-	-defines the memory and vCPU requirements which are used to determine the optimal EC2 instance type for that particular job.
+-defines Docker images and scripts <br />
+-defines how jobs are run <br />
+-defines the memory and vCPU requirements which are used to determine the optimal EC2 instance type for that particular job. <br />
 #### AWS Batch Jobs:
-	-an instance of a job definition, typically for a single sample
-
-
+-an instance of a job definition, typically for a single sample <br />
 ## Resource Management
 #### Nextflow:
-	-Connects directly to the AWS Batch API
-	-Manages AWS Batch job definition creation
-	-Manages job creation and error handling
+-Connects directly to the AWS Batch API <br />
+-Manages AWS Batch job definition creation <br />
+-Manages job creation and error handling <br />
 #### IAM – Identity and Access Management:
-Each AWS resource listed above requires a service role that has the corresponding permissions to use the services necessary for its function.  The main concern is to isolate the batch compute EC2 instances into a network with limited network connectivity while allowing the head node instance to serve its web facing portal.
+Each AWS resource listed above requires a service role that has the corresponding permissions to use the services necessary for its function.  The main concern is to isolate the batch compute EC2 instances into a network with limited network connectivity while allowing the head node instance to serve its web facing portal. <br />
 
 ## Storage and Networking
 #### EBS - Elastic Block Store
-	-EC2 instance storage for each separate instance
+-EC2 instance storage for each separate instance <br />
 #### EFS - Elastic File System
-	-shared storage between instances for short-term results storage
+-shared storage between instances for short-term results storage <br />
 #### S3 – Simple Storage Service
-	-Globally unique bucket name for long-term results storage
+-Globally unique bucket name for long-term results storage <br />
 ### Networking:
+<br />
 #### Virtual Private Cloud
+<br />
 #### Security Group
+<br />
 #### Subnet
-
+<br />
 
