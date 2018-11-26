@@ -28,20 +28,20 @@ cd BLJBatchAWS
 
 ## AWS Batch Environment
 #### AMI - Amazon Machine Image
--This is a custom virtual machine which contains Docker and some of the pre-requisite software for Nextflow, including AWSCLI blah blah blah blah blah <br />
+  -This is a custom virtual machine which contains Docker and some of the pre-requisite software for Nextflow, including AWSCLI blah blah blah blah blah <br />
 #### AWS Batch Compute Environment:
--maximum vCPUs (virtual CPUs) <br />
--Amazon Machine Image (AMI) definition or creation <br />
--Spot Price – the percent at which to bid on available EC2 instances <br />
+  -maximum vCPUs (virtual CPUs) <br />
+  -Amazon Machine Image (AMI) definition or creation <br />
+  -Spot Price – the percent at which to bid on available EC2 instances <br />
 #### AWS Batch Job Queue:
--defines the priority <br />
--one or more compute environments <br />
+  -defines the priority <br />
+  -one or more compute environments <br />
 #### AWS Batch Job definitions: 
--defines Docker images and scripts <br />
--defines how jobs are run <br />
--defines the memory and vCPU requirements which are used to determine the optimal EC2 instance type for that particular job. <br />
+  -defines Docker images and scripts <br />
+  -defines how jobs are run <br />
+  -defines the memory and vCPU requirements which are used to determine the optimal EC2 instance type for that particular job. <br />
 #### AWS Batch Jobs:
--an instance of a job definition, typically for a single sample <br />
+  -an instance of a job definition, typically for a single sample <br />
 ## Resource Management
 #### Nextflow:
 -Connects directly to the AWS Batch API <br />
@@ -52,11 +52,11 @@ Each AWS resource listed above requires a service role that has the correspondin
 
 ## Storage and Networking
 #### EBS - Elastic Block Store
--EC2 instance storage for each separate instance <br />
+  -EC2 instance storage for each separate instance <br />
 #### EFS - Elastic File System
--shared storage between instances for short-term results storage <br />
+  -shared storage between instances for short-term results storage <br />
 #### S3 – Simple Storage Service
--Globally unique bucket name for long-term results storage <br />
+  -Globally unique bucket name for long-term results storage <br />
 ### Networking:
 <br />
 #### Virtual Private Cloud
