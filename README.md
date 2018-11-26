@@ -2,15 +2,25 @@
 This is a series of batch scripts that deploys an AWS Batch compute environment suitable for use with the BioLockJ Genomics analysis pipeline.  
 
 To run:
-Make sure docker, awscli, and git are installed on your machine (macOS or Linux only for now)
-
+1.) Make sure docker, awscli, and git are installed on your computer or virtual environment (macOS or Linux only for now).
+2.) Create an Amazon Web Services Account and create a root key pair.  Write them down, as you will not be able to retrieve them later.
+3.) Run the following command from a command prompt to login to your AWS account from the console
+**Note, this currently creates a custom sized AMI which will use storage space and create charges to your AWS account. Delete this AMI and all associated volume snapshots when you are done.**  This is for developent purposes, in the future a publicly available AMI will be provided.
+```
+aws configure
+AWS Access Key ID []:myaccesskeyID
+AWS Secret Access Key []:mysecretaccesskey
+Default region name []:us-east-1
+Default output format []:text
+```
+4.) run the following commands to deploy a computing environment and all associated AWS resources necessary for submitting AWS Batch computing jobs.
 ```
 git clone https://github.com/mjzapata/BLJBatchAWS.git
 cd BLJBatchAWS
 ./deployBLJBatchEnv.sh
 ```
+5.) Install Nextflow and create a nextflow configuration file that specifies the Batch service role that was created during the compute environment startup.
 
-**Note, this currently creates a custom sized AMI which will use storage space and create charges to your AWS account.
 
 ## AWS Batch Environment
 #### AMI - Amazon Machine Image
