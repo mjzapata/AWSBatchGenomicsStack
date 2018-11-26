@@ -2,6 +2,7 @@
 This is a series of batch scripts that deploys an AWS Batch compute environment suitable for use with the BioLockJ Genomics analysis pipeline.  
 
 To run:
+
 1.) Make sure docker, awscli, and git are installed on your computer or virtual environment (macOS or Linux only for now).
 
 2.) Create an Amazon Web Services Account and create a root key pair.  Write them down, as you will not be able to retrieve them later.
