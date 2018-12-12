@@ -1,11 +1,14 @@
 #!/bin/bash
 
+#image created 12_12_2018
+#BLJAMImanager-50GB_DOCKER   ami-01a9c10af27d4d2a8    725685564787/BLJAMImanager-50GB_DOCKER    725685564787
+
 STACKNAME=BLJStack
 COMPUTEENVIRONMENTNAME=BLJComputeEnvironment
 QUEUENAME=BLJQueue
 SPOTPERCENT=60
 MAXCPU=1024
-EBSVOLUMESIZEGB=60
+EBSVOLUMESIZEGB=30
 
 if [ $# -eq 1 ]; then
     ARGUMENT=$1
@@ -45,5 +48,4 @@ else
     echo "set the name of your stack inside this script "
     echo "Usage: ./deployBLJBatchEnv.sh create "
     echo "Usage: ./deployBLJBatchEnv.sh delete "
-
 fi

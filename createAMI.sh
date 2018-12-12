@@ -39,7 +39,7 @@ if [ $# -eq 12 ]; then
 		--instance-type $INSTANCETYPE \
 		--key-name $KEYNAME \
 		--subnet-id $SUBNETS \
-		--block-device-mappings 'DeviceName=/dev/sdb,Ebs={VolumeSize="'$EBSVOLUMESIZEGB'",DeleteOnTermination=true,Encrypted=true,VolumeType=gp2}' )
+		--block-device-mappings 'DeviceName=/dev/sdb,Ebs={VolumeSize="'$EBSVOLUMESIZEGB'",DeleteOnTermination=true,Encrypted=false,VolumeType=gp2}' )
 	echo $EC2RunOutput
 
 	#status
