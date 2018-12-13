@@ -9,6 +9,13 @@
 #Questions for Sarah:  EBS.  Am I provisioning 1TB for one instance or for each instance?
 # subnets? Security groups?  Which do I create, need a public IP?
 
+#PUBLIC image created 12_12_2018
+#BLJAMImanager-50GB_DOCKER   ami-01a9c10af27d4d2a8    725685564787/BLJAMImanager-50GB_DOCKER    725685564787
+
+#TODO: Automatically print out nextflow.config template, filled in.
+#  including the access key and secret key?  restrict file access for config file to "user"??  
+#   or should I use the .pem
+
 #TODO: might delete the original compute environments since they have a different AMI??
 #TODO: create a random S3 bucket, try to keep it as empty as possible
 

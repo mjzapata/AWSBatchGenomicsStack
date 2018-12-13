@@ -1,7 +1,5 @@
 #!/bin/bash
 
-#image created 12_12_2018
-#BLJAMImanager-50GB_DOCKER   ami-01a9c10af27d4d2a8    725685564787/BLJAMImanager-50GB_DOCKER    725685564787
 
 STACKNAME=BLJStack
 COMPUTEENVIRONMENTNAME=BLJComputeEnvironment
