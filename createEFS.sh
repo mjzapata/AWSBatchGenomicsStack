@@ -27,12 +27,24 @@ if [ $# -gt 1 ]; then
 
 		efsID=$(echo $efsoutput | awk '//{print $4}')
 		echo $efsID
+
 		#TODO: add tags
 	elif [ $ARGUMENT == "create" ]; then
 		efsID=$2
 		efsoutput=$(aws efs delete-file-system --file-system-id $efsID)
 		echo $efsoutput
 		"deleted filesystem:  $efsID"
+	elif [[ $ARGUMENT="createMountTarget" ]]; then
+		efsID=$2
+		efsSubnetTarget=$3
+		efsSecurityGroupTarget=$4
+		mountOutput=$(aws efs create-mount-target \
+			--file-system-id $efsID \
+			--subnet-id $efsSubnetTarget \
+			--security-groups $efsSecurityGroupTarget)
+		#POSSIBLE MOUNT TARGET STATE: Creating, available
+
+		echo $mountOutput
 	else
 		echo "usage: "
 		echo "usage: ./createEFS.sh describe [EFSCREATIONTOKEN]  (returns efsID)"

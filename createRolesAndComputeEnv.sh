@@ -241,6 +241,13 @@ if [ $# -eq 8 ]; then
 			echo "Elastic Filesystem already EXISTS with id: $efsID"
 		fi
 
+		efsSubnetTarget=$SUBNETS
+		efsSecurityGroupTarget=$BATCHSECURITYGROUP
+		mountoutput=$(./createEFS.sh createMountTarget \
+			$efsID \
+			$efsSubnetTarget \
+			$efsSecurityGroupTarget)
+
 		#######################################################################################
 		#7.) Print success message
 		#######################################################################################
