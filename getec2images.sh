@@ -1,5 +1,6 @@
 #!/bin/bash
 
+# Returns "available" if the image is available
 
 if [ $# -eq 2 ]; then
 

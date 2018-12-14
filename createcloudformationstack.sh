@@ -47,17 +47,19 @@ elif [[ $# -gt 2 ]]; then
 		# Then "Stack exists"
 		stackstatus=$(./getcloudformationstack.sh $STACKNAME)
 		totaltime=0
+		echo "|-------------------------------|"
+		echo -n "<"
 		while [ "$stackstatus" != "Stack exists" ]
 		do
 			stackstatus=$(./getcloudformationstack.sh $STACKNAME) 
-			echo "."
-			sleep 10s
-			totaltime=$((totaltime+10))
+			echo -n "."
+			sleep 5s
+			totaltime=$((totaltime+5))
 		done
-		echo " Stack $STACKNAME created in $totaltime seconds"
+		echo ">"
+		echo "Stack $STACKNAME created in $totaltime seconds"
 
 
-		
 		#TODO: make another elif for a parameter file instead
 
 else

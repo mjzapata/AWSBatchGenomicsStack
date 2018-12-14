@@ -3,6 +3,7 @@
 #aws ec2 run-instances --image-id ami-xxxxxxxx --count 1 --instance-type t2.micro --key-name MyKeyPair --security-group-ids sg-xxxxxxxx --subnet-id subnet-xxxxxxxx
 
 # Use this template image to create the BLJ image with more EBS memory
+#TODO: STACKFILE call not used here???  Any others?
 
 if [ $# -eq 12 ]; then
 
@@ -54,6 +55,7 @@ if [ $# -eq 12 ]; then
 	instancestatus=$(./getinstance.sh $instanceID status)
 	instancetime=0
 	echo "Starting EC2 instance. This may take a minute"
+
 	while [ "$instancestatus" != "running" ]
 	do
 		instancestatus=$(./getinstance.sh $instanceID status) 
@@ -87,11 +89,12 @@ if [ $# -eq 12 ]; then
 	imageID=$(aws ec2 create-image --instance-id $instanceID --name BLJAMI${AMIIDENTIFIER}-${EBSVOLUMESIZEGB}GB_DOCKER)  #--description enter a description
 	imageStatus=$(./getec2images.sh $imageID status)
 	echo "creating AMI. This may take a minute"
+	echo "|----------------------------------------|"
 	imagetime=0
 	while [ "$imageStatus" != "available" ]
 	do
 		imageStatus=$(./getec2images.sh $imageID status)
-		echo "."
+		echo -n "."
 		sleep 5s
 		imagetime=$((imagetime+5))
 	done
