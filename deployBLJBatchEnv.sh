@@ -1,52 +1,62 @@
 #!/bin/bash
 
+#TODO: add progress bar
+#need to capture output from each step and check for success?
+#also check if there are currently any instances using any of these resources?
 
-STACKNAME=BLJStack2
-COMPUTEENVIRONMENTNAME=BLJComputeEnvironment2
-QUEUENAME=BLJQueue2
+STACKNAME=BLJStack
+COMPUTEENVIRONMENTNAME=BLJComputeEnvironment
+QUEUENAME=BLJQueue
 SPOTPERCENT=60
 MAXCPU=1024
 EBSVOLUMESIZEGB=30
 #hardcoded AMI value. set equal to "no" to create and use custom AMI size
-DEFAULTAMI=ami-01a9c10af27d4d2a8
+DEFAULTAMI=ami-021c52fde2e3ab958 #no
+#CREATENEWAMI=yes
+CUSTOMAMIFOREFS="yes"
 EFSPERFORMANCEMODE=maxIO  #or generalPurpose 
 
 if [ $# -eq 1 ]; then
     ARGUMENT=$1
 
 	if [ "$ARGUMENT" == "create" ]; then
-
-	   ./createRolesAndComputeEnv.sh $STACKNAME $COMPUTEENVIRONMENTNAME $QUEUENAME $SPOTPERCENT $MAXCPU $DEFAULTAMI $EBSVOLUMESIZEGB $EFSPERFORMANCEMODE
+	   ./createRolesAndComputeEnv.sh $STACKNAME $COMPUTEENVIRONMENTNAME $QUEUENAME $SPOTPERCENT $MAXCPU $DEFAULTAMI $CUSTOMAMIFOREFS $EBSVOLUMESIZEGB $EFSPERFORMANCEMODE
 
 	elif [ "$ARGUMENT" == "delete" ]; then
 
-        echo "this will take approximately two minutes "
-        echo "deleting $STACKNAME  $COMPUTEENVIRONMENTNAME $QUEUENAME "
+        echo "this will take approximately two minutes"
+        echo "deleting $STACKNAME  $COMPUTEENVIRONMENTNAME $QUEUENAME"
         
         #delete queue
+        #echo "|------|"
+        #echo -n "<."
         aws batch update-job-queue --job-queue $QUEUENAME --state DISABLED
-        sleep 20
-        aws batch delete-job-queue --job-queue $QUEUENAME
         sleep 30
-
+        #echo -n "."
+        aws batch delete-job-queue --job-queue $QUEUENAME
+        sleep 40
+        #echo -n "."
         #delete compute environment which is dependent on queue
         aws batch update-compute-environment --compute-environment $COMPUTEENVIRONMENTNAME --state DISABLED
         sleep 20
+        #echo -n "."
         aws batch delete-compute-environment --compute-environment $COMPUTEENVIRONMENTNAME
         sleep 20
+        #echo -n "."
         #delete cloudformation stack
         aws cloudformation delete-stack --stack-name $STACKNAME
         sleep 30
+        #echo ".>"
 
     else
-        echo "set the name of your stack inside this script "
-        echo "Usage: ./deployBLJBatchEnv.sh create "
-        echo "Usage: ./deployBLJBatchEnv.sh delete "
+        echo "set the name of your stack inside this script"
+        echo "Usage: ./deployBLJBatchEnv.sh create"
+        echo "Usage: ./deployBLJBatchEnv.sh delete"
 
 	fi
-
 else
-    echo "set the name of your stack inside this script "
-    echo "Usage: ./deployBLJBatchEnv.sh create "
-    echo "Usage: ./deployBLJBatchEnv.sh delete "
+    echo "set the name of your stack inside this script"
+    echo "Usage: ./deployBLJBatchEnv.sh create"
+    echo "Usage: ./deployBLJBatchEnv.sh delete"
 fi
+

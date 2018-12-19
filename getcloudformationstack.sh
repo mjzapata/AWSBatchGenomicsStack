@@ -31,10 +31,10 @@ elif [ $# -eq 2 ]; then
 	STACKNAME=$1
 	ROLENAME=$2
 
+	#echo  "searching for" $STACKNAME $ROLENAME
 	if [ "$ROLENAME" == "output" ]; then
 		aws cloudformation describe-stacks --stack-name $STACKNAME
 	else
-
 		outputline=$(aws cloudformation describe-stacks --stack-name $STACKNAME | grep $ROLENAME)
 		IFS=$'\n'
 		for line in $outputline
@@ -62,8 +62,9 @@ else
 
 	echo "Your command line contains $# arguments"
 	echo "Usage:  ./getlcloudformationstack.sh mystackname                       #check if stack exists"
-	echo "Usage:  ./getlcloudformationstack.sh mystackname outputvaluename       #get value of specific output"
 	echo "Usage:  ./getlcloudformationstack.sh mystackname output                #get all outputs"
+	echo "Usage:  ./getlcloudformationstack.sh mystackname outputvaluename       #get value of specific output"
+	echo "outputvaluename:  ecsTaskRole    spotFleetRole    ecsInstanceRole   lambdaBatchExecutionRole   awsBatchServiceRole"
 	# if [ $# -lt 1 ]; then
 	# 	echo "Your command line contains $# arguments"
 	#     echo "Usage: \n  ./getlcloudformationstack.sh mystackname"
@@ -76,3 +77,4 @@ else
 	# fi
 
 fi
+

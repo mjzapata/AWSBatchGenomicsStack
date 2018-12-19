@@ -18,6 +18,8 @@
 #TODO: autocreate an AIM role with the minimal capabilities and paste it into nextflow output
 # EFS: This operation requires permissions for the elasticfilesystem:CreateFileSystem action.
 
+#TODO: validate IP ADDRESS
+
 #TODO: EFS
 # The PerformanceMode of the file system.   https://docs.aws.amazon.com/cli/latest/reference/efs/create-file-system.html
 # We recommend generalPurpose performance mode for most file systems. 
@@ -44,7 +46,7 @@
 #NOTE: You get a maximum of 5 VPCS per region, each different stack name creates its own VPC
 SECONDS=0
 
-if [ $# -eq 8 ]; then
+if [ $# -eq 9 ]; then
 
 	STACKNAME=$1
 	COMPUTEENVIRONMENTNAME=$2
@@ -52,8 +54,9 @@ if [ $# -eq 8 ]; then
 	SPOTPERCENT=$4
 	MAXCPU=$5
 	DEFAULTAMI=$6
-	EBSVOLUMESIZEGB=$7
-	EFSPERFORMANCEMODE=$8
+	CUSTOMAMIFOREFS=$7
+	EBSVOLUMESIZEGB=$8
+	EFSPERFORMANCEMODE=$9
 	#VERBOSE=$7
 	#IMAGEID=$4
 
@@ -72,7 +75,7 @@ if [ $# -eq 8 ]; then
 	#this is only the instance type for creating AMIs
 	INSTANCETYPEFORAMICREATION=t2.micro  
 	TEMPLATEIMAGEID=ami-0b9a214f40c38d5eb  #latest as of 2018oct17
-	EBSVOLUMESIZEGB="50"
+	#EBSVOLUMESIZEGB="50"
 	#Additional identifiers for AMI
 	AMIIDENTIFIER=manager
 	IMAGETAG=ImageRole
@@ -149,73 +152,14 @@ if [ $# -eq 8 ]; then
 		echo "Bastion Security Group $BASTIONSECURITYGROUP"
 		SUBNETS=$(./getcloudformationstack.sh $STACKNAME Subnet)  #replaced getsubnets
 		echo "subnets: $SUBNETS"
-        #######################################################################################
-		#3.) Check for AMI
-		#######################################################################################
-		#3.a) Check if default AMI exists
-		# if the default AMI is not found OR if the user has specified "no" as the DEFAULTAMI
-		# then a custom AMI will be created
-		imageIDStatus=$(./getec2images.sh $DEFAULTAMI status)
-		imageTagStatus=$(./getec2images.sh tags $IMAGETAG $IMAGETAGVALUE)
-		imageExistWordCount=$(echo -n $imageTagStatus | wc -m)
-		if [[ $imageIDStatus == "available" && $DEFAULTAMI != "no" ]]; then
-			echo "Found default BLJ image with ID: ${DEFAULTAMI}"
-			imageID=$DEFAULTAMI
-		elif [[ $imageExistWordCount -lt 2 ]]; then
-		#3.b)  Check if AMI with custom tags exists
-			#TODO: clean up the getec2images call. maybe rename functions
-			#If it doesn't exist ask if you want to create an AMI using the 
-			#if [ $imageIDStatus == "image not found" ]; then
-			while true; do
-	    		read -p "Image with tag: ${IMAGETAG}, value: ${IMAGETAGVALUE} does not exist. Do you want to create it?: " yn
-	    		case $yn in
-	        		[Yy]* ) ./createAMI.sh $STACKNAME $TEMPLATEIMAGEID $INSTANCETYPEFORAMICREATION $KEYNAME $EBSVOLUMESIZEGB $AMIIDENTIFIER $STACKFILE $IMAGETAG $IMAGETAGVALUE $SUBNETS $BASTIONSECURITYGROUP $MYPUBLICIPADDRESS; break;;
-	        		[Nn]* ) exit;;
-	        		* ) echo "Please answer yes or no.";;
-	    		esac
-			done
-			./createAMI.sh $STACKNAME $TEMPLATEIMAGEID $INSTANCETYPEFORAMICREATION $KEYNAME $EBSVOLUMESIZEGB $AMIIDENTIFIER $STACKFILE $IMAGETAG $IMAGETAGVALUE $SUBNETS $BASTIONSECURITYGROUP $MYPUBLICIPADDRESS
-			#image ID is the 6th column in the outputstring
-			imageID=$(echo $imageTagStatus | grep IMAGES | grep ami | awk '//{print $6}')
-		fi
-
-		#TODO: alternatively list available AMIs?
-
-		#TODO: add optional parameters at the end for subnet?  see README.md on how to do this...
-		#REGISTRY=
-		#REPO_URI= 725685564787.dkr.ecr.us-east-1.amazonaws.com/isaac
-		# Pass control
-		# give aaron list of paramaters
-		# make a checkbox for each item in a csv?
-
-		#TODO: removed ec2 keypair.... might need to put this back in???
-		#TODO: need to put it in two security groups
 
 
 		#######################################################################################
-		#4.) Create Batch Computing environment
+		#TODO: AMI and EFS are tied together!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! Check more thoroughly
 		#######################################################################################
-		# batchCreatOutput=$(aws batch create-compute-environment --compute-environment-name $COMPUTEENVIRONMENTNAME \
-		# --type MANAGED --state ENABLED --service-role ${SERVICEROLE} \
-		# --compute-resources type=SPOT,minvCpus=0,maxvCpus=$MAXCPU,desiredvCpus=$DESIREDCPUS,instanceTypes=optimal,imageId=$imageID,subnets=$SUBNETS,securityGroupIds=$BATCHSECURITYGROUP,instanceRole=$INSTANCEROLE,bidPercentage=$SPOTPERCENT,spotIamFleetRole=$IAMFLEETROLE)
-		# sleep 10s
-		echo "creating compute environment: $COMPUTEENVIRONMENTNAME"
-		batchCreatOutput=$(aws batch create-compute-environment --compute-environment-name $COMPUTEENVIRONMENTNAME \
-		--type MANAGED --state ENABLED --service-role ${SERVICEROLE} \
-		--compute-resources type=SPOT,minvCpus=0,maxvCpus=$MAXCPU,desiredvCpus=$DESIREDCPUS,instanceTypes=optimal,imageId=$imageID,subnets=$SUBNETS,securityGroupIds=$BATCHSECURITYGROUP,ec2KeyPair=$KEYNAME,instanceRole=$INSTANCEROLE,bidPercentage=$SPOTPERCENT,spotIamFleetRole=$IAMFLEETROLE)
-		echo "$batchOutput"
-		echo "$batchCreatOutput"
-		sleep 10s
-		#######################################################################################
-		#5.) Create Job Queue
-		#######################################################################################
-		queueCreateOutput=$(aws batch create-job-queue --job-queue-name $QUEUENAME \
-			--compute-environment-order order=0,computeEnvironment=$COMPUTEENVIRONMENTNAME  \
-			--priority $COMPUTEENVPRIORITY \
-			--state ENABLED)
 
 		#######################################################################################
-		#6.) Create Elastic Filesystem (EFS)
+		#4.) Create Elastic Filesystem (EFS)
 		#######################################################################################
 		EFSCREATIONTOKEN=${STACKNAME}-EFS
 		#EFSPERFORMANCEMODE defined in deployBLJBatchEnv.
@@ -243,13 +187,107 @@ if [ $# -eq 8 ]; then
 
 		efsSubnetTarget=$SUBNETS
 		efsSecurityGroupTarget=$BATCHSECURITYGROUP
+		aws ec2 authorize-security-group-ingress --group-id $efsSecurityGroupTarget —protocol tcp --port 2049 --source-group $BATCHSECURITYGROUP
+		aws ec2 authorize-security-group-egress --group-id $efsSecurityGroupTarget —protocol tcp --port 2049 --source-group $BATCHSECURITYGROUP
+
 		mountoutput=$(./createEFS.sh createMountTarget \
 			$efsID \
 			$efsSubnetTarget \
 			$efsSecurityGroupTarget)
 
+        #######################################################################################
+		#3.) Check for AMI
 		#######################################################################################
-		#7.) Print success message
+		#3.a) Check if default AMI exists
+		# if the default AMI is not found OR if the user has specified "no" as the DEFAULTAMI
+		# then a custom AMI will be created
+		imageIDStatus=$(./getec2images.sh $DEFAULTAMI status)
+		imageTagStatus=$(./getec2images.sh tags $IMAGETAG $IMAGETAGVALUE)
+		imageExistWordCount=$(echo -n $imageTagStatus | wc -m)
+		if [[ $imageIDStatus == "available" && $DEFAULTAMI != "no" ]]; then
+			echo "Found default BLJ image with ID: ${DEFAULTAMI}"
+			imageID=$DEFAULTAMI
+		elif [[ $imageExistWordCount -lt 2 ]]; then
+		#3.b)  Check if AMI with custom tags exists
+			#TODO: clean up the getec2images call. maybe rename functions
+			#If it doesn't exist ask if you want to create an AMI using the 
+			#if [ $imageIDStatus == "image not found" ]; then
+			while true; do
+	    		read -p "Image with tag: ${IMAGETAG}, value: ${IMAGETAGVALUE} does not exist. Do you want to create it?: " yn
+	    		case $yn in
+	        		[Yy]* ) ./createAMI.sh $STACKNAME $TEMPLATEIMAGEID $INSTANCETYPEFORAMICREATION $KEYNAME $EBSVOLUMESIZEGB $AMIIDENTIFIER $STACKFILE $IMAGETAG $IMAGETAGVALUE $SUBNETS $BASTIONSECURITYGROUP $MYPUBLICIPADDRESS configureEC2forAMI.sh; break;;
+	        		[Nn]* ) exit;;
+	        		* ) echo "Please answer yes or no.";;
+	    		esac
+			done
+			./createAMI.sh $STACKNAME $TEMPLATEIMAGEID $INSTANCETYPEFORAMICREATION $KEYNAME $EBSVOLUMESIZEGB $AMIIDENTIFIER $STACKFILE $IMAGETAG $IMAGETAGVALUE $SUBNETS $BASTIONSECURITYGROUP $MYPUBLICIPADDRESS configureEC2forAMI.sh
+			#image ID is the 6th column in the outputstring
+			imageID=$(echo $imageTagStatus | grep IMAGES | grep ami | awk '//{print $6}')
+		fi
+
+		#modify the tag name to include EFS
+		efsImageTagValue=${IMAGETAGVALUE}TAG_EFS
+		imageTagStatus=$(./getec2images.sh tags $IMAGETAG $efsImageTagValue)
+		imageExistWordCount=$(echo -n $imageTagStatus | wc -m)
+		echo "CUSTOMAMIFOREFS: $CUSTOMAMIFOREFS"
+		echo "image exist wordcount: $imageExistWordCount"
+		if [[ $imageExistWordCount -gt 2 ]]; then
+			imageTagStatus=$(./getec2images.sh tags $IMAGETAG $efsImageTagValue)
+			imageID=$(echo $imageTagStatus | grep IMAGES | grep ami | awk '//{print $6}')
+			echo "EXISTING AMI with EFS: $imageID"
+
+		elif [[ $CUSTOMAMIFOREFS == "yes" && $imageExistWordCount -lt 2 ]]; then
+			#use the last image as a template
+			echo "using EFS-enabled $imageID as template for changing fstab to mount file system..."
+			echo "..."
+			echo "..."
+			echo "..."
+			TEMPLATEIMAGEID=$imageID
+			./createAMI.sh $STACKNAME $TEMPLATEIMAGEID $INSTANCETYPEFORAMICREATION $KEYNAME 0 ${AMIIDENTIFIER}_EFS $STACKFILE $IMAGETAG $efsImageTagValue $SUBNETS $BASTIONSECURITYGROUP $MYPUBLICIPADDRESS fstabAMI.sh $efsID
+			imageTagStatus=$(./getec2images.sh tags $IMAGETAG $efsImageTagValue)
+			imageID=$(echo $imageTagStatus | grep IMAGES | grep ami | awk '//{print $6}')
+			echo "new EFS-enabled AMI with EFS: $imageID"
+		fi
+
+		#TODO: alternatively list available AMIs?
+
+		#TODO: add optional parameters at the end for subnet?  see README.md on how to do this...
+		#REGISTRY=
+		#REPO_URI= 725685564787.dkr.ecr.us-east-1.amazonaws.com/isaac
+		# Pass control
+		# give aaron list of paramaters
+		# make a checkbox for each item in a csv?
+
+		#TODO: removed ec2 keypair.... might need to put this back in???
+		#TODO: need to put it in two security groups
+
+
+
+		#######################################################################################
+		#5.) Create Batch Computing environment
+		#######################################################################################
+		# batchCreatOutput=$(aws batch create-compute-environment --compute-environment-name $COMPUTEENVIRONMENTNAME \
+		# --type MANAGED --state ENABLED --service-role ${SERVICEROLE} \
+		# --compute-resources type=SPOT,minvCpus=0,maxvCpus=$MAXCPU,desiredvCpus=$DESIREDCPUS,instanceTypes=optimal,imageId=$imageID,subnets=$SUBNETS,securityGroupIds=$BATCHSECURITYGROUP,instanceRole=$INSTANCEROLE,bidPercentage=$SPOTPERCENT,spotIamFleetRole=$IAMFLEETROLE)
+		# sleep 10s
+		echo "creating compute environment: $COMPUTEENVIRONMENTNAME"
+		batchCreatOutput=$(aws batch create-compute-environment --compute-environment-name $COMPUTEENVIRONMENTNAME \
+		--type MANAGED --state ENABLED --service-role ${SERVICEROLE} \
+		--compute-resources type=SPOT,minvCpus=0,maxvCpus=$MAXCPU,desiredvCpus=$DESIREDCPUS,instanceTypes=optimal,imageId=$imageID,subnets=$SUBNETS,securityGroupIds=$BATCHSECURITYGROUP,ec2KeyPair=$KEYNAME,instanceRole=$INSTANCEROLE,bidPercentage=$SPOTPERCENT,spotIamFleetRole=$IAMFLEETROLE)
+		echo "$batchOutput"
+		echo "$batchCreatOutput"
+		sleep 10s
+		#######################################################################################
+		#5.) Create Job Queue
+		#######################################################################################
+		queueCreateOutput=$(aws batch create-job-queue --job-queue-name $QUEUENAME \
+			--compute-environment-order order=0,computeEnvironment=$COMPUTEENVIRONMENTNAME  \
+			--priority $COMPUTEENVPRIORITY \
+			--state ENABLED)
+
+
+		#######################################################################################
+		#6.) Print success message
 		#######################################################################################
 		echo "----------------------------------------------------------------------------------------------"
 		timeinminutes=$(awk "BEGIN {print $SECONDS/60}")
@@ -265,7 +303,7 @@ if [ $# -eq 8 ]; then
 	fi
 else
 	echo "Your command line contains $# arguments"
-	echo "usage: six arguments: "
+	echo "usage: nine arguments: "
 	echo " ./createRolesAndComputeEnv.sh STACKNAME COMPUTEENVIRONMENTNAME SPOTPRICE QUEUENAME IMAGEIDNUM MAXCPU EBSVOLUMESIZEGB"
 
 fi

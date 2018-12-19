@@ -2,19 +2,14 @@
 
 #aws ec2 run-instances --image-id ami-xxxxxxxx --count 1 --instance-type t2.micro --key-name MyKeyPair --security-group-ids sg-xxxxxxxx --subnet-id subnet-xxxxxxxx
 
+#TODO: count number of arguments!!!
+
 # Use this template image to create the BLJ image with more EBS memory
 #TODO: STACKFILE call not used here???  Any others?
+#TODO: this script is called sevearl times from createRolesAndComputeEnv.sh
+# Argument 14 is an overload argument. WATCH OUT.
 
-if [ $# -eq 12 ]; then
-
-	# TEMPLATEIMAGEID=ami-0b9a214f40c38d5eb  #as of 2018oct17
-	# INSTANCETYPE=t2.micro
-	# KEYNAME=BioLockJKeyPairAMI
-	# EBSVOLUMESIZEGB="50"
-	# AMIIDENTIFIER=generic
-
-	# STACKNAME=tempbljsubnetstack2
-	# STACKFILE=BLJStack.json
+if [ $# -gt 12 ]; then
 
 	# IMAGETAG=ImageRole
 	# IMAGETAGVALUE=BLJManager
@@ -31,16 +26,28 @@ if [ $# -eq 12 ]; then
 	SUBNETS=${10}
 	BASTIONSECURITYGROUP=${11}
 	MYPUBLICIPADDRESS=${12}
+	SCRIPTNAME=${13}
+	efsID=${14}
 
 	#run EC2 instances: https://docs.aws.amazon.com/cli/latest/reference/ec2/run-instances.html
 	# https://docs.aws.amazon.com/cli/latest/userguide/cli-ec2-launch.html
-	EC2RunOutput=$(aws ec2 run-instances \
-		--image-id $TEMPLATEIMAGEID \
-		--count 1 \
-		--instance-type $INSTANCETYPE \
-		--key-name $KEYNAME \
-		--subnet-id $SUBNETS \
-		--block-device-mappings 'DeviceName=/dev/sdb,Ebs={VolumeSize="'$EBSVOLUMESIZEGB'",DeleteOnTermination=true,Encrypted=false,VolumeType=gp2}' )
+	if [[ $EBSVOLUMESIZEGB > 1 ]]; then
+		EC2RunOutput=$(aws ec2 run-instances \
+			--image-id $TEMPLATEIMAGEID \
+			--count 1 \
+			--instance-type $INSTANCETYPE \
+			--key-name $KEYNAME \
+			--subnet-id $SUBNETS \
+			--block-device-mappings 'DeviceName=/dev/sdb,Ebs={VolumeSize="'$EBSVOLUMESIZEGB'",DeleteOnTermination=true,Encrypted=false,VolumeType=gp2}' )
+	else
+		EC2RunOutput=$(aws ec2 run-instances \
+			--image-id $TEMPLATEIMAGEID \
+			--count 1 \
+			--instance-type $INSTANCETYPE \
+			--key-name $KEYNAME \
+			--subnet-id $SUBNETS)
+	fi
+
 	echo $EC2RunOutput
 
 	#status
@@ -80,7 +87,7 @@ if [ $# -eq 12 ]; then
 	ssh -o UserKnownHostsFile=/dev/null \
 		-o StrictHostKeyChecking=no \
 		-i ${KEYNAME}.pem ec2-user@${instanceIP} \
-		'bash -s' < configureEC2forAMI.sh
+		'bash -s' < ./${SCRIPTNAME} "${efsID}"
 	echo "----------------------------------------"
 	echo "----------------------------------------"
 	echo "Check for any errors in the AMI creation"
@@ -89,7 +96,8 @@ if [ $# -eq 12 ]; then
 	imageID=$(aws ec2 create-image --instance-id $instanceID --name BLJAMI${AMIIDENTIFIER}-${EBSVOLUMESIZEGB}GB_DOCKER)  #--description enter a description
 	imageStatus=$(./getec2images.sh $imageID status)
 	echo "creating AMI. This may take a minute"
-	echo "|----------------------------------------|"
+	echo "|--------------------|"
+	echo -n "<."
 	imagetime=0
 	while [ "$imageStatus" != "available" ]
 	do
@@ -98,6 +106,7 @@ if [ $# -eq 12 ]; then
 		sleep 5s
 		imagetime=$((imagetime+5))
 	done
+	echo -n ".>"
 	echo " Instance:  $imageID  created in $imagetime seconds"
 
 

@@ -47,7 +47,7 @@ elif [[ $# -gt 2 ]]; then
 		# Then "Stack exists"
 		stackstatus=$(./getcloudformationstack.sh $STACKNAME)
 		totaltime=0
-		echo "|-------------------------------|"
+		echo "|-----------------------------|"
 		echo -n "<"
 		while [ "$stackstatus" != "Stack exists" ]
 		do

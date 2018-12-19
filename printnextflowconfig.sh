@@ -45,7 +45,7 @@ echo "
 cloud{
 	imageId = '$imageID'
 	sharedStorageId = '$efsID'
-	sharedStorageMount = '/mnt/shared'
+	sharedStorageMount = '/mnt/efs'
 }
 aws {
     accessKey = 'mysecretaccesskeyid'

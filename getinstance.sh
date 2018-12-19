@@ -50,6 +50,23 @@ if [ $# -eq 2 ]; then
 			echo $var
 		done | paste -s -d, /dev/stdin
 
+	elif [ "$ARGUMENT" == "reachability" ]; then
+		#when IFS (reserved variable) is a value other than default, tmp=($roleline) gets parsed based on IFS
+		
+		instances=$(aws ec2 describe-instance-status --instance-ids $instanceID | grep "DETAILS\treachability")
+		
+		IFS=$'\n'
+		for line in $instances
+		do
+			#echo $line
+			IFS=$'\t'
+			tmp=($line)
+			var="${tmp[2]}"
+			echo $var
+		done | paste -s -d, /dev/stdin
+
+
+
 	else
 		echo "Usage: ./getinstance.sh instanceID valuetoquery, such as ipaddress, hostname, status"
 	fi

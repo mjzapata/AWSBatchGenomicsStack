@@ -24,6 +24,8 @@ Resources:
     Type: 'AWS::EC2::VPC'
     Properties:
       CidrBlock: 10.0.0.0/16
+      EnableDnsSupport: 'True'
+      EnableDnsHostnames: 'True'
     Metadata:
       'AWS::CloudFormation::Designer':
         id: 279c1982-398d-4beb-95e9-7ea871ed3b25
