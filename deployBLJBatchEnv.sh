@@ -4,9 +4,9 @@
 #need to capture output from each step and check for success?
 #also check if there are currently any instances using any of these resources?
 
-STACKNAME=BLJStack
-COMPUTEENVIRONMENTNAME=BLJComputeEnvironment
-QUEUENAME=BLJQueue
+STACKNAME=BLJStack8
+COMPUTEENVIRONMENTNAME=BLJComputeEnvironment8
+QUEUENAME=BLJQueue8
 SPOTPERCENT=60
 MAXCPU=1024
 EBSVOLUMESIZEGB=30
@@ -44,6 +44,15 @@ if [ $# -eq 1 ]; then
         sleep 20
         #echo -n "."
         #delete cloudformation stack
+
+
+        #delete EFS mount point
+
+        #delete EFS
+
+        #delete job definition
+        # aws batch deregister-job-definition 
+
         aws cloudformation delete-stack --stack-name $STACKNAME
         sleep 30
         #echo ".>"

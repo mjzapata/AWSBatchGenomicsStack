@@ -80,6 +80,22 @@ Resources:
       SecurityGroupEgress:
         - IpProtocol: '-1'
           CidrIp: 0.0.0.0/0
+  BastionSecurityGroupIngress:
+    Type: 'AWS::EC2::SecurityGroupIngress'
+    Properties:
+      IpProtocol: tcp
+      FromPort: '2049'
+      ToPort: '2049'
+      SourceSecurityGroupId: !GetAtt BastionSecurityGroup.GroupId
+      GroupId: !GetAtt BastionSecurityGroup.GroupId
+  BastionSecurityGroupEgress:
+    Type: 'AWS::EC2::SecurityGroupEgress'
+    Properties:
+      IpProtocol: tcp
+      FromPort: '2049'
+      ToPort: '2049'
+      DestinationSecurityGroupId: !GetAtt BastionSecurityGroup.GroupId
+      GroupId: !GetAtt BastionSecurityGroup.GroupId
     Metadata:
       'AWS::CloudFormation::Designer':
         id: 7ad20dce-085e-463f-9df6-283f5a7d9d3a

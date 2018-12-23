@@ -155,7 +155,7 @@ if [ $# -eq 9 ]; then
 
 
 		#######################################################################################
-		#TODO: AMI and EFS are tied together!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! Check more thoroughly
+		#TODO: AMI and EFS are tied together!!!!!!!!!!!! Check more thoroughly
 		#######################################################################################
 
 		#######################################################################################
@@ -187,8 +187,6 @@ if [ $# -eq 9 ]; then
 
 		efsSubnetTarget=$SUBNETS
 		efsSecurityGroupTarget=$BATCHSECURITYGROUP
-		aws ec2 authorize-security-group-ingress --group-id $efsSecurityGroupTarget —protocol tcp --port 2049 --source-group $BATCHSECURITYGROUP
-		aws ec2 authorize-security-group-egress --group-id $efsSecurityGroupTarget —protocol tcp --port 2049 --source-group $BATCHSECURITYGROUP
 
 		mountoutput=$(./createEFS.sh createMountTarget \
 			$efsID \
