@@ -60,8 +60,14 @@ Resources:
   BatchSecurityGroup:
     Type: 'AWS::EC2::SecurityGroup'
     Properties:
-      GroupDescription: Security Group for the EC2 instances launched into the VPC by Batch
+      GroupDescription: Security Group for Batch
       VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: !Join 
+            - ''
+            - - !Ref 'AWS::StackName'
+              - '-batch-sg'
     Metadata:
       'AWS::CloudFormation::Designer':
         id: b65d1864-edbd-4eb5-b161-21e04b7a9a5d
@@ -75,7 +81,7 @@ Resources:
           Value: !Join 
             - ''
             - - !Ref 'AWS::StackName'
-              - '-bastion-access'
+              - '-bastion-sg'
       SecurityGroupIngress:
         - IpProtocol: tcp
           FromPort: '22'
@@ -91,7 +97,7 @@ Resources:
     Metadata:
       'AWS::CloudFormation::Designer':
         id: c1d21c28-367b-4d9d-95d4-3c712561a79f
-  BastionSecurityGroupIngress:
+  BastionToBastionSecurityGroupIngressNFS:
     Type: 'AWS::EC2::SecurityGroupIngress'
     Properties:
       IpProtocol: tcp
@@ -102,13 +108,19 @@ Resources:
     Metadata:
       'AWS::CloudFormation::Designer':
         id: ddcdaa9a-8ff1-4994-90bb-86598e2ff1fd
-  BastionSecurityGroupEgress:
-    Type: 'AWS::EC2::SecurityGroupEgress'
+  BatachToBastionSecurityGroupIngressNFS:
+    Type: 'AWS::EC2::SecurityGroupIngress'
     Properties:
       IpProtocol: tcp
       FromPort: '2049'
       ToPort: '2049'
-      DestinationSecurityGroupId: !GetAtt BastionSecurityGroup.GroupId
+      SourceSecurityGroupId: !GetAtt BatchSecurityGroup.GroupId
+      GroupId: !GetAtt BastionSecurityGroup.GroupId
+  BastionSecurityGroupEgress:
+    Type: 'AWS::EC2::SecurityGroupEgress'
+    Properties:
+      IpProtocol: '-1'
+      CidrIp: 0.0.0.0/0
       GroupId: !GetAtt BastionSecurityGroup.GroupId
     Metadata:
       'AWS::CloudFormation::Designer':
@@ -162,6 +174,25 @@ Resources:
     Metadata:
       'AWS::CloudFormation::Designer':
         id: 6cad450f-0404-4ce6-b741-ff9bcdc396ae
+  ECSTaskRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - "ecs-tasks.amazonaws.com"
+            Action:
+              - "sts:AssumeRole"
+      ManagedPolicyArns:
+      - "arn:aws:iam::aws:policy/AmazonS3FullAccess"
+      - "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
+      - "arn:aws:iam::aws:policy/AmazonElasticFileSystemFullAccess"
+      - "arn:aws:iam::aws:policy/service-role/AmazonEC2ContainerServiceforEC2Role"
+      - "arn:aws:iam::aws:policy/service-role/AmazonEC2RoleForSSM"
+      - "arn:aws:iam::aws:policy/AmazonEC2FullAccess"
   EcsInstanceRole:
     Type: 'AWS::IAM::Role'
     Properties:
@@ -204,8 +235,7 @@ Resources:
       PerformanceMode: maxIO
       FileSystemTags:
         - Key: Name
-          Value:
-            Ref: VolumeName
+          Value: !Join [ "-", [ !Ref "AWS::StackName", EFS-shared ] ]
     Metadata:
       'AWS::CloudFormation::Designer':
         id: e3143b62-7cb1-4dea-87cd-5e0f290e684b
@@ -225,12 +255,11 @@ Resources:
   LaunchTemplate:
     Type: "AWS::EC2::LaunchTemplate"
     Properties:
-      LaunchTemplateName: BLJEFSTemplate
+      LaunchTemplateName: !Join [ "-", [ !Ref "AWS::StackName", "BLJEFSTemplate" ] ]
       LaunchTemplateData:
         UserData:
           Fn::Base64: !Sub |
             MIME-Version: 1.0
-            Content-Transfer-Encoding: 7bit
             Content-Type: multipart/mixed; boundary="==MYBOUNDARY=="
             
             --==MYBOUNDARY==
@@ -257,6 +286,8 @@ Outputs:
     Value: !Ref BatchSecurityGroup
   BastionSecurityGroup:
     Value: !Ref BastionSecurityGroup
+  ECSTaskRole:
+    Value: !Ref ECSTaskRole
   EcsInstanceRoleArn:
     Value: !Ref EcsInstanceRole
   IamInstanceProfileArn:
@@ -267,6 +298,8 @@ Outputs:
     Value: !Ref BatchServiceRole
   FileSystemId:
     Value: !Ref FileSystem
+  LaunchTemplateId:
+    Value: !Ref LaunchTemplate
 Metadata:
   'AWS::CloudFormation::Designer':
     4d9dff45-f244-46b4-bc94-72252bc75793:

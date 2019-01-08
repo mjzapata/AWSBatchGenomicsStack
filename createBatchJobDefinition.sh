@@ -6,18 +6,20 @@
 #and mounting the EFS in a location that docker can reach it.
 #This was the only way to get EFS to mount at boot time.
 
-if [ $# -gt 4 && $# -lt 7 ]; then
+if [[ $# -gt 4 && $# -lt 7 ]]; then
 
 	JOBDEFINITIONNAME=$1
-	IMAGE=$2
-	JOBEROLEARN=$3
-	VCPUS=$4
-	MEMORY=$5
+	JOBIMAGE=$2
+	JOBROLEARN=$3
+	JOBVCPUS=$4
+	JOBMEMORY=$5
 
 	if [ $# -eq 6 ]; then
 		COMMAND=$6
+		echo "COMMAND=$COMMAND"
 	else
 		COMMAND=/bin/bash
+		echo "COMMAND=$COMMAND"
 	fi
 
 	#1.) Check for existence of JOBDEFINITIONNAME
@@ -25,46 +27,47 @@ if [ $# -gt 4 && $# -lt 7 ]; then
 	jobdefwordcount=$(aws batch describe-job-definitions | grep JOBDEFINITIONS | grep ${JOBDEFINITIONNAME} | wc -m)
 
 	if [[ jobdefwordcount -gt 1 ]]; then
-		echo "job exists"
+		echo "JobDefinition exists"
 	else
 
-	echo "
-JobDefinition:
-  Type: AWS::Batch::JobDefinition
-  Properties:
-    Type: container
-    JobDefinitionName: ${JOBDEFINITIONNAME}
-    ContainerProperties:
-      MountPoints:
-        - ReadOnly: false
-          SourceVolume: efs
-          ContainerPath: /efs
-      Volumes:
-        - Host:
-            SourcePath: /mnt/efs
-          Name: efs
-      Command:
-        - ${COMMAND}
-      Memory: ${MEMORY}
-      Privileged: true
-      JobRoleArn: ${JOBROLEARN}
-      ReadonlyRootFilesystem: true
-      Vcpus: ${VCPUS}
-      Image: ${IMAGE}
-" 
-	containerProperties="{"image": "${IMAGE}", "vcpus": $VCPUS, "memory": $MEMORY, "command": ["${COMMAND}"]}"
+# 	echo "
+# JobDefinition:
+#   Type: AWS::Batch::JobDefinition
+#   Properties:
+#     Type: container
+#     JobDefinitionName: ${JOBDEFINITIONNAME}
+#     ContainerProperties:
+#       MountPoints:
+#         - ReadOnly: false
+#           SourceVolume: efs
+#           ContainerPath: /efs
+#       Volumes:
+#         - Host:
+#             SourcePath: /mnt/efs
+#           Name: efs
+#       Command:
+#         - ${COMMAND}
+#       JOBMEMORY: ${JOBMEMORY}
+#       Privileged: true
+#       JobRoleArn: ${JOBROLEARN}
+#       ReadonlyRootFilesystem: true
+#       Vcpus: ${JOBVCPUS}
+#       Image: ${JOBIMAGE}
+# " 
+	#containerProperties="{"image": "${JOBIMAGE}", "vcpus": $JOBVCPUS, "memory": $JOBMEMORY, "command": ["${COMMAND}"]}"
 
 	CONTAINERPATH=/efs
 
 	VOLUMESOURCEPATH=/mnt/efs
 	VOLUMENAME=efs
 
+
 containerProperties="{
-  \"image\": \"$IMAGE\",
-  \"vcpus\": $VCPUS,
-  \"memory\": $MEMORY,
+  \"image\": \"$JOBIMAGE\",
+  \"vcpus\": $JOBVCPUS,
+  \"memory\": $JOBMEMORY,
   \"command\": [\"$COMMAND\"],
-  \"jobRoleArn\": \"$JOBROLEARN\",
+  \"jobRoleArn\": \"${JOBROLEARN}\",
   \"volumes\": [
     {
       \"host\": {
@@ -83,10 +86,12 @@ containerProperties="{
   \"readonlyRootFilesystem\": false,
   \"privileged\": true
 }"
+echo "containerProperties:"
+echo $containerProperties
+echo ""
 
-	jobRegisterOutpu=$(aws batch register-job-definition --job-definition-name $JOBDEFINITIONNAME --type container --container-properties ${containerProperties})
-
-
+	jobRegisterOutput=$(aws batch register-job-definition --job-definition-name $JOBDEFINITIONNAME --type container --container-properties "${containerProperties}")
+	echo $jobRegisterOutput
 
 	fi
 

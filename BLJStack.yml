@@ -91,10 +91,8 @@ Resources:
   BastionSecurityGroupEgress:
     Type: 'AWS::EC2::SecurityGroupEgress'
     Properties:
-      IpProtocol: tcp
-      FromPort: '2049'
-      ToPort: '2049'
-      DestinationSecurityGroupId: !GetAtt BastionSecurityGroup.GroupId
+      IpProtocol: '-1'
+      CidrIp: 0.0.0.0/0
       GroupId: !GetAtt BastionSecurityGroup.GroupId
     Metadata:
       'AWS::CloudFormation::Designer':

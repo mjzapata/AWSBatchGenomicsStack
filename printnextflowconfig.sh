@@ -13,11 +13,8 @@ echo "copy and paste this into a file named nextflow.config and change the value
 echo ""
 echo "
 executor {
-     name = 'awsbatch'
-     awscli = '/home/ec2-user/miniconda/bin/aws'
-}
-process {
-     queue = '$QUEUENAME'
+    name = 'awsbatch'
+    awscli = '/home/ec2-user/miniconda/bin/aws'
 }
 cloud{
 	imageId = '$imageID'
@@ -35,13 +32,10 @@ if [ $# -eq 3 ]; then
 echo "copy and paste this into a file named nextflow.config and change the values for accessKey and secretKey"
 echo ""
 echo "
- executor {
-     name = 'awsbatch'
-     awscli = '/home/ec2-user/miniconda/bin/aws'
- }
- process {
-     queue = '$QUEUENAME'
- }
+executor {
+    name = 'awsbatch'
+    awscli = '/home/ec2-user/miniconda/bin/aws'
+}
 cloud{
 	imageId = '$imageID'
 	sharedStorageId = '$efsID'

@@ -59,18 +59,25 @@ if [ $# -eq 9 ]; then
 	EFSPERFORMANCEMODE=$9
 	#VERBOSE=$7
 	#IMAGEID=$4
+	echo "COMPUTEENVIRONMENTNAME=$COMPUTEENVIRONMENTNAME"
+	echo "QUEUENAME=$QUEUENAME"
+	echo "SPOTPERCENT=$SPOTPERCENT"
+	echo "MAXCPU=$MAXCPU"
+	echo "DEFAULTAMI=$DEFAULTAMI"
 
 	ACCOUNTID=$(./getawsaccountid.sh)
 	stackstatus=$(./getcloudformationstack.sh $STACKNAME)
 	DESIREDCPUS=0 #this is the minimum reserved CPUS.  Specifying more than 0 will waste money unless you are putting out batch jobs 24/7
+	echo "DESIREDCPUS=$DESIREDCPUS"
 
 	#TODO: create a seperate script for the compute environment
 	#computeenvstatus=$()
 
 	#Global Parameters
 	KEYNAME=BioLockJKeyPairAMI
+	echo "KEYNAME=$KEYNAME"
 	#Stack Parameters
-	STACKFILE=BLJStack.yml
+	STACKFILE=BLJStackEFS.yml
 	#AMI Parameters
 	#this is only the instance type for creating AMIs
 	INSTANCETYPEFORAMICREATION=t2.micro  
@@ -85,6 +92,8 @@ if [ $# -eq 9 ]; then
 	#Compute Environment Parameters
 	#TODO: check if compute environment exists!!!
 	COMPUTEENVPRIORITY=10
+	echo "COMPUTEENVPRIORITY=$COMPUTEENVPRIORITY"
+
 
 	# reduce the last number to be more leniant about ip a ddresses, for example if a university has multiple IPs
 	#Get local public IPaddress https://askubuntu.com/questions/95910/command-for-determining-my-public-ip 
@@ -131,72 +140,69 @@ if [ $# -eq 9 ]; then
 	stackstatus=$(./getcloudformationstack.sh $STACKNAME)
 	if [ "$stackstatus" == "Stack exists" ]; then
 		SERVICEROLE=$(./getcloudformationstack.sh $STACKNAME BatchServiceRoleArn)
-		echo "Service Role: $SERVICEROLE"
+		echo "SERVICEROLE=$SERVICEROLE"
 		#TODO: check these aren't empty
 		IAMFLEETROLE=$(./getcloudformationstack.sh $STACKNAME SpotIamFleetRoleArn)
 		IAMFLEETROLE=arn:aws:iam::${ACCOUNTID}:role/${IAMFLEETROLE}
-		echo "Spot Fleet Role: $IAMFLEETROLE"
-		#JOBROLEARN=$(./getcloudformationstack.sh $STACKNAME ecsTaskRole)
+		echo "IAMFLEETROLE=$IAMFLEETROLE"
+		JOBROLEARN=$(./getcloudformationstack.sh $STACKNAME ECSTaskRole)
+		echo "JOBROLEARN=$JOBROLEARN"
 		
 		#INSTANCEROLE=$(./getcloudformationstack.sh $STACKNAME EcsInstanceRoleArn)
 		#INSTANCEROLE=arn:aws:iam::${ACCOUNTID}:role/${INSTANCEROLE}
 		INSTANCEROLE=$(./getcloudformationstack.sh $STACKNAME IamInstanceProfileArn)
 		INSTANCEROLE=arn:aws:iam::${ACCOUNTID}:instance-profile/${INSTANCEROLE}
-		echo "Instance Role: $INSTANCEROLE"
+		echo "INSTANCEROLE=$INSTANCEROLE"
 
 		#Note: creating a security group with IP rules?  See  Page 6 of Creating a new AMI
 		# allows security group creation for each instance?  Public for web facing, private for batch?
 		BASTIONSECURITYGROUP=$(./getcloudformationstack.sh $STACKNAME BastionSecurityGroup)
 		#BATCHSECURITYGROUP=$(./getcloudformationstack.sh $STACKNAME BatchSecurityGroup)  #TODO: change the json and this to have a name that returns a different value
 		BATCHSECURITYGROUP=$BASTIONSECURITYGROUP  #TODO delete this and uncomment later
-		echo "Bastion Security Group $BASTIONSECURITYGROUP"
+		echo "BASTIONSECURITYGROUP=$BASTIONSECURITYGROUP"
 		SUBNETS=$(./getcloudformationstack.sh $STACKNAME Subnet)  #replaced getsubnets
-		echo "subnets: $SUBNETS"
-
-
-		#######################################################################################
-		#TODO: AMI and EFS are tied together!!!!!!!!!!!! Check more thoroughly
-		#######################################################################################
+		echo "SUBNETS=$SUBNETS"
+		efsID=$(./getcloudformationstack.sh $STACKNAME FileSystemId)
 
 		#######################################################################################
-		#4.) Create Elastic Filesystem (EFS)
+		#3.) Create Elastic Filesystem (EFS)
 		#######################################################################################
-		EFSCREATIONTOKEN=${STACKNAME}-EFS
-		#EFSPERFORMANCEMODE defined in deployBLJBatchEnv.
-		EFSTHROUGHPUTMODE=bursting #or provisioned (seems expensive)
-		EFSENCRYPTEDMODE=--no-encrypted
-		EFSTAG=BLJEFSPerformanceMode
-		EFSTAGVALUE=$EFSPERFORMANCEMODE
+		# EFSCREATIONTOKEN=${STACKNAME}-EFS
+		# #EFSPERFORMANCEMODE defined in deployBLJBatchEnv.
+		# EFSTHROUGHPUTMODE=bursting #or provisioned (seems expensive)
+		# EFSENCRYPTEDMODE=--no-encrypted
+		# EFSTAG=BLJEFSPerformanceMode
+		# EFSTAGVALUE=$EFSPERFORMANCEMODE
 
-		efsID=$(./createEFS.sh describe $EFSCREATIONTOKEN)
-		efsexists=$(echo -n $efsID | wc -m)
-		#if the filesystem doesn't already exist, create it.
-		if [[ $efsexists -lt 1 ]]; then
-			efsID=$(./createEFS.sh \
-				create \
-				$EFSCREATIONTOKEN \
-				$EFSPERFORMANCEMODE \
-				$EFSTHROUGHPUTMODE \
-				$EFSENCRYPTEDMODE \
-				$EFSTAG \
-				$EFSTAGVALUE)
-			echo "Elastic Filesystem CREATED with id: $efsID"
-		else
-			echo "Elastic Filesystem already EXISTS with id: $efsID"
-		fi
+		# efsID=$(./createEFS.sh describe $EFSCREATIONTOKEN)
+		# efsexists=$(echo -n $efsID | wc -m)
+		# #if the filesystem doesn't already exist, create it.
+		# if [[ $efsexists -lt 1 ]]; then
+		# 	efsID=$(./createEFS.sh \
+		# 		create \
+		# 		$EFSCREATIONTOKEN \
+		# 		$EFSPERFORMANCEMODE \
+		# 		$EFSTHROUGHPUTMODE \
+		# 		$EFSENCRYPTEDMODE \
+		# 		$EFSTAG \
+		# 		$EFSTAGVALUE)
+		# 	echo "Elastic Filesystem CREATED with id: $efsID"
+		# else
+		# 	echo "Elastic Filesystem already EXISTS with id: $efsID"
+		# fi
 
-		efsSubnetTarget=$SUBNETS
-		efsSecurityGroupTarget=$BATCHSECURITYGROUP
+		# efsSubnetTarget=$SUBNETS
+		# efsSecurityGroupTarget=$BATCHSECURITYGROUP
 
-		mountoutput=$(./createEFS.sh createMountTarget \
-			$efsID \
-			$efsSubnetTarget \
-			$efsSecurityGroupTarget)
+		# mountoutput=$(./createEFS.sh createMountTarget \
+		# 	$efsID \
+		# 	$efsSubnetTarget \
+		# 	$efsSecurityGroupTarget)
 
         #######################################################################################
-		#3.) Check for AMI
+		#4.) Check for AMI
 		#######################################################################################
-		#3.a) Check if default AMI exists
+		#4.a) Check if default AMI exists
 		# if the default AMI is not found OR if the user has specified "no" as the DEFAULTAMI
 		# then a custom AMI will be created
 		imageIDStatus=$(./getec2images.sh $DEFAULTAMI status)
@@ -222,30 +228,32 @@ if [ $# -eq 9 ]; then
 			#image ID is the 6th column in the outputstring
 			imageID=$(echo $imageTagStatus | grep IMAGES | grep ami | awk '//{print $6}')
 		fi
+		echo imageID=$imageID
 
-		#modify the tag name to include EFS
-		efsImageTagValue=${IMAGETAGVALUE}TAG_EFS
-		imageTagStatus=$(./getec2images.sh tags $IMAGETAG $efsImageTagValue)
-		imageExistWordCount=$(echo -n $imageTagStatus | wc -m)
-		echo "CUSTOMAMIFOREFS: $CUSTOMAMIFOREFS"
-		echo "image exist wordcount: $imageExistWordCount"
-		if [[ $imageExistWordCount -gt 2 ]]; then
-			imageTagStatus=$(./getec2images.sh tags $IMAGETAG $efsImageTagValue)
-			imageID=$(echo $imageTagStatus | grep IMAGES | grep ami | awk '//{print $6}')
-			echo "EXISTING AMI with EFS: $imageID"
+		#4.b) Check if EFS AMI exists
+		# #modify the tag name to include EFS
+		# efsImageTagValue=${IMAGETAGVALUE}TAG_EFS
+		# imageTagStatus=$(./getec2images.sh tags $IMAGETAG $efsImageTagValue)
+		# imageExistWordCount=$(echo -n $imageTagStatus | wc -m)
+		# echo "CUSTOMAMIFOREFS: $CUSTOMAMIFOREFS"
+		# echo "image exist wordcount: $imageExistWordCount"
+		# if [[ $imageExistWordCount -gt 2 ]]; then
+		# 	imageTagStatus=$(./getec2images.sh tags $IMAGETAG $efsImageTagValue)
+		# 	imageID=$(echo $imageTagStatus | grep IMAGES | grep ami | awk '//{print $6}')
+		# 	echo "EXISTING AMI with EFS: $imageID"
 
-		elif [[ $CUSTOMAMIFOREFS == "yes" && $imageExistWordCount -lt 2 ]]; then
-			#use the last image as a template
-			echo "using EFS-enabled $imageID as template for changing fstab to mount file system..."
-			echo "..."
-			echo "..."
-			echo "..."
-			TEMPLATEIMAGEID=$imageID
-			./createAMI.sh $STACKNAME $TEMPLATEIMAGEID $INSTANCETYPEFORAMICREATION $KEYNAME 0 ${AMIIDENTIFIER}_EFS $STACKFILE $IMAGETAG $efsImageTagValue $SUBNETS $BASTIONSECURITYGROUP $MYPUBLICIPADDRESS fstabAMI.sh $efsID
-			imageTagStatus=$(./getec2images.sh tags $IMAGETAG $efsImageTagValue)
-			imageID=$(echo $imageTagStatus | grep IMAGES | grep ami | awk '//{print $6}')
-			echo "new EFS-enabled AMI with EFS: $imageID"
-		fi
+		# elif [[ $CUSTOMAMIFOREFS == "yes" && $imageExistWordCount -lt 2 ]]; then
+		# 	#use the last image as a template
+		# 	echo "using EFS-enabled $imageID as template for changing fstab to mount file system..."
+		# 	echo "..."
+		# 	echo "..."
+		# 	echo "..."
+		# 	TEMPLATEIMAGEID=$imageID
+		# 	./createAMI.sh $STACKNAME $TEMPLATEIMAGEID $INSTANCETYPEFORAMICREATION $KEYNAME 0 ${AMIIDENTIFIER}_EFS $STACKFILE $IMAGETAG $efsImageTagValue $SUBNETS $BASTIONSECURITYGROUP $MYPUBLICIPADDRESS fstabAMI.sh $efsID
+		# 	imageTagStatus=$(./getec2images.sh tags $IMAGETAG $efsImageTagValue)
+		# 	imageID=$(echo $imageTagStatus | grep IMAGES | grep ami | awk '//{print $6}')
+		# 	echo "new EFS-enabled AMI with EFS: $imageID"
+		# fi
 
 		#TODO: alternatively list available AMIs?
 
@@ -260,6 +268,11 @@ if [ $# -eq 9 ]; then
 		#TODO: need to put it in two security groups
 
 
+		LAUNCHTEMPLATEID=$(./getcloudformationstack.sh $STACKNAME LaunchTemplateId)
+		echo "LAUNCHTEMPLATEID=$LAUNCHTEMPLATEID"
+		#Name might be better to use later, will need to label it as an output under outputs! 
+		 #LaunchTemplateName=$(./getcloudformationstack.sh $STACKNAME LaunchTemplateName)
+
 
 		#######################################################################################
 		#5.) Create Batch Computing environment
@@ -269,12 +282,17 @@ if [ $# -eq 9 ]; then
 		# --compute-resources type=SPOT,minvCpus=0,maxvCpus=$MAXCPU,desiredvCpus=$DESIREDCPUS,instanceTypes=optimal,imageId=$imageID,subnets=$SUBNETS,securityGroupIds=$BATCHSECURITYGROUP,instanceRole=$INSTANCEROLE,bidPercentage=$SPOTPERCENT,spotIamFleetRole=$IAMFLEETROLE)
 		# sleep 10s
 		echo "creating compute environment: $COMPUTEENVIRONMENTNAME"
-		batchCreatOutput=$(aws batch create-compute-environment --compute-environment-name $COMPUTEENVIRONMENTNAME \
+		# batchCreatOutput=$(aws batch create-compute-environment --compute-environment-name $COMPUTEENVIRONMENTNAME \
+		# --type MANAGED --state ENABLED --service-role ${SERVICEROLE} \
+		# --compute-resources type=SPOT,minvCpus=0,maxvCpus=$MAXCPU,desiredvCpus=$DESIREDCPUS,instanceTypes=optimal,imageId=$imageID,subnets=$SUBNETS,securityGroupIds=$BATCHSECURITYGROUP,ec2KeyPair=$KEYNAME,instanceRole=$INSTANCEROLE,bidPercentage=$SPOTPERCENT,spotIamFleetRole=$IAMFLEETROLE)
+		batchCreateOutput=$(aws batch create-compute-environment --compute-environment-name $COMPUTEENVIRONMENTNAME \
 		--type MANAGED --state ENABLED --service-role ${SERVICEROLE} \
-		--compute-resources type=SPOT,minvCpus=0,maxvCpus=$MAXCPU,desiredvCpus=$DESIREDCPUS,instanceTypes=optimal,imageId=$imageID,subnets=$SUBNETS,securityGroupIds=$BATCHSECURITYGROUP,ec2KeyPair=$KEYNAME,instanceRole=$INSTANCEROLE,bidPercentage=$SPOTPERCENT,spotIamFleetRole=$IAMFLEETROLE)
+		--compute-resources type=SPOT,minvCpus=0,maxvCpus=$MAXCPU,desiredvCpus=$DESIREDCPUS,instanceTypes=optimal,imageId=$imageID,subnets=$SUBNETS,securityGroupIds=$BATCHSECURITYGROUP,ec2KeyPair=$KEYNAME,instanceRole=$INSTANCEROLE,bidPercentage=$SPOTPERCENT,spotIamFleetRole=$IAMFLEETROLE,launchTemplate={launchTemplateId=$LAUNCHTEMPLATEID})
 		echo "$batchOutput"
-		echo "$batchCreatOutput"
-		sleep 10s
+		echo "$batchCreateOutput"
+		./sleepProgressBar.sh 3 4
+
+
 		#######################################################################################
 		#5.) Create Job Queue
 		#######################################################################################
@@ -283,6 +301,22 @@ if [ $# -eq 9 ]; then
 			--priority $COMPUTEENVPRIORITY \
 			--state ENABLED)
 
+		echo $queueCreateOutput
+		#######################################################################################
+		#6.) Create Job Definition
+		#######################################################################################
+		JOBROLEARN=$JOBROLEARN
+		JOBDEFINITIONNAME=testJob3$JOBROLEARN
+		echo $JOBDEFINITIONNAME
+		JOBIMAGE=mjzapata2/ubuntu:latest
+		JOBVCPUS=8
+		JOBMEMORY=2000
+		echo "JOBROLEARN=$JOBROLEARN"
+
+		JobDefoutput=$(./createBatchJobDefinition.sh $JOBDEFINITIONNAME $JOBIMAGE $JOBROLEARN $JOBVCPUS $JOBMEMORY)
+		echo "JobDefoutput=$JobDefoutput"
+		#TODO: might ahve to work with revisions instead?
+		#TODO: assign more meaningful name elsewhere.  Maybe one job per type of clasifier/workload to run
 
 		#######################################################################################
 		#6.) Print success message
