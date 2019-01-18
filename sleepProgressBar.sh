@@ -14,6 +14,7 @@ if [ $# -eq 2 ]; then
 	     echo -n "."
 	     sleep $SLEEPINTERVAL
 	done
+	echo ""
 else
 	echo "wrong number of arguments"
 
