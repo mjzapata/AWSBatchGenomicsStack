@@ -134,6 +134,14 @@ Resources:
     Metadata:
       'AWS::CloudFormation::Designer':
         id: 87ccb9df-192a-4548-97f8-e7aa00fce39b
+  NetworkInterfaces:
+    Type: 'AWS::EC2::NetworkInterface'
+    Properties:
+      Description: "Network interface for Bastion Node"
+      SubnetId: !Ref Subnet
+      GroupSet:
+        - Ref: BatchSecurityGroup
+        - Ref: BastionSecurityGroup
   Route:
     Type: 'AWS::EC2::Route'
     Properties:
@@ -274,6 +282,7 @@ Resources:
             - mkdir -p ${!efs_directory}
             - echo "${!file_system_id_01}:/ ${!efs_directory} efs tls,_netdev" >> /etc/fstab
             - mount -a -t efs defaults
+            - sudo chown -R ec2-user:ec2-user /mnt/efs
             
             --==MYBOUNDARY==--
     Metadata:

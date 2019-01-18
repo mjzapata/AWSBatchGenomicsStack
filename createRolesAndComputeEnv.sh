@@ -46,7 +46,7 @@
 #NOTE: You get a maximum of 5 VPCS per region, each different stack name creates its own VPC
 SECONDS=0
 
-if [ $# -eq 9 ]; then
+if [ $# -eq 12 ]; then
 
 	STACKNAME=$1
 	COMPUTEENVIRONMENTNAME=$2
@@ -57,27 +57,34 @@ if [ $# -eq 9 ]; then
 	CUSTOMAMIFOREFS=$7
 	EBSVOLUMESIZEGB=$8
 	EFSPERFORMANCEMODE=$9
+	DOCKERREPOSEARCHSTRING=${10}
+	NEXTFLOWCONFIGOUTPUTDIRECTORY=${11}
+	S3BUCKETNAME=${12}
 	#VERBOSE=$7
 	#IMAGEID=$4
+	echo "STACKNAME=$STACKNAME"
 	echo "COMPUTEENVIRONMENTNAME=$COMPUTEENVIRONMENTNAME"
 	echo "QUEUENAME=$QUEUENAME"
 	echo "SPOTPERCENT=$SPOTPERCENT"
 	echo "MAXCPU=$MAXCPU"
 	echo "DEFAULTAMI=$DEFAULTAMI"
+	echo "DOCKERREPOSEARCHSTRING=$DOCKERREPOSEARCHSTRING"
+	echo "NEXTFLOWCONFIGOUTPUTDIRECTORY=$NEXTFLOWCONFIGOUTPUTDIRECTORY"
 
 	ACCOUNTID=$(./getawsaccountid.sh)
 	stackstatus=$(./getcloudformationstack.sh $STACKNAME)
 	DESIREDCPUS=0 #this is the minimum reserved CPUS.  Specifying more than 0 will waste money unless you are putting out batch jobs 24/7
 	echo "DESIREDCPUS=$DESIREDCPUS"
 
+	REGION=us-east-1 #US-EAST-1 only for right now.
 	#TODO: create a seperate script for the compute environment
+	#TODO: for S3 in regions outside us-east-1 https://docs.aws.amazon.com/cli/latest/reference/s3api/create-bucket.html 
 	#computeenvstatus=$()
 
 	#Global Parameters
 	KEYNAME=BioLockJKeyPairAMI
 	echo "KEYNAME=$KEYNAME"
-	#Stack Parameters
-	STACKFILE=BLJStackEFS.yml
+
 	#AMI Parameters
 	#this is only the instance type for creating AMIs
 	INSTANCETYPEFORAMICREATION=t2.micro  
@@ -94,14 +101,74 @@ if [ $# -eq 9 ]; then
 	COMPUTEENVPRIORITY=10
 	echo "COMPUTEENVPRIORITY=$COMPUTEENVPRIORITY"
 
+	#######################################################################################
+	#0.) S3 Bucket
+	# Check if S3 bucket with name beginning with $STACKNAME exists. If not, create it.
+	# Note: the S3 buckets must be GLOBALLY unique. A random string is appended to the stackname to make duplicates less probably
+	#
+	#######################################################################################
+	echo "----------------------------------------------------------------------"
+	echo "0.) S3 Bucket: "
+	echo "----------------------------------------------------------------------"
+	#TODO: rand generator not yet tested on LINUX:
+	#  -https://stackoverflow.com/questions/2793812/generate-a-random-filename-in-unix-shell 
+	#TODO: set more permissions
+	#$STACKNAME
+	#REGION
+	#S3BUCKETNAME
+	#check for BLJ bucket (TODO: turn this into a function)
+	echo "looking for bucket: $S3BUCKETNAME"
+	echo "forcing bucket names to lowercase"
+	STACKNAMELOWERCASE=$(echo "$STACKNAME" | tr '[:upper:]' '[:lower:]')
+	S3BUCKETNAME=$(echo "$S3BUCKETNAME" | tr '[:upper:]' '[:lower:]')
 
+	IFS=$'\t' #necessary to get tabs to parse correctly
+	if [[ $S3BUCKETNAME == 'autogenerate' ]]; then
+		nametocheck=$STACKNAMELOWERCASE
+		s3bucketlist="$(aws s3api list-buckets)"
+		matchingbucket=$(echo $s3bucketlist | grep BUCKETS | grep $nametocheck)
+		bucketexists=$(echo -n $matchingbucket | wc -m)
+		if [[ $bucketexists -gt 1 ]]; then
+			S3BUCKETNAME=$(echo $matchingbucket  | awk '//{print $3}')
+			echo "Bucket EXISTS with previously randomly generated name: $S3BUCKETNAME"
+		else
+			#create a new bucket with name $STACKNAMELOWERCASE followed by a random string
+			randlength=24
+			randstring=$(cat /dev/urandom | env LC_CTYPE=C tr -cd 'a-f0-9' | head -c $randlength)
+			S3BUCKETNAME=${STACKNAMELOWERCASE}-${randstring}
+			s3CreateString=$(aws s3api create-bucket --bucket $S3BUCKETNAME --region $REGION)
+			echo "Bucket CREATED with randomly generated name: $S3BUCKETNAME"
+			echo "$s3CreateString"
+		fi
+	else
+		nametocheck=$S3BUCKETNAME
+		s3bucketlist=$(aws s3api list-buckets)
+		# grep -w to check for an exact match for the bucketname
+		matchingbucket=$(echo $s3bucketlist | grep -w $nametocheck)
+		bucketexists=$(echo -n $matchingbucket | wc -m)
+		if [[ $bucketexists -gt 1 ]]; then
+			#S3BUCKETNAME=$(echo $matchingbucket  | awk '//{print $3}')
+			echo "matchingbucket named:  $matchingbucket"
+			echo "Bucket EXISTS with name: $S3BUCKETNAME"
+		else
+			s3CreateString=$(aws s3api create-bucket --bucket $S3BUCKETNAME --region $REGION)
+			echo "Bucket CREATED with name: $S3BUCKETNAME"
+			echo "$s3CreateString"
+		fi
+	fi
+	echo "S3BUCKETNAME=$S3BUCKETNAME"
+
+	#######################################################################################
+	#STACK and Cloudformation Parameters 
+	#######################################################################################
+	STACKFILE=BLJStackEFS.yml
 	# reduce the last number to be more leniant about ip a ddresses, for example if a university has multiple IPs
 	#Get local public IPaddress https://askubuntu.com/questions/95910/command-for-determining-my-public-ip 
 	# curl -s checkip.dyndns.org | sed -e 's/.*Current IP Address: //' -e 's/<.*$//'  
 	MYPUBLICIPADDRESS=$(curl -s checkip.dyndns.org | sed -e 's/.*Current IP Address: //' -e 's/<.*$//' )
 	MASK=32
 	MYPUBLICIPADDRESS=${MYPUBLICIPADDRESS}"/"${MASK}
-	echo "My Public IPAddress: $MYPUBLICIPADDRESS"
+	echo "MYPUBLICIPADDRESS=$MYPUBLICIPADDRESS"
 
 	#1.) Check for key and create if it doesn't exist.  This is a keypair for ssh into EC2.
 	./awskeypair.sh create $KEYNAME
@@ -113,26 +180,14 @@ if [ $# -eq 9 ]; then
 	#1.) check if stack exists
 	# If it doesn't, ask if you want to create it
 	#######################################################################################
+	echo "----------------------------------------------------------------------------------------------"
+	echo "1.) Deploy Cloudformation Stack  -------------------------------------------------------------"
+	echo "----------------------------------------------------------------------------------------------"
 	stackstatus=$(./getcloudformationstack.sh $STACKNAME)
 	if [ "$stackstatus" == "Stack exists" ]; then
 		echo $stackstatus
 	else
-		# while true; do
-  #   		read -p "Stack $STACKNAME does not exist. Do you want to create it?: " yn
-  #   		case $yn in
-  #       		[Yy]* ) ./createcloudformationstack.sh ${STACKNAME} $STACKFILE ParameterKey=\"NetworkAccessIP\",ParameterValue="$MYPUBLICIPADDRESS"; break;;
-  #       		[Nn]* ) exit;;
-  #       		* ) echo "Please answer yes or no.";;
-  #   		esac
-		#  done
 		./createcloudformationstack.sh ${STACKNAME} $STACKFILE ParameterKey=\"NetworkAccessIP\",ParameterValue="$MYPUBLICIPADDRESS"
-		#TODO: stack events https://docs.aws.amazon.com/cli/latest/reference/cloudformation/describe-stack-events.html
-		#https://www.tecmint.com/awk-print-fields-columns-with-space-separator/
-		#Bastion: https://github.com/bonusbits/cloudformation_templates/blob/master/infrastructure/archive/bastion.json
-
-		#echo $stackcreatedstatus 
-		#TODO: if the user doesn't want to create it,  
-		# then say that there are no suitable compute environments, or check for sutiable environments?
 	fi
 	#######################################################################################
 	#2.) check if stack exists once more
@@ -157,116 +212,16 @@ if [ $# -eq 9 ]; then
 		#Note: creating a security group with IP rules?  See  Page 6 of Creating a new AMI
 		# allows security group creation for each instance?  Public for web facing, private for batch?
 		BASTIONSECURITYGROUP=$(./getcloudformationstack.sh $STACKNAME BastionSecurityGroup)
-		#BATCHSECURITYGROUP=$(./getcloudformationstack.sh $STACKNAME BatchSecurityGroup)  #TODO: change the json and this to have a name that returns a different value
-		BATCHSECURITYGROUP=$BASTIONSECURITYGROUP  #TODO delete this and uncomment later
+		BATCHSECURITYGROUP=$(./getcloudformationstack.sh $STACKNAME BatchSecurityGroup)  #TODO: change the json and this to have a name that returns a different value
+		#BATCHSECURITYGROUP=$BASTIONSECURITYGROUP  #TODO delete this and uncomment later
+
+		SECURITYGROUPS="$BASTIONSECURITYGROUP,$BATCHSECURITYGROUP"
+
+		echo "BATCHSECURITYGROUP=$BATCHSECURITYGROUP"
 		echo "BASTIONSECURITYGROUP=$BASTIONSECURITYGROUP"
 		SUBNETS=$(./getcloudformationstack.sh $STACKNAME Subnet)  #replaced getsubnets
 		echo "SUBNETS=$SUBNETS"
 		efsID=$(./getcloudformationstack.sh $STACKNAME FileSystemId)
-
-		#######################################################################################
-		#3.) Create Elastic Filesystem (EFS)
-		#######################################################################################
-		# EFSCREATIONTOKEN=${STACKNAME}-EFS
-		# #EFSPERFORMANCEMODE defined in deployBLJBatchEnv.
-		# EFSTHROUGHPUTMODE=bursting #or provisioned (seems expensive)
-		# EFSENCRYPTEDMODE=--no-encrypted
-		# EFSTAG=BLJEFSPerformanceMode
-		# EFSTAGVALUE=$EFSPERFORMANCEMODE
-
-		# efsID=$(./createEFS.sh describe $EFSCREATIONTOKEN)
-		# efsexists=$(echo -n $efsID | wc -m)
-		# #if the filesystem doesn't already exist, create it.
-		# if [[ $efsexists -lt 1 ]]; then
-		# 	efsID=$(./createEFS.sh \
-		# 		create \
-		# 		$EFSCREATIONTOKEN \
-		# 		$EFSPERFORMANCEMODE \
-		# 		$EFSTHROUGHPUTMODE \
-		# 		$EFSENCRYPTEDMODE \
-		# 		$EFSTAG \
-		# 		$EFSTAGVALUE)
-		# 	echo "Elastic Filesystem CREATED with id: $efsID"
-		# else
-		# 	echo "Elastic Filesystem already EXISTS with id: $efsID"
-		# fi
-
-		# efsSubnetTarget=$SUBNETS
-		# efsSecurityGroupTarget=$BATCHSECURITYGROUP
-
-		# mountoutput=$(./createEFS.sh createMountTarget \
-		# 	$efsID \
-		# 	$efsSubnetTarget \
-		# 	$efsSecurityGroupTarget)
-
-        #######################################################################################
-		#4.) Check for AMI
-		#######################################################################################
-		#4.a) Check if default AMI exists
-		# if the default AMI is not found OR if the user has specified "no" as the DEFAULTAMI
-		# then a custom AMI will be created
-		imageIDStatus=$(./getec2images.sh $DEFAULTAMI status)
-		imageTagStatus=$(./getec2images.sh tags $IMAGETAG $IMAGETAGVALUE)
-		imageExistWordCount=$(echo -n $imageTagStatus | wc -m)
-		if [[ $imageIDStatus == "available" && $DEFAULTAMI != "no" ]]; then
-			echo "Found default BLJ image with ID: ${DEFAULTAMI}"
-			imageID=$DEFAULTAMI
-		elif [[ $imageExistWordCount -lt 2 ]]; then
-		#3.b)  Check if AMI with custom tags exists
-			#TODO: clean up the getec2images call. maybe rename functions
-			#If it doesn't exist ask if you want to create an AMI using the 
-			#if [ $imageIDStatus == "image not found" ]; then
-			while true; do
-	    		read -p "Image with tag: ${IMAGETAG}, value: ${IMAGETAGVALUE} does not exist. Do you want to create it?: " yn
-	    		case $yn in
-	        		[Yy]* ) ./createAMI.sh $STACKNAME $TEMPLATEIMAGEID $INSTANCETYPEFORAMICREATION $KEYNAME $EBSVOLUMESIZEGB $AMIIDENTIFIER $STACKFILE $IMAGETAG $IMAGETAGVALUE $SUBNETS $BASTIONSECURITYGROUP $MYPUBLICIPADDRESS configureEC2forAMI.sh; break;;
-	        		[Nn]* ) exit;;
-	        		* ) echo "Please answer yes or no.";;
-	    		esac
-			done
-			./createAMI.sh $STACKNAME $TEMPLATEIMAGEID $INSTANCETYPEFORAMICREATION $KEYNAME $EBSVOLUMESIZEGB $AMIIDENTIFIER $STACKFILE $IMAGETAG $IMAGETAGVALUE $SUBNETS $BASTIONSECURITYGROUP $MYPUBLICIPADDRESS configureEC2forAMI.sh
-			#image ID is the 6th column in the outputstring
-			imageID=$(echo $imageTagStatus | grep IMAGES | grep ami | awk '//{print $6}')
-		fi
-		echo imageID=$imageID
-
-		#4.b) Check if EFS AMI exists
-		# #modify the tag name to include EFS
-		# efsImageTagValue=${IMAGETAGVALUE}TAG_EFS
-		# imageTagStatus=$(./getec2images.sh tags $IMAGETAG $efsImageTagValue)
-		# imageExistWordCount=$(echo -n $imageTagStatus | wc -m)
-		# echo "CUSTOMAMIFOREFS: $CUSTOMAMIFOREFS"
-		# echo "image exist wordcount: $imageExistWordCount"
-		# if [[ $imageExistWordCount -gt 2 ]]; then
-		# 	imageTagStatus=$(./getec2images.sh tags $IMAGETAG $efsImageTagValue)
-		# 	imageID=$(echo $imageTagStatus | grep IMAGES | grep ami | awk '//{print $6}')
-		# 	echo "EXISTING AMI with EFS: $imageID"
-
-		# elif [[ $CUSTOMAMIFOREFS == "yes" && $imageExistWordCount -lt 2 ]]; then
-		# 	#use the last image as a template
-		# 	echo "using EFS-enabled $imageID as template for changing fstab to mount file system..."
-		# 	echo "..."
-		# 	echo "..."
-		# 	echo "..."
-		# 	TEMPLATEIMAGEID=$imageID
-		# 	./createAMI.sh $STACKNAME $TEMPLATEIMAGEID $INSTANCETYPEFORAMICREATION $KEYNAME 0 ${AMIIDENTIFIER}_EFS $STACKFILE $IMAGETAG $efsImageTagValue $SUBNETS $BASTIONSECURITYGROUP $MYPUBLICIPADDRESS fstabAMI.sh $efsID
-		# 	imageTagStatus=$(./getec2images.sh tags $IMAGETAG $efsImageTagValue)
-		# 	imageID=$(echo $imageTagStatus | grep IMAGES | grep ami | awk '//{print $6}')
-		# 	echo "new EFS-enabled AMI with EFS: $imageID"
-		# fi
-
-		#TODO: alternatively list available AMIs?
-
-		#TODO: add optional parameters at the end for subnet?  see README.md on how to do this...
-		#REGISTRY=
-		#REPO_URI= 725685564787.dkr.ecr.us-east-1.amazonaws.com/isaac
-		# Pass control
-		# give aaron list of paramaters
-		# make a checkbox for each item in a csv?
-
-		#TODO: removed ec2 keypair.... might need to put this back in???
-		#TODO: need to put it in two security groups
-
 
 		LAUNCHTEMPLATEID=$(./getcloudformationstack.sh $STACKNAME LaunchTemplateId)
 		echo "LAUNCHTEMPLATEID=$LAUNCHTEMPLATEID"
@@ -274,17 +229,61 @@ if [ $# -eq 9 ]; then
 		 #LaunchTemplateName=$(./getcloudformationstack.sh $STACKNAME LaunchTemplateName)
 
 
+        #######################################################################################
+		#3.) Check for AMI
 		#######################################################################################
-		#5.) Create Batch Computing environment
-		#######################################################################################
-		# batchCreatOutput=$(aws batch create-compute-environment --compute-environment-name $COMPUTEENVIRONMENTNAME \
-		# --type MANAGED --state ENABLED --service-role ${SERVICEROLE} \
-		# --compute-resources type=SPOT,minvCpus=0,maxvCpus=$MAXCPU,desiredvCpus=$DESIREDCPUS,instanceTypes=optimal,imageId=$imageID,subnets=$SUBNETS,securityGroupIds=$BATCHSECURITYGROUP,instanceRole=$INSTANCEROLE,bidPercentage=$SPOTPERCENT,spotIamFleetRole=$IAMFLEETROLE)
-		# sleep 10s
+		#3.a) Check if default AMI exists
+		# if the default AMI is not found OR if the user has specified "no" as the DEFAULTAMI
+		# then a custom AMI will be created
+		if [[ $DEFAULTAMI == "no" ]]; then
+			imageIDStatus="NA"
+		else
+			imageIDStatus=$(./getec2images.sh $DEFAULTAMI status)
+			echo "imageIDStatus=$imageIDStatus"
+			imageTagStatus=$(./getec2images.sh tags $IMAGETAG $IMAGETAGVALUE)
+			echo "imageTagStatus=$imageTagStatus"
+			imageExistWordCount=$(echo -n $imageTagStatus | wc -m)
+		fi
+
+		if [[ $imageIDStatus == "available" && $DEFAULTAMI != "no" ]]; then
+			echo "Found default BLJ image with ID: ${DEFAULTAMI}"
+			imageID=$DEFAULTAMI
+		elif [[ $imageExistWordCount -lt 2 ]]; then
+			echo "CREATING new AMI...."
+			EC2RUNARGUMENT="createAMI"
+			INSTANCENAME="CREATEAMI"
+		#3.b)  Check if AMI with custom tags exists
+			#TODO: clean up the getec2images call. maybe rename functions
+			#If it doesn't exist ask if you want to create an AMI using the 
+			#if [ $imageIDStatus == "image not found" ]; then
+			while true; do
+	    		read -p "Image with tag: ${IMAGETAG}, value: ${IMAGETAGVALUE} does not exist. Do you want to create it?: " yn
+	    		case $yn in
+	        		[Yy]* ) ./launchEC2.sh $STACKNAME $TEMPLATEIMAGEID $INSTANCETYPEFORAMICREATION $KEYNAME $EBSVOLUMESIZEGB $SUBNETS $BASTIONSECURITYGROUP \
+											$MYPUBLICIPADDRESS $INSTANCENAME $EC2RUNARGUMENT $LAUNCHTEMPLATEID configureEC2forAMI.sh \
+											$AMIIDENTIFIER $IMAGETAG $IMAGETAGVALUE; break;;
+	        		[Nn]* ) exit;;
+	        		* ) echo "Please answer yes or no.";;
+	    		esac
+			done
+			# ./launchEC2.sh $STACKNAME $TEMPLATEIMAGEID $INSTANCETYPEFORAMICREATION $KEYNAME $EBSVOLUMESIZEGB $SUBNETS $BASTIONSECURITYGROUP \
+			# 				$MYPUBLICIPADDRESS $INSTANCENAME $EC2RUNARGUMENT $LAUNCHTEMPLATEID configureEC2forAMI.sh \
+			# 				$AMIIDENTIFIER $IMAGETAG $IMAGETAGVALUE
+			#image ID is the 6th column in the outputstring
+			imageID=$(echo $imageTagStatus | grep IMAGES | grep ami | awk '//{print $6}')
+
+		fi
+		echo imageID=$imageID
+
+
+
+		################################################################################################
+		#4.) Create Batch Computing environment
+		####################################################################################################
+		echo "----------------------------------------------------------------------------------------------"
+		echo "4.) creating compute environment: $COMPUTEENVIRONMENTNAME       ------------------------------"
+		echo "----------------------------------------------------------------------------------------------"
 		echo "creating compute environment: $COMPUTEENVIRONMENTNAME"
-		# batchCreatOutput=$(aws batch create-compute-environment --compute-environment-name $COMPUTEENVIRONMENTNAME \
-		# --type MANAGED --state ENABLED --service-role ${SERVICEROLE} \
-		# --compute-resources type=SPOT,minvCpus=0,maxvCpus=$MAXCPU,desiredvCpus=$DESIREDCPUS,instanceTypes=optimal,imageId=$imageID,subnets=$SUBNETS,securityGroupIds=$BATCHSECURITYGROUP,ec2KeyPair=$KEYNAME,instanceRole=$INSTANCEROLE,bidPercentage=$SPOTPERCENT,spotIamFleetRole=$IAMFLEETROLE)
 		batchCreateOutput=$(aws batch create-compute-environment --compute-environment-name $COMPUTEENVIRONMENTNAME \
 		--type MANAGED --state ENABLED --service-role ${SERVICEROLE} \
 		--compute-resources type=SPOT,minvCpus=0,maxvCpus=$MAXCPU,desiredvCpus=$DESIREDCPUS,instanceTypes=optimal,imageId=$imageID,subnets=$SUBNETS,securityGroupIds=$BATCHSECURITYGROUP,ec2KeyPair=$KEYNAME,instanceRole=$INSTANCEROLE,bidPercentage=$SPOTPERCENT,spotIamFleetRole=$IAMFLEETROLE,launchTemplate={launchTemplateId=$LAUNCHTEMPLATEID})
@@ -302,21 +301,8 @@ if [ $# -eq 9 ]; then
 			--state ENABLED)
 
 		echo $queueCreateOutput
-		#######################################################################################
-		#6.) Create Job Definition
-		#######################################################################################
-		JOBROLEARN=$JOBROLEARN
-		JOBDEFINITIONNAME=testJob3$JOBROLEARN
-		echo $JOBDEFINITIONNAME
-		JOBIMAGE=mjzapata2/ubuntu:latest
-		JOBVCPUS=8
-		JOBMEMORY=2000
-		echo "JOBROLEARN=$JOBROLEARN"
+		
 
-		JobDefoutput=$(./createBatchJobDefinition.sh $JOBDEFINITIONNAME $JOBIMAGE $JOBROLEARN $JOBVCPUS $JOBMEMORY)
-		echo "JobDefoutput=$JobDefoutput"
-		#TODO: might ahve to work with revisions instead?
-		#TODO: assign more meaningful name elsewhere.  Maybe one job per type of clasifier/workload to run
 
 		#######################################################################################
 		#6.) Print success message
@@ -327,16 +313,52 @@ if [ $# -eq 9 ]; then
 		echo "BLJ Stack, AMI, and compute environment deployed in: $timeinminutes minutes ($SECONDS seconds)"
 		echo "----------------------------------------------------------------------------------------------"
 
-		#./printnextflowconfig.sh $imageID $QUEUENAME 
-		./printnextflowconfig.sh $imageID $QUEUENAME $efsID
+		#######################################################################################
+		#7.) Create Job Definition
+		# Create ONE Job defintion for ONE container
+		# The purpose of creating a seperate job definition to work with nextflow is that
+		# containers need to be declared as "priviledged" in order to mount EFS volumes.
+		# This script will have to be run for every job definition you wish to run
+		# and only re-run if you want to change the actual name of the IMAGE
+		# this will then output a new nextflow config file
+		# Note, the cpus and memory can be overridden at runtime in each nextflow process.
+		#######################################################################################
+		echo "----------------------------------------------------------------------------------------------"
+		echo "7.) Create Job Definition  -------------------------------------------------------------------"
+		echo "----------------------------------------------------------------------------------------------"
+		DOCKERRREPOVERSION="latest"
+		JOBVCPUS=2      #can be overridden at runtime
+		JOBMEMORY=1000	#can be overriden at runtime
+		#JOBDEFPREFIX=$(tr -s /: _ <<< "$DOCKERREPOSEARCHSTRING") #biolockj
+		# outputs two columns 
+		#DOCKER_IMAGE    JOBDEFINITION   Tab hack with awk
+		BLJBatchJobsDeployOutput=$(./deployBatchJobDefinitions.sh $DOCKERREPOSEARCHSTRING $DOCKERRREPOVERSION $JOBROLEARN $JOBVCPUS $JOBMEMORY $STACKNAME)  #$JOBDEFPREFIX
+		echo -e $BLJBatchJobsDeployOutput > ${NEXTFLOWCONFIGOUTPUTDIRECTORY}/JobDefinitions.tsv
+		awk -v OFS="\t" '$1=$1' ${NEXTFLOWCONFIGOUTPUTDIRECTORY}/JobDefinitions.tsv
+
+		echo "----------------------------------------------------------------------------------------------"
+		echo "----------------------------------------------------------------------------------------------"
+
+		#######################################################################################
+		#8.) Print Nextflow Config
+		#######################################################################################
+		echo "----------------------------------------------------------------------------------------------"
+		echo "8.) Print Nextflow Config   ------------------------------------------------------------------"
+		echo "----------------------------------------------------------------------------------------------"
+		echo "copy and paste this into a file named nextflow.config and change the values for accessKey and secretKey"
+		AWSACCESSKEY='mysecretaccesskeyid'
+		AWSSECRETKEY='mysecretkey'
+		nextflowconfig=$(./printnextflowconfig.sh $QUEUENAME $AWSACCESSKEY $AWSSECRETKEY)
+		
+		echo $nextflowconfig > "${NEXTFLOWCONFIGOUTPUTDIRECTORY}/nextflow.config"
 
 	else
 		echo "stack could not be found or created"
 	fi
 else
 	echo "Your command line contains $# arguments"
-	echo "usage: nine arguments: "
-	echo " ./createRolesAndComputeEnv.sh STACKNAME COMPUTEENVIRONMENTNAME SPOTPRICE QUEUENAME IMAGEIDNUM MAXCPU EBSVOLUMESIZEGB"
+	echo "usage: twelve arguments: "
+	echo " ./createRolesAndComputeEnv.sh STACKNAME COMPUTEENVIRONMENTNAME QUEUENAME SPOTPERCENT MAXCPU DEFAULTAMI CUSTOMAMIFOREFS EBSVOLUMESIZEGB EFSPERFORMANCEMODE DOCKERREPOSEARCHSTRING NEXTFLOWCONFIGOUTPUTDIRECTORY S3BUCKETNAME"
 
 fi
 
@@ -354,3 +376,4 @@ fi
 
 # ./createRolesAndComputeEnv.sh BLJStack1 BLJComputeEnvironment1 BLJQueue1 60 1024
 #TO READ: https://docs.aws.amazon.com/cli/latest/userguide/cli-ec2-sg.html#configuring-a-security-group
+

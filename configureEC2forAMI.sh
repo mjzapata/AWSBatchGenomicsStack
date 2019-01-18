@@ -27,6 +27,8 @@ sudo mkdir /docker_scratch
 sudo echo -e '/dev/xvdb1\t/docker_scratch\text4\tdefaults\t0\t0' | sudo tee -a /etc/fstab
 sudo mount -a
 
+dockerstoragesize=$(docker info | grep -i base)
+echo "Docker storage size now equals: $dockerstoragesize"
 
 sudo yum install -y wget
 wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh

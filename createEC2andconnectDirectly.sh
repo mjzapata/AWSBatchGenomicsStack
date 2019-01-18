@@ -51,6 +51,8 @@ EC2RunOutput=$(aws ec2 run-instances \
 	instanceHostName=$(./getinstance.sh $instanceID hostname)
 	echo "instanceHostName: $instanceHostName"
 
+	aws ec2 wait instance-running --instance-ids $instanceID
+
 	#join the instance to the right security group, 
 	aws ec2 modify-instance-attribute --instance-id $instanceID --groups $BASTIONSECURITYGROUP
 	# authorize ingress on that port
@@ -62,6 +64,7 @@ if [[ $ARGUMENT == "directconnect" ]]; then
 	ssh -o UserKnownHostsFile=/dev/null \
 		-o StrictHostKeyChecking=no \
 		-i ${KEYNAME}.pem ec2-user@${instanceIP}
+
 
 # elif [[ ARGUMENT == "runscript" ]]; then
 # 	ssh -o UserKnownHostsFile=/dev/null \

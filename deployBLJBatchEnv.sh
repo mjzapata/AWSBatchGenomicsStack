@@ -4,27 +4,40 @@
 #need to capture output from each step and check for success?
 #also check if there are currently any instances using any of these resources?
 
-STACKNAME=BLJStack36
-COMPUTEENVIRONMENTNAME=BLJComputeEnvironment36
-QUEUENAME=BLJQueue36
+ARGUMENT=$1
+
+STACKNAME=$2
+COMPUTEENVIRONMENTNAME=${STACKNAME}ComputeEnv
+QUEUENAME=${STACKNAME}Queue
 SPOTPERCENT=60
 MAXCPU=1024
-EBSVOLUMESIZEGB=30
-#hardcoded AMI value. set equal to "no" to create and use custom AMI size
-DEFAULTAMI=ami-021c52fde2e3ab958 #no
-#CREATENEWAMI=yes
-CUSTOMAMIFOREFS="no"
-EFSPERFORMANCEMODE=maxIO  #or generalPurpose 
+EBSVOLUMESIZEGB=0
 
-if [ $# -eq 1 ]; then
-    ARGUMENT=$1
+#hardcoded AMI value. set equal to "no" to create and use custom AMI size
+#DEFAULTAMI=no #no
+#DEFAULTAMI=ami-021c52fde2e3ab958 #no
+DEFAULTAMI=ami-05422e32bf76f947c
+
+CUSTOMAMIFOREFS="no"
+EFSPERFORMANCEMODE=maxIO  #or generalPurpose
+#DOCKERREPOSEARCHSTRING="biolockj/"
+DOCKERREPOSEARCHSTRING="mjzapata2/"
+
+#NEXTFLOWCONFIGOUTPUTDIRECTORY="$HOME/Documents/github/aws/BLJBatchAWS/nextflow/testnextflow"
+NEXTFLOWCONFIGOUTPUTDIRECTORY="./nextflow/testnextflow"
+mkdir -p $NEXTFLOWCONFIGOUTPUTDIRECTORY
+
+#S3 buckets will NOT be deleted when running "./deployBLJBatchEnv delete"
+S3BUCKETNAME=autogenerate #autogenerate #autogenerate is a keyword that creates a bucket named ${STACKNAME}{randomstring}, eg Stack1_oijergoi4itf94j94
+
+if [ $# -eq 2 ]; then
 
 	if [ "$ARGUMENT" == "create" ]; then
-	   ./createRolesAndComputeEnv.sh $STACKNAME $COMPUTEENVIRONMENTNAME $QUEUENAME $SPOTPERCENT $MAXCPU $DEFAULTAMI $CUSTOMAMIFOREFS $EBSVOLUMESIZEGB $EFSPERFORMANCEMODE
+	   ./createRolesAndComputeEnv.sh $STACKNAME $COMPUTEENVIRONMENTNAME $QUEUENAME $SPOTPERCENT $MAXCPU $DEFAULTAMI $CUSTOMAMIFOREFS $EBSVOLUMESIZEGB $EFSPERFORMANCEMODE $DOCKERREPOSEARCHSTRING $NEXTFLOWCONFIGOUTPUTDIRECTORY $S3BUCKETNAME
 
 	elif [ "$ARGUMENT" == "delete" ]; then
 
-        echo "this will take approximately two minutes"
+        echo "this will take approximately three minutes"
         echo "deleting $STACKNAME  $COMPUTEENVIRONMENTNAME $QUEUENAME"
         
         #delete queue
@@ -43,20 +56,20 @@ if [ $# -eq 1 ]; then
 
         #delete job definition
         # aws batch deregister-job-definition 
+        # get a list of all jobdefs that start with $STACKNAME
 
         aws cloudformation delete-stack --stack-name $STACKNAME
-        ./sleepProgressBar.sh 5 20
+        ./sleepProgressBar.sh 6 10
 
     else
         echo "set the name of your stack inside this script"
-        echo "Usage: ./deployBLJBatchEnv.sh create"
-        echo "Usage: ./deployBLJBatchEnv.sh delete"
+        echo "Usage: ./deployBLJBatchEnv.sh create STACKNAME"
+        echo "Usage: ./deployBLJBatchEnv.sh delete STACKNAME"
 
 	fi
 else
-    echo "set the name of your stack inside this script"
-    echo "Usage: ./deployBLJBatchEnv.sh create"
-    echo "Usage: ./deployBLJBatchEnv.sh delete"
+    echo "Usage: ./deployBLJBatchEnv.sh create STACKNAME"
+    echo "Usage: ./deployBLJBatchEnv.sh delete STACKNAME"
 fi
 
 

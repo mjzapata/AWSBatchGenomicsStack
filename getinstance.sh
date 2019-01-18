@@ -17,6 +17,33 @@ if [ $# -eq 2 ]; then
 			#echo $line
 			IFS=$'\t'
 			tmp=($line)
+			var="${tmp[12]}"
+			echo $var
+		done | paste -s -d, /dev/stdin
+
+	elif [ "$ARGUMENT" == "ipaddresspublic" ]; then
+	#11 hostname
+		#when IFS (reserved variable) is a value other than default, tmp=($roleline) gets parsed based on IFS
+		IFS=$'\n'
+		for line in $instances
+		do
+			#echo $line
+			IFS=$'\t'
+			tmp=($line)
+			var="${tmp[14]}"
+			echo $var
+		done | paste -s -d, /dev/stdin
+
+	#hostnamepublic
+	elif [ "$ARGUMENT" == "hostnamepublic" ]; then
+	#11 hostname
+		#when IFS (reserved variable) is a value other than default, tmp=($roleline) gets parsed based on IFS
+		IFS=$'\n'
+		for line in $instances
+		do
+			#echo $line
+			IFS=$'\t'
+			tmp=($line)
 			var="${tmp[13]}"
 			echo $var
 		done | paste -s -d, /dev/stdin
@@ -65,6 +92,20 @@ if [ $# -eq 2 ]; then
 			echo $var
 		done | paste -s -d, /dev/stdin
 
+	elif [ "$ARGUMENT" == "systemstatus" ]; then
+		#when IFS (reserved variable) is a value other than default, tmp=($roleline) gets parsed based on IFS
+		
+		instances=$(aws ec2 describe-instance-status --instance-ids $instanceID | grep "SYSTEMSTATUS")
+		
+		IFS=$'\n'
+		for line in $instances
+		do
+			#echo $line
+			IFS=$'\t'
+			tmp=($line)
+			var="${tmp[1]}"
+			echo $var
+		done | paste -s -d, /dev/stdin
 
 
 	else

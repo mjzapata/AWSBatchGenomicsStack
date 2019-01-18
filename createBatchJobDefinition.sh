@@ -23,39 +23,7 @@ if [[ $# -gt 4 && $# -lt 7 ]]; then
 	fi
 
 	#1.) Check for existence of JOBDEFINITIONNAME
-
-	jobdefwordcount=$(aws batch describe-job-definitions | grep JOBDEFINITIONS | grep ${JOBDEFINITIONNAME} | wc -m)
-
-	if [[ jobdefwordcount -gt 1 ]]; then
-		echo "JobDefinition exists"
-	else
-
-# 	echo "
-# JobDefinition:
-#   Type: AWS::Batch::JobDefinition
-#   Properties:
-#     Type: container
-#     JobDefinitionName: ${JOBDEFINITIONNAME}
-#     ContainerProperties:
-#       MountPoints:
-#         - ReadOnly: false
-#           SourceVolume: efs
-#           ContainerPath: /efs
-#       Volumes:
-#         - Host:
-#             SourcePath: /mnt/efs
-#           Name: efs
-#       Command:
-#         - ${COMMAND}
-#       JOBMEMORY: ${JOBMEMORY}
-#       Privileged: true
-#       JobRoleArn: ${JOBROLEARN}
-#       ReadonlyRootFilesystem: true
-#       Vcpus: ${JOBVCPUS}
-#       Image: ${JOBIMAGE}
-# " 
-	#containerProperties="{"image": "${JOBIMAGE}", "vcpus": $JOBVCPUS, "memory": $JOBMEMORY, "command": ["${COMMAND}"]}"
-
+	#instead of checking, just register a new definitino and it will export the revision number
 	CONTAINERPATH=/efs
 
 	VOLUMESOURCEPATH=/mnt/efs
@@ -93,7 +61,7 @@ echo ""
 	jobRegisterOutput=$(aws batch register-job-definition --job-definition-name $JOBDEFINITIONNAME --type container --container-properties "${containerProperties}")
 	echo $jobRegisterOutput
 
-	fi
+#	fi
 
 fi
 

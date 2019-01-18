@@ -1,2 +1,7 @@
 *.pem
 nextflow.config
+.nextflow*
+nextflow/testprintnextflow/
+nextflow/testmultipledownloadgzip/
+nextflow/testnextflow/
+
