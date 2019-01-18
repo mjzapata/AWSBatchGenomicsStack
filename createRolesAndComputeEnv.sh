@@ -82,7 +82,7 @@ if [ $# -eq 12 ]; then
 	#computeenvstatus=$()
 
 	#Global Parameters
-	KEYNAME=BioLockJKeyPairAMI
+	KEYNAME=${STACKNAME}KeyPair
 	echo "KEYNAME=$KEYNAME"
 
 	#AMI Parameters
