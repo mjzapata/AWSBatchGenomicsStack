@@ -7,6 +7,7 @@
 ARGUMENT=$1
 
 STACKNAME=$2
+KEYNAME=${STACKNAME}KeyPair
 COMPUTEENVIRONMENTNAME=${STACKNAME}ComputeEnv
 QUEUENAME=${STACKNAME}Queue
 SPOTPERCENT=40
@@ -33,7 +34,7 @@ S3BUCKETNAME=autogenerate #autogenerate #autogenerate is a keyword that creates 
 if [ $# -eq 2 ]; then
 
 	if [ "$ARGUMENT" == "create" ]; then
-	   ./createRolesAndComputeEnv.sh $STACKNAME $COMPUTEENVIRONMENTNAME $QUEUENAME $SPOTPERCENT $MAXCPU $DEFAULTAMI $CUSTOMAMIFOREFS $EBSVOLUMESIZEGB $EFSPERFORMANCEMODE $DOCKERREPOSEARCHSTRING $NEXTFLOWCONFIGOUTPUTDIRECTORY $S3BUCKETNAME
+	   ./createRolesAndComputeEnv.sh $STACKNAME $COMPUTEENVIRONMENTNAME $QUEUENAME $SPOTPERCENT $MAXCPU $DEFAULTAMI $CUSTOMAMIFOREFS $EBSVOLUMESIZEGB $EFSPERFORMANCEMODE $DOCKERREPOSEARCHSTRING $NEXTFLOWCONFIGOUTPUTDIRECTORY $KEYNAME $S3BUCKETNAME
 
 	elif [ "$ARGUMENT" == "delete" ]; then
 
@@ -60,6 +61,8 @@ if [ $# -eq 2 ]; then
 
         aws cloudformation delete-stack --stack-name $STACKNAME
         ./sleepProgressBar.sh 6 10
+
+        ./awskeypair.sh delete $KEYNAME
 
     else
         echo "set the name of your stack inside this script"

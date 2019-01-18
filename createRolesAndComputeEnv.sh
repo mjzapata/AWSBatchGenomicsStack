@@ -46,7 +46,7 @@
 #NOTE: You get a maximum of 5 VPCS per region, each different stack name creates its own VPC
 SECONDS=0
 
-if [ $# -eq 12 ]; then
+if [ $# -eq 13 ]; then
 
 	STACKNAME=$1
 	COMPUTEENVIRONMENTNAME=$2
@@ -59,10 +59,12 @@ if [ $# -eq 12 ]; then
 	EFSPERFORMANCEMODE=$9
 	DOCKERREPOSEARCHSTRING=${10}
 	NEXTFLOWCONFIGOUTPUTDIRECTORY=${11}
-	S3BUCKETNAME=${12}
+	KEYNAME=${12}
+	S3BUCKETNAME=${13}
 	#VERBOSE=$7
 	#IMAGEID=$4
 	echo "STACKNAME=$STACKNAME"
+	echo "KEYNAME=$KEYNAME"
 	echo "COMPUTEENVIRONMENTNAME=$COMPUTEENVIRONMENTNAME"
 	echo "QUEUENAME=$QUEUENAME"
 	echo "SPOTPERCENT=$SPOTPERCENT"
@@ -80,10 +82,6 @@ if [ $# -eq 12 ]; then
 	#TODO: create a seperate script for the compute environment
 	#TODO: for S3 in regions outside us-east-1 https://docs.aws.amazon.com/cli/latest/reference/s3api/create-bucket.html 
 	#computeenvstatus=$()
-
-	#Global Parameters
-	KEYNAME=${STACKNAME}KeyPair
-	echo "KEYNAME=$KEYNAME"
 
 	#AMI Parameters
 	#this is only the instance type for creating AMIs
