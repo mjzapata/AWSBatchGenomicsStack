@@ -27,7 +27,7 @@ if [[ $# -gt 5 ]]; then
 	IFS=$'\t' #necessary to get tabs to parse correctly
 	repoimagelist=$(echo $dockersearchoutput | awk '//{print $1}')
 	#DEPLOYJOBDEFINITIONSOUTPUT='STACKNAME=$STACKNAME'
-	DEPLOYJOBDEFINITIONSOUTPUT=""
+	#DEPLOYJOBDEFINITIONSOUTPUT=""
 	while read -r line; do
 	    #echo "Image: $JOBIMAGE"
 	    # a lot of bash trickery to get the job output format to work with Nextflow.
@@ -46,7 +46,7 @@ if [[ $# -gt 5 ]]; then
 		JobLineTrimmed=$(echo $JobLine | sed 's/^.*job-definition/job-definition:\//')
 		JOBDEFINITIONNAMEFULL=$(echo $JobLineTrimmed | awk '//{print $1}')
 
-		DEPLOYJOBDEFINITIONSOUTPUT=$(echo -e $DEPLOYJOBDEFINITIONSOUTPUT)'\n'$(echo -e ${JOBIMAGE}$' '${JOBDEFINITIONNAMEFULL})
+		DEPLOYJOBDEFINITIONSOUTPUT=$(echo -e $DEPLOYJOBDEFINITIONSOUTPUT)$(echo -e ${JOBIMAGE}$' '${JOBDEFINITIONNAMEFULL}'\n')
 
 	done <<< "$repoimagelist"
 	echo -e $DEPLOYJOBDEFINITIONSOUTPUT
