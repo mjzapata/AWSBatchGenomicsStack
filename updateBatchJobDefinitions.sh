@@ -12,9 +12,7 @@
 # process name must be unique.
 
 # OUTPUT: echo the image name and the 
-
 #TODO: test on single docker image
-
 
 if [[ $# -gt 5 ]]; then
 	DOCKERREPOSEARCHSTRING=$1
@@ -47,7 +45,7 @@ if [[ $# -gt 5 ]]; then
 		JobLine=$(echo $JobDefoutput | grep job-definition)
 		JobLineTrimmed=$(echo $JobLine | sed 's/^.*job-definition/job-definition:\//')
 		JOBDEFINITIONNAMEFULL=$(echo $JobLineTrimmed | awk '//{print $1}')
-		
+
 		DEPLOYJOBDEFINITIONSOUTPUT=$(echo -e $DEPLOYJOBDEFINITIONSOUTPUT)'\n'$(echo -e ${JOBIMAGE}$' '${JOBDEFINITIONNAMEFULL})
 
 	done <<< "$repoimagelist"

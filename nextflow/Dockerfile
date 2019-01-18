@@ -39,18 +39,13 @@ RUN apt-get update && apt-get install -y \
  python-tk 
 
 # AWS CLI
-RUN pip install awscli --upgrade --user
-
-
+RUN pip install awscli --upgrade
 # see https://blogs.oracle.com/java-platform-group/java-se-support-for-docker-cpu-and-memory-limits
 ENV NXF_OPTS='-XX:+UnlockExperimentalVMOptions -XX:+UseCGroupMemoryLimitForHeap' NXF_HOME=/.nextflow
 
+# download nextflow runtime
 RUN curl -s https://get.nextflow.io | bash && mv nextflow /usr/local/bin
-
-
-
-# download runtime
-#RUN mkdir /.nextflow
+RUN mkdir /.nextflow
 RUN chmod 755 /usr/local/bin/nextflow \
  && nextflow info
 
@@ -58,4 +53,5 @@ RUN chmod 755 /usr/local/bin/nextflow \
 # define the entry point TODO: what does the official nextflow docker say about entrypoint?
 #ENTRYPOINT ["/usr/local/bin/entry.sh"]
 ENTRYPOINT ["/bin/bash"]
+
 

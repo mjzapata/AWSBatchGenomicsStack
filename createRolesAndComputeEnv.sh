@@ -332,7 +332,7 @@ if [ $# -eq 12 ]; then
 		#JOBDEFPREFIX=$(tr -s /: _ <<< "$DOCKERREPOSEARCHSTRING") #biolockj
 		# outputs two columns 
 		#DOCKER_IMAGE    JOBDEFINITION   Tab hack with awk
-		BLJBatchJobsDeployOutput=$(./deployBatchJobDefinitions.sh $DOCKERREPOSEARCHSTRING $DOCKERRREPOVERSION $JOBROLEARN $JOBVCPUS $JOBMEMORY $STACKNAME)  #$JOBDEFPREFIX
+		BLJBatchJobsDeployOutput=$(./updateBatchJobDefinitions.sh $DOCKERREPOSEARCHSTRING $DOCKERRREPOVERSION $JOBROLEARN $JOBVCPUS $JOBMEMORY $STACKNAME)  #$JOBDEFPREFIX
 		echo -e $BLJBatchJobsDeployOutput > ${NEXTFLOWCONFIGOUTPUTDIRECTORY}/JobDefinitions.tsv
 		awk -v OFS="\t" '$1=$1' ${NEXTFLOWCONFIGOUTPUTDIRECTORY}/JobDefinitions.tsv
 
