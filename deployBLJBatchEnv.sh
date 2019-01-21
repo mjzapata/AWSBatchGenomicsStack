@@ -15,7 +15,7 @@ EBSVOLUMESIZEGB=0
 
 #hardcoded AMI value. set equal to "no" to create and use custom AMI size
 #DEFAULTAMI=no
-DEFAULTAMI=ami-01553712951d7a55b
+DEFAULTAMI=ami-02d58ee5a9193b8b2
 REGION=us-east-1
 
 CUSTOMAMIFOREFS="no"
@@ -77,10 +77,8 @@ if [ $# -eq 2 ]; then
 
         ./awskeypair.sh delete $KEYNAME ${AWSCONFIGOUTPUTDIRECTORY}
 
-
         rm $AWSCONFIGFILENAME
         rm ${NEXTFLOWCONFIGOUTPUTDIRECTORY}nextflow.config
-
 
     else
         echo "set the name of your stack inside this script"
@@ -93,5 +91,3 @@ else
     echo "Usage: ./deployBLJBatchEnv.sh create STACKNAME"
     echo "Usage: ./deployBLJBatchEnv.sh delete STACKNAME"
 fi
-
-
