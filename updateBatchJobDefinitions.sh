@@ -42,14 +42,15 @@ if [[ $# -gt 5 ]]; then
 	    JobDefoutput=$(./createBatchJobDefinition.sh $JOBDEFINITIONNAME $JOBIMAGE $JOBROLEARN $JOBVCPUS $JOBMEMORY)
 
 		IFS=$'\t'
+		OFS=$'\t'
 		JobLine=$(echo $JobDefoutput | grep job-definition)
 		JobLineTrimmed=$(echo $JobLine | sed 's/^.*job-definition/job-definition:\//')
 		JOBDEFINITIONNAMEFULL=$(echo $JobLineTrimmed | awk '//{print $1}')
 
-		DEPLOYJOBDEFINITIONSOUTPUT=$(echo -e $DEPLOYJOBDEFINITIONSOUTPUT)$(echo -e ${JOBIMAGE}$' '${JOBDEFINITIONNAMEFULL}'\n')
+		DEPLOYJOBDEFINITIONSOUTPUT=$(echo -e $DEPLOYJOBDEFINITIONSOUTPUT)'\n'$(echo -e ${JOBIMAGE}$' '${JOBDEFINITIONNAMEFULL})
 
 	done <<< "$repoimagelist"
-	echo -e $DEPLOYJOBDEFINITIONSOUTPUT
+	echo -e "$DEPLOYJOBDEFINITIONSOUTPUT"
 
 fi
 
