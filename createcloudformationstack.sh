@@ -15,7 +15,10 @@ if [ $# -eq 2 ]; then
 		--stack-name $STACKNAME \
 		--capabilities CAPABILITY_IAM)
 
+		echo "-----------------------------------------------------------------------------------------"
 		echo "Creating cloudformation stack $STACKNAME. this could take a few minutes..."
+		echo "https://console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks?filter=active"
+		echo "-----------------------------------------------------------------------------------------"
 		# wait loop to check for creating.  could take a few minutes
 		# Then "Stack exists"
 		stackstatus=$(./getcloudformationstack.sh $STACKNAME)

@@ -1,4 +1,6 @@
 #!/bin/bash
+#NOTE USED IN THE MAIN PIPELINE ANYMORE
+#ONLY HERE FOR Experimental purposes
 
 #TODO: mount properties and behavior
 # https://docs.aws.amazon.com/efs/latest/ug/mounting-fs-mount-cmd-general.html

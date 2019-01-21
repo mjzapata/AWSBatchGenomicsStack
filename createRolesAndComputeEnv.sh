@@ -43,10 +43,12 @@
 #TODO: create a random S3 bucket, try to keep it as empty as possible
 #TODO: make printnextflow more generic so it can be called with just a stackname?
 
+#TODO: hardcoded region in the progress of EC2 deployment and cloudformation
+
 #NOTE: You get a maximum of 5 VPCS per region, each different stack name creates its own VPC
 SECONDS=0
 
-if [ $# -eq 13 ]; then
+if [ $# -eq 16 ]; then
 
 	STACKNAME=$1
 	COMPUTEENVIRONMENTNAME=$2
@@ -58,34 +60,38 @@ if [ $# -eq 13 ]; then
 	EBSVOLUMESIZEGB=$8
 	EFSPERFORMANCEMODE=$9
 	DOCKERREPOSEARCHSTRING=${10}
-	NEXTFLOWCONFIGOUTPUTDIRECTORY=${11}
-	KEYNAME=${12}
-	S3BUCKETNAME=${13}
+	AWSCONFIGOUTPUTDIRECTORY=${11}
+	AWSCONFIGFILENAME=${12}
+	NEXTFLOWCONFIGOUTPUTDIRECTORY=${13}
+	REGION=${14}
+	KEYNAME=${15}
+	S3BUCKETNAME=${16}
 	#VERBOSE=$7
 	#IMAGEID=$4
-	echo "STACKNAME=$STACKNAME"
-	echo "KEYNAME=$KEYNAME"
-	echo "COMPUTEENVIRONMENTNAME=$COMPUTEENVIRONMENTNAME"
-	echo "QUEUENAME=$QUEUENAME"
-	echo "SPOTPERCENT=$SPOTPERCENT"
-	echo "MAXCPU=$MAXCPU"
-	echo "DEFAULTAMI=$DEFAULTAMI"
-	echo "DOCKERREPOSEARCHSTRING=$DOCKERREPOSEARCHSTRING"
-	echo "NEXTFLOWCONFIGOUTPUTDIRECTORY=$NEXTFLOWCONFIGOUTPUTDIRECTORY"
+	echo "STACKNAME=$STACKNAME" >> $AWSCONFIGFILENAME
+	echo "AWSCONFIGOUTPUTDIRECTORY=$AWSCONFIGOUTPUTDIRECTORY"  >> $AWSCONFIGFILENAME
+	echo "KEYNAME=$KEYNAME" >> $AWSCONFIGFILENAME
+	echo "COMPUTEENVIRONMENTNAME=$COMPUTEENVIRONMENTNAME"  >> $AWSCONFIGFILENAME
+	echo "QUEUENAME=$QUEUENAME"  >> $AWSCONFIGFILENAME
+	echo "SPOTPERCENT=$SPOTPERCENT"  >> $AWSCONFIGFILENAME
+	echo "EBSVOLUMESIZEGB=$EBSVOLUMESIZEGB" >> $AWSCONFIGFILENAME
+	echo "MAXCPU=$MAXCPU"  >> $AWSCONFIGFILENAME
+	echo "DEFAULTAMI=$DEFAULTAMI"  >> $AWSCONFIGFILENAME
+	echo "DOCKERREPOSEARCHSTRING=$DOCKERREPOSEARCHSTRING"  >> $AWSCONFIGFILENAME
+	echo "REGION=$REGION" >> $AWSCONFIGFILENAME
 
 	ACCOUNTID=$(./getawsaccountid.sh)
 	stackstatus=$(./getcloudformationstack.sh $STACKNAME)
 	DESIREDCPUS=0 #this is the minimum reserved CPUS.  Specifying more than 0 will waste money unless you are putting out batch jobs 24/7
-	echo "DESIREDCPUS=$DESIREDCPUS"
+	echo "DESIREDCPUS=$DESIREDCPUS" >> $AWSCONFIGFILENAME
 
-	REGION=us-east-1 #US-EAST-1 only for right now.
 	#TODO: create a seperate script for the compute environment
 	#TODO: for S3 in regions outside us-east-1 https://docs.aws.amazon.com/cli/latest/reference/s3api/create-bucket.html 
 	#computeenvstatus=$()
 
 	#AMI Parameters
 	#this is only the instance type for creating AMIs
-	INSTANCETYPEFORAMICREATION=t2.micro  
+	INSTANCETYPEFORAMICREATION=t2.micro 
 	TEMPLATEIMAGEID=ami-0b9a214f40c38d5eb  #latest as of 2018oct17
 	#EBSVOLUMESIZEGB="50"
 	#Additional identifiers for AMI
@@ -154,22 +160,23 @@ if [ $# -eq 13 ]; then
 			echo "$s3CreateString"
 		fi
 	fi
-	echo "S3BUCKETNAME=$S3BUCKETNAME"
+	echo "S3BUCKETNAME=$S3BUCKETNAME" >> $AWSCONFIGFILENAME
 
 	#######################################################################################
 	#STACK and Cloudformation Parameters 
 	#######################################################################################
 	STACKFILE=BLJStackEFS.yml
+	echo "STACKFILE=$STACKFILE" >> $AWSCONFIGFILENAME
 	# reduce the last number to be more leniant about ip a ddresses, for example if a university has multiple IPs
 	#Get local public IPaddress https://askubuntu.com/questions/95910/command-for-determining-my-public-ip 
 	# curl -s checkip.dyndns.org | sed -e 's/.*Current IP Address: //' -e 's/<.*$//'  
 	MYPUBLICIPADDRESS=$(curl -s checkip.dyndns.org | sed -e 's/.*Current IP Address: //' -e 's/<.*$//' )
 	MASK=32
 	MYPUBLICIPADDRESS=${MYPUBLICIPADDRESS}"/"${MASK}
-	echo "MYPUBLICIPADDRESS=$MYPUBLICIPADDRESS"
+	echo "MYPUBLICIPADDRESS=$MYPUBLICIPADDRESS" >> $AWSCONFIGFILENAME
 
 	#1.) Check for key and create if it doesn't exist.  This is a keypair for ssh into EC2.
-	./awskeypair.sh create $KEYNAME
+	./awskeypair.sh create $KEYNAME ${AWSCONFIGOUTPUTDIRECTORY}
 	#TODO: 1.a) also create secret access key: aws iam create-access-key --user-name  for nextflow login instead of SSH
 	#option to create and delete one of these on every run for extra security??????
 	#TODO: https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_access-keys.html#Using_CreateAccessKey_CLIAPI
@@ -193,19 +200,19 @@ if [ $# -eq 13 ]; then
 	stackstatus=$(./getcloudformationstack.sh $STACKNAME)
 	if [ "$stackstatus" == "Stack exists" ]; then
 		SERVICEROLE=$(./getcloudformationstack.sh $STACKNAME BatchServiceRoleArn)
-		echo "SERVICEROLE=$SERVICEROLE"
+		echo "SERVICEROLE=$SERVICEROLE" >> $AWSCONFIGFILENAME
 		#TODO: check these aren't empty
 		IAMFLEETROLE=$(./getcloudformationstack.sh $STACKNAME SpotIamFleetRoleArn)
 		IAMFLEETROLE=arn:aws:iam::${ACCOUNTID}:role/${IAMFLEETROLE}
-		echo "IAMFLEETROLE=$IAMFLEETROLE"
+		echo "IAMFLEETROLE=$IAMFLEETROLE" >> $AWSCONFIGFILENAME
 		JOBROLEARN=$(./getcloudformationstack.sh $STACKNAME ECSTaskRole)
-		echo "JOBROLEARN=$JOBROLEARN"
+		echo "JOBROLEARN=$JOBROLEARN" >> $AWSCONFIGFILENAME
 		
 		#INSTANCEROLE=$(./getcloudformationstack.sh $STACKNAME EcsInstanceRoleArn)
 		#INSTANCEROLE=arn:aws:iam::${ACCOUNTID}:role/${INSTANCEROLE}
 		INSTANCEROLE=$(./getcloudformationstack.sh $STACKNAME IamInstanceProfileArn)
 		INSTANCEROLE=arn:aws:iam::${ACCOUNTID}:instance-profile/${INSTANCEROLE}
-		echo "INSTANCEROLE=$INSTANCEROLE"
+		echo "INSTANCEROLE=$INSTANCEROLE" >> $AWSCONFIGFILENAME
 
 		#Note: creating a security group with IP rules?  See  Page 6 of Creating a new AMI
 		# allows security group creation for each instance?  Public for web facing, private for batch?
@@ -215,14 +222,14 @@ if [ $# -eq 13 ]; then
 
 		SECURITYGROUPS="$BASTIONSECURITYGROUP,$BATCHSECURITYGROUP"
 
-		echo "BATCHSECURITYGROUP=$BATCHSECURITYGROUP"
-		echo "BASTIONSECURITYGROUP=$BASTIONSECURITYGROUP"
+		echo "BATCHSECURITYGROUP=$BATCHSECURITYGROUP" >> $AWSCONFIGFILENAME
+		echo "BASTIONSECURITYGROUP=$BASTIONSECURITYGROUP" >> $AWSCONFIGFILENAME
 		SUBNETS=$(./getcloudformationstack.sh $STACKNAME Subnet)  #replaced getsubnets
-		echo "SUBNETS=$SUBNETS"
+		echo "SUBNETS=$SUBNETS" >> $AWSCONFIGFILENAME
 		efsID=$(./getcloudformationstack.sh $STACKNAME FileSystemId)
 
 		LAUNCHTEMPLATEID=$(./getcloudformationstack.sh $STACKNAME LaunchTemplateId)
-		echo "LAUNCHTEMPLATEID=$LAUNCHTEMPLATEID"
+		echo "LAUNCHTEMPLATEID=$LAUNCHTEMPLATEID" >> $AWSCONFIGFILENAME
 		#Name might be better to use later, will need to label it as an output under outputs! 
 		 #LaunchTemplateName=$(./getcloudformationstack.sh $STACKNAME LaunchTemplateName)
 
@@ -234,9 +241,9 @@ if [ $# -eq 13 ]; then
 		# if the default AMI is not found OR if the user has specified "no" as the DEFAULTAMI
 		# then a custom AMI will be created
 		if [[ $DEFAULTAMI == "no" ]]; then
-			imageIDStatus="NA"
+			IMAGEIDStatus="NA"
 		else
-			imageIDStatus=$(./getec2images.sh $DEFAULTAMI status)
+			IMAGEIDDStatus=$(./getec2images.sh $DEFAULTAMI status)
 			echo "imageIDStatus=$imageIDStatus"
 			imageTagStatus=$(./getec2images.sh tags $IMAGETAG $IMAGETAGVALUE)
 			echo "imageTagStatus=$imageTagStatus"
@@ -245,11 +252,12 @@ if [ $# -eq 13 ]; then
 
 		if [[ $imageIDStatus == "available" && $DEFAULTAMI != "no" ]]; then
 			echo "Found default BLJ image with ID: ${DEFAULTAMI}"
-			imageID=$DEFAULTAMI
+			IMAGEID=$DEFAULTAMI
 		elif [[ $imageExistWordCount -lt 2 ]]; then
 			echo "CREATING new AMI...."
 			EC2RUNARGUMENT="createAMI"
 			INSTANCENAME="CREATEAMI"
+			COPYCONFIG=no
 		#3.b)  Check if AMI with custom tags exists
 			#TODO: clean up the getec2images call. maybe rename functions
 			#If it doesn't exist ask if you want to create an AMI using the 
@@ -258,7 +266,7 @@ if [ $# -eq 13 ]; then
 	    		read -p "Image with tag: ${IMAGETAG}, value: ${IMAGETAGVALUE} does not exist. Do you want to create it?: " yn
 	    		case $yn in
 	        		[Yy]* ) ./launchEC2.sh $STACKNAME $TEMPLATEIMAGEID $INSTANCETYPEFORAMICREATION $KEYNAME $EBSVOLUMESIZEGB $SUBNETS $BASTIONSECURITYGROUP \
-											$MYPUBLICIPADDRESS $INSTANCENAME $EC2RUNARGUMENT $LAUNCHTEMPLATEID configureEC2forAMI.sh \
+											$INSTANCENAME $EC2RUNARGUMENT $LAUNCHTEMPLATEID $COPYCONFIG configureEC2forAMI.sh \
 											$AMIIDENTIFIER $IMAGETAG $IMAGETAGVALUE; break;;
 	        		[Nn]* ) exit;;
 	        		* ) echo "Please answer yes or no.";;
@@ -268,10 +276,10 @@ if [ $# -eq 13 ]; then
 			# 				$MYPUBLICIPADDRESS $INSTANCENAME $EC2RUNARGUMENT $LAUNCHTEMPLATEID configureEC2forAMI.sh \
 			# 				$AMIIDENTIFIER $IMAGETAG $IMAGETAGVALUE
 			#image ID is the 6th column in the outputstring
-			imageID=$(echo $imageTagStatus | grep IMAGES | grep ami | awk '//{print $6}')
+			IMAGEID=$(echo $imageTagStatus | grep IMAGES | grep ami | awk '//{print $6}')
 
 		fi
-		echo imageID=$imageID
+		echo "IMAGEID=$IMAGEID" >> $AWSCONFIGFILENAME
 
 
 
@@ -284,7 +292,7 @@ if [ $# -eq 13 ]; then
 		echo "creating compute environment: $COMPUTEENVIRONMENTNAME"
 		batchCreateOutput=$(aws batch create-compute-environment --compute-environment-name $COMPUTEENVIRONMENTNAME \
 		--type MANAGED --state ENABLED --service-role ${SERVICEROLE} \
-		--compute-resources type=SPOT,minvCpus=0,maxvCpus=$MAXCPU,desiredvCpus=$DESIREDCPUS,instanceTypes=optimal,imageId=$imageID,subnets=$SUBNETS,securityGroupIds=$BATCHSECURITYGROUP,ec2KeyPair=$KEYNAME,instanceRole=$INSTANCEROLE,bidPercentage=$SPOTPERCENT,spotIamFleetRole=$IAMFLEETROLE,launchTemplate={launchTemplateId=$LAUNCHTEMPLATEID})
+		--compute-resources type=SPOT,minvCpus=0,maxvCpus=$MAXCPU,desiredvCpus=$DESIREDCPUS,instanceTypes=optimal,imageId=$IMAGEID,subnets=$SUBNETS,securityGroupIds=$BATCHSECURITYGROUP,ec2KeyPair=$KEYNAME,instanceRole=$INSTANCEROLE,bidPercentage=$SPOTPERCENT,spotIamFleetRole=$IAMFLEETROLE,launchTemplate={launchTemplateId=$LAUNCHTEMPLATEID})
 		echo "$batchOutput"
 		echo "$batchCreateOutput"
 		./sleepProgressBar.sh 3 4
@@ -300,7 +308,6 @@ if [ $# -eq 13 ]; then
 
 		echo $queueCreateOutput
 		
-
 
 		#######################################################################################
 		#6.) Print success message
@@ -332,8 +339,8 @@ if [ $# -eq 13 ]; then
 		#DOCKER_IMAGE    JOBDEFINITION   Tab hack with awk
 		BLJBatchJobsDeployOutput=$(./updateBatchJobDefinitions.sh $DOCKERREPOSEARCHSTRING $DOCKERRREPOVERSION $JOBROLEARN $JOBVCPUS $JOBMEMORY $STACKNAME)  #$JOBDEFPREFIX
 		echo -e "$BLJBatchJobsDeployOutput"
-		echo -e $BLJBatchJobsDeployOutput > ${NEXTFLOWCONFIGOUTPUTDIRECTORY}/JobDefinitions.tsv
-		awk -v OFS="\t" '$1=$1' ${NEXTFLOWCONFIGOUTPUTDIRECTORY}/JobDefinitions.tsv
+		echo -e $BLJBatchJobsDeployOutput > ${AWSCONFIGOUTPUTDIRECTORY}${STACKNAME}JobDefinitions.tsv
+		awk -v OFS="\t" '$1=$1' ${AWSCONFIGOUTPUTDIRECTORY}${STACKNAME}JobDefinitions.tsv
 
 		echo "----------------------------------------------------------------------------------------------"
 		echo "----------------------------------------------------------------------------------------------"
@@ -349,15 +356,15 @@ if [ $# -eq 13 ]; then
 		AWSSECRETKEY='mysecretkey'
 		nextflowconfig=$(./printnextflowconfig.sh $QUEUENAME $AWSACCESSKEY $AWSSECRETKEY)
 		
-		echo $nextflowconfig > "${NEXTFLOWCONFIGOUTPUTDIRECTORY}/nextflow.config"
+		echo $nextflowconfig > "${NEXTFLOWCONFIGOUTPUTDIRECTORY}nextflow.config"
 
 	else
 		echo "stack could not be found or created"
 	fi
 else
 	echo "Your command line contains $# arguments"
-	echo "usage: twelve arguments: "
-	echo " ./createRolesAndComputeEnv.sh STACKNAME COMPUTEENVIRONMENTNAME QUEUENAME SPOTPERCENT MAXCPU DEFAULTAMI CUSTOMAMIFOREFS EBSVOLUMESIZEGB EFSPERFORMANCEMODE DOCKERREPOSEARCHSTRING NEXTFLOWCONFIGOUTPUTDIRECTORY S3BUCKETNAME"
+	echo "usage: sixteen arguments: "
+	echo " ./createRolesAndComputeEnv.sh STACKNAME COMPUTEENVIRONMENTNAME QUEUENAME SPOTPERCENT MAXCPU DEFAULTAMI CUSTOMAMIFOREFS EBSVOLUMESIZEGB EFSPERFORMANCEMODE DOCKERREPOSEARCHSTRING AWSCONFIGOUTPUTDIRECTORY S3BUCKETNAME"
 
 fi
 

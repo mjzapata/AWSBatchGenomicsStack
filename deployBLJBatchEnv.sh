@@ -7,7 +7,6 @@
 ARGUMENT=$1
 
 STACKNAME=$2
-KEYNAME=${STACKNAME}KeyPair
 COMPUTEENVIRONMENTNAME=${STACKNAME}ComputeEnv
 QUEUENAME=${STACKNAME}Queue
 SPOTPERCENT=40
@@ -18,6 +17,7 @@ EBSVOLUMESIZEGB=0
 #DEFAULTAMI=no #no
 #DEFAULTAMI=ami-021c52fde2e3ab958 #no
 DEFAULTAMI=ami-05422e32bf76f947c
+REGION=us-east-1
 
 CUSTOMAMIFOREFS="no"
 EFSPERFORMANCEMODE=maxIO  #or generalPurpose
@@ -25,16 +25,30 @@ EFSPERFORMANCEMODE=maxIO  #or generalPurpose
 DOCKERREPOSEARCHSTRING="mjzapata2/"
 
 #NEXTFLOWCONFIGOUTPUTDIRECTORY="$HOME/Documents/github/aws/BLJBatchAWS/nextflow/testnextflow"
-NEXTFLOWCONFIGOUTPUTDIRECTORY="./nextflow/testnextflow"
-mkdir -p $NEXTFLOWCONFIGOUTPUTDIRECTORY
+NEXTFLOWCONFIGOUTPUTDIRECTORY=~/.nextflow/
+
+AWSCONFIGOUTPUTDIRECTORY=~/.aws/
+mkdir -p $AWSCONFIGOUTPUTDIRECTORY
+KEYNAME=${STACKNAME}KeyPair
+
+#Can check if this file already exists before proceeding?
+AWSCONFIGFILENAME=${AWSCONFIGOUTPUTDIRECTORY}${STACKNAME}.sh
+echo "AWSCONFIGFILENAME=$AWSCONFIGFILENAME"
 
 #S3 buckets will NOT be deleted when running "./deployBLJBatchEnv delete"
-S3BUCKETNAME=autogenerate #autogenerate #autogenerate is a keyword that creates a bucket named ${STACKNAME}{randomstring}, eg Stack1_oijergoi4itf94j94
+#autogenerate is a keyword that creates a bucket named ${STACKNAME}{randomstring}, eg Stack1_oijergoi4itf94j94
+S3BUCKETNAME=autogenerate
 
 if [ $# -eq 2 ]; then
 
 	if [ "$ARGUMENT" == "create" ]; then
-	   ./createRolesAndComputeEnv.sh $STACKNAME $COMPUTEENVIRONMENTNAME $QUEUENAME $SPOTPERCENT $MAXCPU $DEFAULTAMI $CUSTOMAMIFOREFS $EBSVOLUMESIZEGB $EFSPERFORMANCEMODE $DOCKERREPOSEARCHSTRING $NEXTFLOWCONFIGOUTPUTDIRECTORY $KEYNAME $S3BUCKETNAME
+        touch "$AWSCONFIGFILENAME"
+        echo "#!/bin/bash" > $AWSCONFIGFILENAME
+        echo "" >> $AWSCONFIGFILENAME
+
+	   ./createRolesAndComputeEnv.sh $STACKNAME $COMPUTEENVIRONMENTNAME $QUEUENAME $SPOTPERCENT $MAXCPU \
+                $DEFAULTAMI $CUSTOMAMIFOREFS $EBSVOLUMESIZEGB $EFSPERFORMANCEMODE $DOCKERREPOSEARCHSTRING \
+                $AWSCONFIGOUTPUTDIRECTORY $AWSCONFIGFILENAME $NEXTFLOWCONFIGOUTPUTDIRECTORY $REGION $KEYNAME $S3BUCKETNAME
 
 	elif [ "$ARGUMENT" == "delete" ]; then
 
@@ -62,7 +76,11 @@ if [ $# -eq 2 ]; then
         aws cloudformation delete-stack --stack-name $STACKNAME
         ./sleepProgressBar.sh 6 10
 
-        ./awskeypair.sh delete $KEYNAME
+        ./awskeypair.sh delete ${AWSCONFIGOUTPUTDIRECTORY}$KEYNAME
+
+
+        rm $AWSCONFIGFILENAME
+
 
     else
         echo "set the name of your stack inside this script"
@@ -70,6 +88,7 @@ if [ $# -eq 2 ]; then
         echo "Usage: ./deployBLJBatchEnv.sh delete STACKNAME"
 
 	fi
+
 else
     echo "Usage: ./deployBLJBatchEnv.sh create STACKNAME"
     echo "Usage: ./deployBLJBatchEnv.sh delete STACKNAME"

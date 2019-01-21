@@ -19,8 +19,6 @@ process {
     queue = $QUEUENAME
 }
 aws {
-    accessKey = '$AWSACCESSKEY'
-    secretKey = '$AWSSECRETKEY'
     region = 'us-east-1'
 }
 "

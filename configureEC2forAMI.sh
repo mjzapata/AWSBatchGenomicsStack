@@ -43,3 +43,7 @@ $HOME/miniconda/bin/aws --version
 sudo stop ecs
 sudo rm -rf /var/lib/ecs/data/ecs_agent_data.json
 
+
+
+
+

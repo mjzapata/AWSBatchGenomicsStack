@@ -5,9 +5,10 @@
 #TODO: count number of arguments!!!
 
 # Use this template image to create the BLJ image with more EBS memory
-#TODO: MYPUBLICIPADDRESSNOTCURRENTLYUSED
 #TODO: this script is called sevearl times from createRolesAndComputeEnv.sh
 # Argument 14 is an overload argument. WATCH OUT.
+
+#TODO: Massively simplify this
 
 if [ $# -gt 8 ]; then
 
@@ -21,10 +22,10 @@ if [ $# -gt 8 ]; then
 	EBSVOLUMESIZEGB=$5
 	SUBNETS=$6
 	SECURITYGROUPS=$7
-	MYPUBLICIPADDRESS=$8
-	INSTANCENAME=$9
-	EC2RUNARGUMENT=${10}
-	LAUNCHTEMPLATEID=${11}
+	INSTANCENAME=$8
+	EC2RUNARGUMENT=${9}
+	LAUNCHTEMPLATEID=${10}
+	AWSCONFIGFILENAME=${11}
 	SCRIPTNAME=${12}
 	AMIIDENTIFIER=${13}
 	IMAGETAG=${14}
@@ -33,7 +34,7 @@ if [ $# -gt 8 ]; then
 
 	#replace comma of Security groups with spaces
 	SECURITYGROUPS=`echo "$SECURITYGROUPS" | tr ',' ' '`
-
+	echo "SECURITYGROUPS=$SECURITYGROUPS"
 	#run EC2 instances: https://docs.aws.amazon.com/cli/latest/reference/ec2/run-instances.html
 	# https://docs.aws.amazon.com/cli/latest/userguide/cli-ec2-launch.html
 	if [[ $EBSVOLUMESIZEGB > 1 ]]; then
@@ -72,13 +73,17 @@ if [ $# -gt 8 ]; then
 
 	# Progress can be seen here: 	# https://console.aws.amazon.com/ec2/v2/home?region=us-east-1#Instances:sort=instanceId
 	AWSREGION=$(aws configure get region)
-	echo "-------------------------------------------------------"
+	echo "-----------------------------------------------------------------------------------------"
 	echo "Instance state progress can be seen here:"
 	echo "https://console.aws.amazon.com/ec2/v2/home?region=${AWSREGION}#Instances:sort=instanceId"
-	echo "-------------------------------------------------------"
+	echo "-----------------------------------------------------------------------------------------"
 
 	#get instance status and wait for it to run
 	# RUNNING or ???  TERMINATED  (actually returns nothing) second row third column
+
+	echo "AWSCONFIGFILENAME=$AWSCONFIGFILENAME"
+	source $AWSCONFIGFILENAME
+
 	systemstatus=$(./getinstance.sh $instanceID systemstatus)
 	systemtime=0
 	echo "Starting EC2 instance. This will take a few minutes: "
@@ -105,6 +110,23 @@ if [ $# -gt 8 ]; then
 	echo "instanceHostNamePublic=$instanceHostNamePublic"
 
 
+	if [ $AWSCONFIGFILENAME != "no" ]; then
+		#AWSCONFIGOUTPUTDIRECTORY=~/.aws
+		echo "AWSCONFIGOUTPUTDIRECTORY=$AWSCONFIGOUTPUTDIRECTORY"
+		ssh ec2-user@${instanceHostNamePublic} -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no "mkdir -p /home/ec2-user/.aws/"
+		ssh ec2-user@${instanceHostNamePublic} -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no "mkdir -p /home/ec2-user/.nextflow/"
+		echo "made remote directories"
+		scp -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no $AWSCONFIGFILENAME ec2-user@${instanceHostNamePublic}:/home/ec2-user/.aws/
+		scp -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no ${AWSCONFIGOUTPUTDIRECTORY}BLJStack52KeyPair.pem ec2-user@${instanceHostNamePublic}:/home/ec2-user/.aws/
+		scp -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no ${AWSCONFIGOUTPUTDIRECTORY}BLJStack52JobDefinitions.tsv ec2-user@${instanceHostNamePublic}:/home/ec2-user/.aws/
+		scp -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no ${AWSCONFIGOUTPUTDIRECTORY}config ec2-user@${instanceHostNamePublic}:/home/ec2-user/.aws/
+		scp -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no ${AWSCONFIGOUTPUTDIRECTORY}credentials ec2-user@${instanceHostNamePublic}:/home/ec2-user/.aws/
+
+		scp -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no ~/.nextflow/nextflow.config ec2-user@${instanceHostNamePublic}:/home/ec2-user/.nextflow/
+
+		#TODO: change absolute paths
+	fi
+
 	#6.) SSH into the host and run the configure script then close it and create an AMI based on this image
 		# ssh trick to not check host keyfile https://linuxcommando.blogspot.com/2008/10/how-to-disable-ssh-host-key-checking.html
 		#  -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no
@@ -118,7 +140,7 @@ if [ $# -gt 8 ]; then
 		echo "instance running..."
 		ssh -o UserKnownHostsFile=/dev/null \
 			-o StrictHostKeyChecking=no \
-			-i ${KEYNAME}.pem ec2-user@${instanceHostNamePublic} \
+			ec2-user@${instanceHostNamePublic} \
 			'bash -s' < ./${SCRIPTNAME}
 
 	###########################################################
@@ -126,7 +148,7 @@ if [ $# -gt 8 ]; then
 	###########################################################
 	elif [[ $EC2RUNARGUMENT == "directconnect" ]]; then
 		echo "To re-connect to this instance later run:"
-		echo "ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -i ${KEYNAME}.pem ec2-user@${instanceHostNamePublic}"
+		echo "ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -i ${AWSCONFIGOUTPUTDIRECTORY}${KEYNAME}.pem ec2-user@${instanceHostNamePublic}"
 		echo ""
 		echo "To shut this instance down, exit the instance and run:"
 		echo "aws ec2 terminate-instances --instance-id $instanceID"
@@ -135,7 +157,7 @@ if [ $# -gt 8 ]; then
 		echo "Connecting directly via ssh:"
 		ssh -o UserKnownHostsFile=/dev/null \
 			-o StrictHostKeyChecking=no \
-			-i ${KEYNAME}.pem ec2-user@${instanceHostNamePublic}
+			ec2-user@${instanceHostNamePublic}
 
 	###########################################################
 	#########      EC2RunArgument=createAMI           #########
@@ -144,7 +166,7 @@ if [ $# -gt 8 ]; then
 		echo "EC2RUNARGUMENT=$EC2RUNARGUMENT"
 		ssh -o UserKnownHostsFile=/dev/null \
 			-o StrictHostKeyChecking=no \
-			-i ${KEYNAME}.pem ec2-user@${instanceHostNamePublic} \
+			ec2-user@${instanceHostNamePublic} \
 			'bash -s' < ./${SCRIPTNAME}
 		echo "----------------------------------------"
 		echo "----------------------------------------"

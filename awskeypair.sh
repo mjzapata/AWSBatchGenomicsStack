@@ -6,8 +6,9 @@
 # "Usage: awskeypair create MyKeyName,  awskeypair remove MyKeyName, awskeypair list MyKeyName,  awskeypair list"
 ARGUMENT=$1
 
-if [ $# -eq 2 ]; then
+if [ $# -eq 3 ]; then
 	KEYNAME=$2
+	AWSCONFIGOUTPUTDIRECTORY=$3
 
 	if [ "$ARGUMENT" == "create" ]; then
 
@@ -15,9 +16,9 @@ if [ $# -eq 2 ]; then
 		keydescription=$(aws ec2 describe-key-pairs)
 		keystatus=$(echo "$keydescription" | grep -c "$KEYNAME")
 		if [ $keystatus -eq 0 ]; then
-			aws ec2 create-key-pair --key-name $KEYNAME --query 'KeyMaterial' --output text > ${KEYNAME}.pem
+			aws ec2 create-key-pair --key-name $KEYNAME --query 'KeyMaterial' --output text > ${AWSCONFIGOUTPUTDIRECTORY}${KEYNAME}.pem
 			#this is a security requirement for keypairs to be used
-			chmod 600 ${KEYNAME}.pem
+			chmod 600 ${AWSCONFIGOUTPUTDIRECTORY}${KEYNAME}.pem
 		else
 			echo "key with name: $KEYNAME  already exists!"
 		fi
@@ -28,8 +29,8 @@ if [ $# -eq 2 ]; then
 
 	elif [ "$ARGUMENT" == "delete" ]; then
 		echo "deleting $KEYNAME"
-		chmod 777 ${KEYNAME}.pem
-		rm ${KEYNAME}.pem
+		chmod 777 ${AWSCONFIGOUTPUTDIRECTORY}${KEYNAME}.pem
+		rm ${AWSCONFIGOUTPUTDIRECTORY}${KEYNAME}.pem
 		aws ec2 delete-key-pair --key-name $KEYNAME
 
 	else

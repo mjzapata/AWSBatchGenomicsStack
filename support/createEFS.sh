@@ -1,5 +1,6 @@
 #!/bin/bash
 #creates an elastic filesystem with the same name as the stack
+#THIS SCRIPT IS NOT USED IN THE MAIN PIPELINE ANYMORE.  Only here for experimental purposes.
 
 #to delete a filesystem:
 #efsID=$(./createEFS.sh describe $EFSCREATIONTOKEN)
