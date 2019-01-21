@@ -122,8 +122,8 @@ if [ $# -gt 10 ]; then
 		# AWS Configuration 
 		echo "Creating remote directories"
 		scp -o UserKnownHostsFile=/dev/null -i ${AWSCONFIGOUTPUTDIRECTORY}${KEYNAME}.pem -o StrictHostKeyChecking=no $AWSCONFIGFILENAME ec2-user@${instanceHostNamePublic}:/home/ec2-user/.aws/
-		scp -o UserKnownHostsFile=/dev/null -i ${AWSCONFIGOUTPUTDIRECTORY}${KEYNAME}.pem -o StrictHostKeyChecking=no ${AWSCONFIGOUTPUTDIRECTORY}BLJStack52KeyPair.pem ec2-user@${instanceHostNamePublic}:/home/ec2-user/.aws/
-		scp -o UserKnownHostsFile=/dev/null -i ${AWSCONFIGOUTPUTDIRECTORY}${KEYNAME}.pem -o StrictHostKeyChecking=no ${AWSCONFIGOUTPUTDIRECTORY}BLJStack52JobDefinitions.tsv ec2-user@${instanceHostNamePublic}:/home/ec2-user/.aws/
+		scp -o UserKnownHostsFile=/dev/null -i ${AWSCONFIGOUTPUTDIRECTORY}${KEYNAME}.pem -o StrictHostKeyChecking=no ${AWSCONFIGOUTPUTDIRECTORY}${KEYNAME}.pem ec2-user@${instanceHostNamePublic}:/home/ec2-user/.aws/
+		scp -o UserKnownHostsFile=/dev/null -i ${AWSCONFIGOUTPUTDIRECTORY}${KEYNAME}.pem -o StrictHostKeyChecking=no ${AWSCONFIGOUTPUTDIRECTORY}${STACKNAME}JobDefinitions.tsv ec2-user@${instanceHostNamePublic}:/home/ec2-user/.aws/
 		scp -o UserKnownHostsFile=/dev/null -i ${AWSCONFIGOUTPUTDIRECTORY}${KEYNAME}.pem -o StrictHostKeyChecking=no ${AWSCONFIGOUTPUTDIRECTORY}config ec2-user@${instanceHostNamePublic}:/home/ec2-user/.aws/
 		scp -o UserKnownHostsFile=/dev/null -i ${AWSCONFIGOUTPUTDIRECTORY}${KEYNAME}.pem -o StrictHostKeyChecking=no ${AWSCONFIGOUTPUTDIRECTORY}credentials ec2-user@${instanceHostNamePublic}:/home/ec2-user/.aws/
 
