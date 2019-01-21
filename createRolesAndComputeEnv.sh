@@ -97,7 +97,7 @@ if [ $# -eq 16 ]; then
 	#Additional identifiers for AMI
 	AMIIDENTIFIER=manager
 	IMAGETAG=ImageRole
-	IMAGETAGVALUE=BLJManager
+	IMAGETAGVALUE=BLJManage
 	EFSTAG=BLJEFSPerformanceMode
 	EFSTAGVALUE=$EFSPERFORMANCEMODE
 	#Compute Environment Parameters

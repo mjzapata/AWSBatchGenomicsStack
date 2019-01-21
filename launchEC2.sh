@@ -81,8 +81,6 @@ if [ $# -gt 8 ]; then
 	#get instance status and wait for it to run
 	# RUNNING or ???  TERMINATED  (actually returns nothing) second row third column
 
-	echo "AWSCONFIGFILENAME=$AWSCONFIGFILENAME"
-	source $AWSCONFIGFILENAME
 
 	systemstatus=$(./getinstance.sh $instanceID systemstatus)
 	systemtime=0
@@ -109,22 +107,33 @@ if [ $# -gt 8 ]; then
 	instanceHostNamePublic=$(./getinstance.sh $instanceID hostnamepublic)
 	echo "instanceHostNamePublic=$instanceHostNamePublic"
 
-
+	#------------------------------------------------------------------------------------------------
+	#TODO: redo all input arguments and put an argument specifically for if I want to copy the configs
+	#TODO: change absolute paths
+	#------------------------------------------------------------------------------------------------
+	echo "AWSCONFIGFILENAME=$AWSCONFIGFILENAME"
+	source $AWSCONFIGFILENAME
 	if [ $AWSCONFIGFILENAME != "no" ]; then
 		#AWSCONFIGOUTPUTDIRECTORY=~/.aws
 		echo "AWSCONFIGOUTPUTDIRECTORY=$AWSCONFIGOUTPUTDIRECTORY"
 		ssh ec2-user@${instanceHostNamePublic} -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no "mkdir -p /home/ec2-user/.aws/"
 		ssh ec2-user@${instanceHostNamePublic} -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no "mkdir -p /home/ec2-user/.nextflow/"
-		echo "made remote directories"
+
+		# AWS Configuration 
+		echo "Creating remote directories"
 		scp -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no $AWSCONFIGFILENAME ec2-user@${instanceHostNamePublic}:/home/ec2-user/.aws/
 		scp -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no ${AWSCONFIGOUTPUTDIRECTORY}BLJStack52KeyPair.pem ec2-user@${instanceHostNamePublic}:/home/ec2-user/.aws/
 		scp -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no ${AWSCONFIGOUTPUTDIRECTORY}BLJStack52JobDefinitions.tsv ec2-user@${instanceHostNamePublic}:/home/ec2-user/.aws/
 		scp -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no ${AWSCONFIGOUTPUTDIRECTORY}config ec2-user@${instanceHostNamePublic}:/home/ec2-user/.aws/
 		scp -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no ${AWSCONFIGOUTPUTDIRECTORY}credentials ec2-user@${instanceHostNamePublic}:/home/ec2-user/.aws/
 
+		# Scripts for running the head node
+		scp -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no launchEC2HeadNode.sh ec2-user@${instanceHostNamePublic}:/home/ec2-user/
+
+		# Nextflow Configuration
 		scp -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no ~/.nextflow/nextflow.config ec2-user@${instanceHostNamePublic}:/home/ec2-user/.nextflow/
 
-		#TODO: change absolute paths
+		
 	fi
 
 	#6.) SSH into the host and run the configure script then close it and create an AMI based on this image

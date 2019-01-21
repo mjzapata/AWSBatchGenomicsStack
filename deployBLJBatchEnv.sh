@@ -16,7 +16,8 @@ EBSVOLUMESIZEGB=0
 #hardcoded AMI value. set equal to "no" to create and use custom AMI size
 #DEFAULTAMI=no #no
 #DEFAULTAMI=ami-021c52fde2e3ab958 #no
-DEFAULTAMI=ami-05422e32bf76f947c
+#DEFAULTAMI=ami-05422e32bf76f947c
+DEFAULTAMI=no
 REGION=us-east-1
 
 CUSTOMAMIFOREFS="no"
@@ -76,10 +77,11 @@ if [ $# -eq 2 ]; then
         aws cloudformation delete-stack --stack-name $STACKNAME
         ./sleepProgressBar.sh 6 10
 
-        ./awskeypair.sh delete ${AWSCONFIGOUTPUTDIRECTORY}$KEYNAME
+        ./awskeypair.sh delete $KEYNAME ${AWSCONFIGOUTPUTDIRECTORY}
 
 
         rm $AWSCONFIGFILENAME
+        rm ${NEXTFLOWCONFIGOUTPUTDIRECTORY}nextflow.config
 
 
     else

@@ -27,6 +27,9 @@ sudo mkdir /docker_scratch
 sudo echo -e '/dev/xvdb1\t/docker_scratch\text4\tdefaults\t0\t0' | sudo tee -a /etc/fstab
 sudo mount -a
 
+# is this the correct way to add aws 
+PATH=$PATH:/home/ec2-user/miniconda/bin
+
 dockerstoragesize=$(docker info | grep -i base)
 echo "Docker storage size now equals: $dockerstoragesize"
 

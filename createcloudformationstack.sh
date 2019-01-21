@@ -1,5 +1,16 @@
 #!/bin/bash
 
+
+#aws --region us-east-1 cloudformation create-stack --stack-name stackBLJ --template-body file://Managed_EC2_and_Spot_Batch_Environment.json --capabilities CAPABILITY_IAM
+
+#InternalAccessSecurityGroup
+#aws cloudformation create-stack \
+#		--template-body file://${STACKFILE} \
+#		--stack-name $STACKNAME \
+#		--capabilities CAPABILITY_IAM \
+#		--parameters ParameterKey="NetworkAccessIP",ParameterValue="173.92.84.208/32"
+
+
 if [ $# -eq 2 ]; then
 
 	STACKNAME=$1
@@ -45,7 +56,10 @@ elif [[ $# -gt 2 ]]; then
 		--capabilities CAPABILITY_IAM \
 		--parameters $PARAMETERS)
 
+		echo "-----------------------------------------------------------------------------------------"
 		echo "Creating cloudformation stack $STACKNAME. this could take a few minutes..."
+		echo "https://console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks?filter=active"
+		echo "-----------------------------------------------------------------------------------------"
 		# wait loop to check for creating.  could take a few minutes
 		# Then "Stack exists"
 		stackstatus=$(./getcloudformationstack.sh $STACKNAME)
@@ -73,11 +87,3 @@ else
 	echo "the cloudformation stack included here allows for ssh only from the specified IP address ranges following CIDR notation"
 fi
 
-#aws --region us-east-1 cloudformation create-stack --stack-name stackBLJ --template-body file://Managed_EC2_and_Spot_Batch_Environment.json --capabilities CAPABILITY_IAM
-
-#InternalAccessSecurityGroup
-#aws cloudformation create-stack \
-#		--template-body file://${STACKFILE} \
-#		--stack-name $STACKNAME \
-#		--capabilities CAPABILITY_IAM \
-#		--parameters ParameterKey="NetworkAccessIP",ParameterValue="173.92.84.208/32"
