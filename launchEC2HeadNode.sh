@@ -22,20 +22,16 @@ if [ $# -eq 3 ]; then
 	
 	#directconnect
 	if [ "$EC2RUNARGUMENT" == "directconnect" ]; then
-	#if [ "$ARGUMENT" == "create" ]; then
-
-		#INSTANCETYPE=t2.micro
-		#imageID=ami-05422e32bf76f947c
-		#EBSVOLUMESIZEGB=0
-
-		echo "STACKNAME=$STACKNAME"
-		echo "INSTANCETYPE=$INSTANCETYPE"
 
 		AWSCONFIGFILENAME=~/.aws/${STACKNAME}.sh
 		source $AWSCONFIGFILENAME
 
 		SECURITYGROUPS="$BASTIONSECURITYGROUP,$BATCHSECURITYGROUP"
+
+		echo "STACKNAME=$STACKNAME"
+		echo "INSTANCETYPE=$INSTANCETYPE"
 		echo "SECURITYGROUPS=$SECURITYGROUPS"
+		echo "IMAGEID=$IMAGEID"
 
 		INSTANCENAME="HeadNode"
 
@@ -46,17 +42,10 @@ if [ $# -eq 3 ]; then
 		# AMIIDENTIFIER=null
 		# IMAGETAG=null
 		# IMAGETAGVALUE=null
-		SECURITYGROUPS="$BASTIONSECURITYGROUP,$BATCHSECURITYGROUP"
 
 		./launchEC2.sh $STACKNAME $IMAGEID $INSTANCETYPE $KEYNAME $EBSVOLUMESIZEGB \
 		$SUBNETS $SECURITYGROUPS $INSTANCENAME $EC2RUNARGUMENT $LAUNCHTEMPLATEID $AWSCONFIGFILENAME
 
-		#scp ~/.aws/${STACKNAME}.sh          ec2-user
-		#scp ~/.aws/BLJStack52KeyPair.pem
-		#scp BLJStack52JobDefinitions.tsv
-		#scp ~/.nextflow/nextflow.config     ec2-user
-		#scp ~/.aws/config
-		#scp ~/.aws/credentials
 	fi
 
 elif [ $# -eq 4 ]; then
@@ -73,7 +62,7 @@ elif [ $# -eq 4 ]; then
 		
 		AWSCONFIGFILENAME=~/.aws/${STACKNAME}.sh
 		source $AWSCONFIGFILENAME
-		
+
 		SECURITYGROUPS="$BASTIONSECURITYGROUP,$BATCHSECURITYGROUP"
 		echo "SECURITYGROUPS=$SECURITYGROUPS"
 
@@ -84,7 +73,7 @@ elif [ $# -eq 4 ]; then
 
 else
 	echo "Usage: "
-	echo "./launcheEC2HeadNode.sh directconnect [STACKNAME] [INSTANCETYPE]"
-	echo "./launcheEC2HeadNode.sh runscript [STACKNAME] [INSTANCETYPE] startHeadNode.sh"
+	echo "./launchEC2HeadNode.sh directconnect [STACKNAME] [INSTANCETYPE]"
+	echo "./launchEC2HeadNode.sh runscript [STACKNAME] [INSTANCETYPE] startHeadNode.sh"
 
 fi

@@ -15,9 +15,7 @@ EBSVOLUMESIZEGB=0
 
 #hardcoded AMI value. set equal to "no" to create and use custom AMI size
 #DEFAULTAMI=no #no
-#DEFAULTAMI=ami-021c52fde2e3ab958 #no
-#DEFAULTAMI=ami-05422e32bf76f947c
-DEFAULTAMI=no
+DEFAULTAMI=ami-02420f07f3bcf3c5d
 REGION=us-east-1
 
 CUSTOMAMIFOREFS="no"

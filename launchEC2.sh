@@ -10,7 +10,7 @@
 
 #TODO: Massively simplify this
 
-if [ $# -gt 8 ]; then
+if [ $# -gt 10 ]; then
 
 	# IMAGETAG=ImageRole
 	# IMAGETAGVALUE=BLJManager
@@ -116,7 +116,7 @@ if [ $# -gt 8 ]; then
 	if [ $AWSCONFIGFILENAME != "no" ]; then
 		#AWSCONFIGOUTPUTDIRECTORY=~/.aws
 		echo "AWSCONFIGOUTPUTDIRECTORY=$AWSCONFIGOUTPUTDIRECTORY"
-		ssh ec2-user@${instanceHostNamePublic} -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no "mkdir -p /home/ec2-user/.aws/"
+		ssh ec2-user@${instanceHostNamePublic} -i ${AWSCONFIGOUTPUTDIRECTORY}${KEYNAME} -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no "mkdir -p /home/ec2-user/.aws/"
 		ssh ec2-user@${instanceHostNamePublic} -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no "mkdir -p /home/ec2-user/.nextflow/"
 
 		# AWS Configuration 
