@@ -116,22 +116,22 @@ if [ $# -gt 10 ]; then
 	if [ $AWSCONFIGFILENAME != "no" ]; then
 		#AWSCONFIGOUTPUTDIRECTORY=~/.aws
 		echo "AWSCONFIGOUTPUTDIRECTORY=$AWSCONFIGOUTPUTDIRECTORY"
-		ssh ec2-user@${instanceHostNamePublic} -i ${AWSCONFIGOUTPUTDIRECTORY}${KEYNAME} -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no "mkdir -p /home/ec2-user/.aws/"
-		ssh ec2-user@${instanceHostNamePublic} -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no "mkdir -p /home/ec2-user/.nextflow/"
+		ssh ec2-user@${instanceHostNamePublic} -i ${AWSCONFIGOUTPUTDIRECTORY}${KEYNAME}.pem -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no "mkdir -p /home/ec2-user/.aws/"
+		ssh ec2-user@${instanceHostNamePublic} -i ${AWSCONFIGOUTPUTDIRECTORY}${KEYNAME}.pem -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no "mkdir -p /home/ec2-user/.nextflow/"
 
 		# AWS Configuration 
 		echo "Creating remote directories"
-		scp -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no $AWSCONFIGFILENAME ec2-user@${instanceHostNamePublic}:/home/ec2-user/.aws/
-		scp -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no ${AWSCONFIGOUTPUTDIRECTORY}BLJStack52KeyPair.pem ec2-user@${instanceHostNamePublic}:/home/ec2-user/.aws/
-		scp -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no ${AWSCONFIGOUTPUTDIRECTORY}BLJStack52JobDefinitions.tsv ec2-user@${instanceHostNamePublic}:/home/ec2-user/.aws/
-		scp -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no ${AWSCONFIGOUTPUTDIRECTORY}config ec2-user@${instanceHostNamePublic}:/home/ec2-user/.aws/
-		scp -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no ${AWSCONFIGOUTPUTDIRECTORY}credentials ec2-user@${instanceHostNamePublic}:/home/ec2-user/.aws/
+		scp -o UserKnownHostsFile=/dev/null -i ${AWSCONFIGOUTPUTDIRECTORY}${KEYNAME}.pem -o StrictHostKeyChecking=no $AWSCONFIGFILENAME ec2-user@${instanceHostNamePublic}:/home/ec2-user/.aws/
+		scp -o UserKnownHostsFile=/dev/null -i ${AWSCONFIGOUTPUTDIRECTORY}${KEYNAME}.pem -o StrictHostKeyChecking=no ${AWSCONFIGOUTPUTDIRECTORY}BLJStack52KeyPair.pem ec2-user@${instanceHostNamePublic}:/home/ec2-user/.aws/
+		scp -o UserKnownHostsFile=/dev/null -i ${AWSCONFIGOUTPUTDIRECTORY}${KEYNAME}.pem -o StrictHostKeyChecking=no ${AWSCONFIGOUTPUTDIRECTORY}BLJStack52JobDefinitions.tsv ec2-user@${instanceHostNamePublic}:/home/ec2-user/.aws/
+		scp -o UserKnownHostsFile=/dev/null -i ${AWSCONFIGOUTPUTDIRECTORY}${KEYNAME}.pem -o StrictHostKeyChecking=no ${AWSCONFIGOUTPUTDIRECTORY}config ec2-user@${instanceHostNamePublic}:/home/ec2-user/.aws/
+		scp -o UserKnownHostsFile=/dev/null -i ${AWSCONFIGOUTPUTDIRECTORY}${KEYNAME}.pem -o StrictHostKeyChecking=no ${AWSCONFIGOUTPUTDIRECTORY}credentials ec2-user@${instanceHostNamePublic}:/home/ec2-user/.aws/
 
 		# Scripts for running the head node
-		scp -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no launchEC2HeadNode.sh ec2-user@${instanceHostNamePublic}:/home/ec2-user/
+		scp -o UserKnownHostsFile=/dev/null -i ${AWSCONFIGOUTPUTDIRECTORY}${KEYNAME}.pem -o StrictHostKeyChecking=no launchEC2HeadNode.sh ec2-user@${instanceHostNamePublic}:/home/ec2-user/
 
 		# Nextflow Configuration
-		scp -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no ~/.nextflow/nextflow.config ec2-user@${instanceHostNamePublic}:/home/ec2-user/.nextflow/
+		scp -o UserKnownHostsFile=/dev/null -i ${AWSCONFIGOUTPUTDIRECTORY}${KEYNAME}.pem -o StrictHostKeyChecking=no ~/.nextflow/nextflow.config ec2-user@${instanceHostNamePublic}:/home/ec2-user/.nextflow/
 
 		
 	fi
@@ -149,7 +149,7 @@ if [ $# -gt 10 ]; then
 		echo "instance running..."
 		ssh -o UserKnownHostsFile=/dev/null \
 			-o StrictHostKeyChecking=no \
-			ec2-user@${instanceHostNamePublic} \
+			-i ${AWSCONFIGOUTPUTDIRECTORY}${KEYNAME}.pem ec2-user@${instanceHostNamePublic} \
 			'bash -s' < ./${SCRIPTNAME}
 
 	###########################################################
@@ -166,7 +166,7 @@ if [ $# -gt 10 ]; then
 		echo "Connecting directly via ssh:"
 		ssh -o UserKnownHostsFile=/dev/null \
 			-o StrictHostKeyChecking=no \
-			ec2-user@${instanceHostNamePublic}
+			-i ${AWSCONFIGOUTPUTDIRECTORY}${KEYNAME}.pem ec2-user@${instanceHostNamePublic}
 
 	###########################################################
 	#########      EC2RunArgument=createAMI           #########
@@ -175,7 +175,7 @@ if [ $# -gt 10 ]; then
 		echo "EC2RUNARGUMENT=$EC2RUNARGUMENT"
 		ssh -o UserKnownHostsFile=/dev/null \
 			-o StrictHostKeyChecking=no \
-			ec2-user@${instanceHostNamePublic} \
+			-i ${AWSCONFIGOUTPUTDIRECTORY}${KEYNAME}.pem ec2-user@${instanceHostNamePublic} \
 			'bash -s' < ./${SCRIPTNAME}
 		echo "----------------------------------------"
 		echo "----------------------------------------"
