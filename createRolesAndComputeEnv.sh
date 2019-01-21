@@ -92,12 +92,13 @@ if [ $# -eq 16 ]; then
 	#AMI Parameters
 	#this is only the instance type for creating AMIs
 	INSTANCETYPEFORAMICREATION=t2.micro 
-	TEMPLATEIMAGEID=ami-0b9a214f40c38d5eb  #latest as of 2018oct17
+	#ami-0b9a214f40c38d5eb #latest as of 2018oct17
+	TEMPLATEIMAGEID=ami-035be7bafff33b6b6
 	#EBSVOLUMESIZEGB="50"
 	#Additional identifiers for AMI
-	AMIIDENTIFIER=manager
+	AMIIDENTIFIER=manager2
 	IMAGETAG=ImageRole
-	IMAGETAGVALUE=BLJManage
+	IMAGETAGVALUE=BLJManage2
 	EFSTAG=BLJEFSPerformanceMode
 	EFSTAGVALUE=$EFSPERFORMANCEMODE
 	#Compute Environment Parameters

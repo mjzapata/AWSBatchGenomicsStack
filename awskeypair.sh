@@ -18,7 +18,7 @@ if [ $# -eq 3 ]; then
 		if [ $keystatus -eq 0 ]; then
 			aws ec2 create-key-pair --key-name $KEYNAME --query 'KeyMaterial' --output text > ${AWSCONFIGOUTPUTDIRECTORY}${KEYNAME}.pem
 			#this is a security requirement for keypairs to be used
-			chmod 600 ${AWSCONFIGOUTPUTDIRECTORY}${KEYNAME}.pem
+			chmod 400 ${AWSCONFIGOUTPUTDIRECTORY}${KEYNAME}.pem
 		else
 			echo "key with name: $KEYNAME  already exists!"
 		fi

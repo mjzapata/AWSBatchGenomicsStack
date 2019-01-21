@@ -113,9 +113,9 @@ if [ $# -gt 10 ]; then
 	#------------------------------------------------------------------------------------------------
 	echo "AWSCONFIGFILENAME=$AWSCONFIGFILENAME"
 	source $AWSCONFIGFILENAME
+	echo "AWSCONFIGOUTPUTDIRECTORY=$AWSCONFIGOUTPUTDIRECTORY"
 	if [ $AWSCONFIGFILENAME != "no" ]; then
 		#AWSCONFIGOUTPUTDIRECTORY=~/.aws
-		echo "AWSCONFIGOUTPUTDIRECTORY=$AWSCONFIGOUTPUTDIRECTORY"
 		ssh ec2-user@${instanceHostNamePublic} -i ${AWSCONFIGOUTPUTDIRECTORY}${KEYNAME}.pem -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no "mkdir -p /home/ec2-user/.aws/"
 		ssh ec2-user@${instanceHostNamePublic} -i ${AWSCONFIGOUTPUTDIRECTORY}${KEYNAME}.pem -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no "mkdir -p /home/ec2-user/.nextflow/"
 

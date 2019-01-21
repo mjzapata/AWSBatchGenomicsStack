@@ -14,8 +14,8 @@ MAXCPU=1024
 EBSVOLUMESIZEGB=0
 
 #hardcoded AMI value. set equal to "no" to create and use custom AMI size
-#DEFAULTAMI=no #no
-DEFAULTAMI=ami-02420f07f3bcf3c5d
+#DEFAULTAMI=no
+DEFAULTAMI=ami-01553712951d7a55b
 REGION=us-east-1
 
 CUSTOMAMIFOREFS="no"
