@@ -359,6 +359,11 @@ if [ $# -eq 16 ]; then
 		
 		echo $nextflowconfig > "${NEXTFLOWCONFIGOUTPUTDIRECTORY}nextflow.config"
 
+		echo "----------------------------------------------------------------------------------------------"
+		echo "9.) Launch EC2 and connect directly MIKE   ---------------------------------------------------"
+		echo "----------------------------------------------------------------------------------------------"
+		echo "./launchEC2HeadNode.sh directconnect $STACKNAME t2.micro"
+
 	else
 		echo "stack could not be found or created"
 	fi
