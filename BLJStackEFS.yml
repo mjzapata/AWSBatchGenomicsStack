@@ -120,7 +120,7 @@ Resources:
     Metadata:
       'AWS::CloudFormation::Designer':
         id: ddcdaa9a-8ff1-4994-90bb-86598e2ff1fd
-  BatachToBastionSecurityGroupIngressNFS:
+  BatchToBastionSecurityGroupIngressNFS:
     Type: 'AWS::EC2::SecurityGroupIngress'
     Properties:
       IpProtocol: tcp
@@ -267,7 +267,6 @@ Resources:
       SubnetId:
         Ref: Subnet
       SecurityGroups:
-        - Ref: BatchSecurityGroup
         - Ref: BastionSecurityGroup
     Metadata:
       'AWS::CloudFormation::Designer':
@@ -292,9 +291,8 @@ Resources:
             - file_system_id_01=${FileSystem}
             - efs_directory=/mnt/efs
             - mkdir -p ${!efs_directory}
-            - echo "${!file_system_id_01}:/ ${!efs_directory} efs tls,_netdev" >> /etc/fstab
+            - echo "${!file_system_id_01}:/ ${!efs_directory} efs defaults,_netdev" >> /etc/fstab
             - mount -a -t efs defaults
-            - sudo chown -R ec2-user:ec2-user /mnt/efs
             
             --==MYBOUNDARY==--
     Metadata:

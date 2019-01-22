@@ -47,13 +47,10 @@ if [[ $# -gt 5 ]]; then
 		JobLineTrimmed=$(echo $JobLine | sed 's/^.*job-definition/job-definition:\//')
 		JOBDEFINITIONNAMEFULL=$(echo $JobLineTrimmed | awk '//{print $1}')
 
-		DEPLOYJOBDEFINITIONSOUTPUT=$(echo -e $DEPLOYJOBDEFINITIONSOUTPUT)'\n'$(echo -e ${JOBIMAGE}$' '${JOBDEFINITIONNAMEFULL})
+		DEPLOYJOBDEFINITIONSOUTPUT=$(echo -e $DEPLOYJOBDEFINITIONSOUTPUT)'\n'$(echo -e ${JOBIMAGE}$'	'${JOBDEFINITIONNAMEFULL})
 
 	done <<< "$repoimagelist"
 	echo -e "$DEPLOYJOBDEFINITIONSOUTPUT"
 
 fi
-
-
-
 

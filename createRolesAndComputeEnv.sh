@@ -93,12 +93,12 @@ if [ $# -eq 16 ]; then
 	#this is only the instance type for creating AMIs
 	INSTANCETYPEFORAMICREATION=t2.micro 
 	#ami-0b9a214f40c38d5eb #latest as of 2018oct17
-	TEMPLATEIMAGEID=ami-035be7bafff33b6b6
+	TEMPLATEIMAGEID=ami-06bec82fb46167b4f
 	#EBSVOLUMESIZEGB="50"
 	#Additional identifiers for AMI
-	AMIIDENTIFIER=manager2
+	AMIIDENTIFIER=manager3
 	IMAGETAG=ImageRole
-	IMAGETAGVALUE=BLJManage2
+	IMAGETAGVALUE=BLJManager3
 	EFSTAG=BLJEFSPerformanceMode
 	EFSTAGVALUE=$EFSPERFORMANCEMODE
 	#Compute Environment Parameters
@@ -218,7 +218,8 @@ if [ $# -eq 16 ]; then
 		#Note: creating a security group with IP rules?  See  Page 6 of Creating a new AMI
 		# allows security group creation for each instance?  Public for web facing, private for batch?
 		BASTIONSECURITYGROUP=$(./getcloudformationstack.sh $STACKNAME BastionSecurityGroup)
-		BATCHSECURITYGROUP=$(./getcloudformationstack.sh $STACKNAME BatchSecurityGroup)  #TODO: change the json and this to have a name that returns a different value
+		#BATCHSECURITYGROUP=$(./getcloudformationstack.sh $STACKNAME BatchSecurityGroup)  #TODO: change the json and this to have a name that returns a different value
+		BATCHSECURITYGROUP=$BASTIONSECURITYGROUP
 		#BATCHSECURITYGROUP=$BASTIONSECURITYGROUP  #TODO delete this and uncomment later
 
 		SECURITYGROUPS="$BASTIONSECURITYGROUP,$BATCHSECURITYGROUP"
@@ -244,30 +245,29 @@ if [ $# -eq 16 ]; then
 		if [[ $DEFAULTAMI == "no" ]]; then
 			IMAGEIDStatus="NA"
 		else
-			IMAGEIDDStatus=$(./getec2images.sh $DEFAULTAMI status)
-			echo "imageIDStatus=$imageIDStatus"
+			IMAGEIDStatus=$(./getec2images.sh $DEFAULTAMI status)
+			echo "IMAGEIDStatus=$IMAGEIDStatus"
 			imageTagStatus=$(./getec2images.sh tags $IMAGETAG $IMAGETAGVALUE)
 			echo "imageTagStatus=$imageTagStatus"
 			imageExistWordCount=$(echo -n $imageTagStatus | wc -m)
 		fi
 
-		if [[ $imageIDStatus == "available" && $DEFAULTAMI != "no" ]]; then
+		if [[ $IMAGEIDStatus == "available" && $DEFAULTAMI != "no" ]]; then
 			echo "Found default BLJ image with ID: ${DEFAULTAMI}"
 			IMAGEID=$DEFAULTAMI
 		elif [[ $imageExistWordCount -lt 2 ]]; then
 			echo "CREATING new AMI...."
 			EC2RUNARGUMENT="createAMI"
 			INSTANCENAME="CREATEAMI"
-			COPYCONFIG=no
 		#3.b)  Check if AMI with custom tags exists
 			#TODO: clean up the getec2images call. maybe rename functions
 			#If it doesn't exist ask if you want to create an AMI using the 
-			#if [ $imageIDStatus == "image not found" ]; then
+			#if [ $IMAGEIDStatus == "image not found" ]; then
 			while true; do
 	    		read -p "Image with tag: ${IMAGETAG}, value: ${IMAGETAGVALUE} does not exist. Do you want to create it?: " yn
 	    		case $yn in
 	        		[Yy]* ) ./launchEC2.sh $STACKNAME $TEMPLATEIMAGEID $INSTANCETYPEFORAMICREATION $KEYNAME $EBSVOLUMESIZEGB $SUBNETS $BASTIONSECURITYGROUP \
-											$INSTANCENAME $EC2RUNARGUMENT $LAUNCHTEMPLATEID $COPYCONFIG configureEC2forAMI.sh \
+											$INSTANCENAME $EC2RUNARGUMENT $LAUNCHTEMPLATEID $AWSCONFIGFILENAME configureEC2forAMI.sh \
 											$AMIIDENTIFIER $IMAGETAG $IMAGETAGVALUE; break;;
 	        		[Nn]* ) exit;;
 	        		* ) echo "Please answer yes or no.";;

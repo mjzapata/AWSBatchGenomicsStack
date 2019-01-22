@@ -10,8 +10,9 @@ if [ $# -eq 3 ]; then
 	KEYNAME=$2
 	AWSCONFIGOUTPUTDIRECTORY=$3
 
-	if [ "$ARGUMENT" == "create" ]; then
-
+	if [ "$ARGUMENT" == "create" ] && [ !-f ${AWSCONFIGOUTPUTDIRECTORY}${KEYNAME}.pem ]; then
+	#if [ "$ARGUMENT" == "create" ]; then
+		#TODO: what if the output file is empty
 		# if a key by that name does not exist in the described key-pairs, create it.  Otherwise, do nothing
 		keydescription=$(aws ec2 describe-key-pairs)
 		keystatus=$(echo "$keydescription" | grep -c "$KEYNAME")

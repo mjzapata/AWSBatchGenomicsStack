@@ -15,13 +15,14 @@ EBSVOLUMESIZEGB=0
 
 #hardcoded AMI value. set equal to "no" to create and use custom AMI size
 #DEFAULTAMI=no
-DEFAULTAMI=ami-02d58ee5a9193b8b2
+#DEFAULTAMI=ami-02d58ee5a9193b8b2
+DEFAULTAMI=ami-0f618c4f6d9afdb13
 REGION=us-east-1
 
 CUSTOMAMIFOREFS="no"
 EFSPERFORMANCEMODE=maxIO  #or generalPurpose
-DOCKERREPOSEARCHSTRING="biolockj/"
-#DOCKERREPOSEARCHSTRING="mjzapata2/"
+#DOCKERREPOSEARCHSTRING="biolockj/"
+DOCKERREPOSEARCHSTRING="mjzapata2/"
 
 #NEXTFLOWCONFIGOUTPUTDIRECTORY="$HOME/Documents/github/aws/BLJBatchAWS/nextflow/testnextflow"
 NEXTFLOWCONFIGOUTPUTDIRECTORY=~/.nextflow/
@@ -78,7 +79,7 @@ if [ $# -eq 2 ]; then
         ./awskeypair.sh delete $KEYNAME ${AWSCONFIGOUTPUTDIRECTORY}
 
         rm $AWSCONFIGFILENAME
-        rm ${NEXTFLOWCONFIGOUTPUTDIRECTORY}nextflow.config
+        #rm ${NEXTFLOWCONFIGOUTPUTDIRECTORY}nextflow.config
 
     else
         echo "set the name of your stack inside this script"
