@@ -38,7 +38,7 @@ $HOME/miniconda/bin/conda install -c conda-forge -y awscli
 rm Miniconda3-latest-Linux-x86_64.sh
 
 # is this the correct way to add aws 
-PATH=$PATH:/home/ec2-user/miniconda/bin
+export PATH=$PATH:/home/ec2-user/miniconda/bin
 
 $HOME/miniconda/bin/aws --version
 aws --version
@@ -47,8 +47,5 @@ aws --version
 
 sudo stop ecs
 sudo rm -rf /var/lib/ecs/data/ecs_agent_data.json
-
-
-
 
 

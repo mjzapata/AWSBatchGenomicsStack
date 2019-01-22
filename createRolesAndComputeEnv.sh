@@ -96,9 +96,9 @@ if [ $# -eq 16 ]; then
 	TEMPLATEIMAGEID=ami-06bec82fb46167b4f
 	#EBSVOLUMESIZEGB="50"
 	#Additional identifiers for AMI
-	AMIIDENTIFIER=manager3
+	AMIIDENTIFIER=managerv5
 	IMAGETAG=ImageRole
-	IMAGETAGVALUE=BLJManager3
+	IMAGETAGVALUE=BLJManagerv5
 	EFSTAG=BLJEFSPerformanceMode
 	EFSTAGVALUE=$EFSPERFORMANCEMODE
 	#Compute Environment Parameters

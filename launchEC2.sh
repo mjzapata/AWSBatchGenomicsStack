@@ -38,26 +38,54 @@ if [ $# -gt 10 ]; then
 	#run EC2 instances: https://docs.aws.amazon.com/cli/latest/reference/ec2/run-instances.html
 	# https://docs.aws.amazon.com/cli/latest/userguide/cli-ec2-launch.html
 	if [[ $EBSVOLUMESIZEGB > 1 ]]; then
-		EC2RunOutput=$(aws ec2 run-instances \
-			--tag-specifications 'ResourceType=instance,Tags={Key=Name,Value="'$INSTANCENAME'"}' \
-			--image-id $TEMPLATEIMAGEID \
-			--security-group-ids $SECURITYGROUPS \
-			--count 1 \
-			--instance-type $INSTANCETYPE \
-			--key-name $KEYNAME \
-			--subnet-id $SUBNETS \
-			--launch-template LaunchTemplateId=$LAUNCHTEMPLATEID \
-			--block-device-mappings 'DeviceName=/dev/sdb,Ebs={VolumeSize="'$EBSVOLUMESIZEGB'",DeleteOnTermination=true,Encrypted=false,VolumeType=gp2}' )
+		if [ $EC2RUNARGUMENT == "createAMI" ]; then
+			
+			EC2RunOutput=$(aws ec2 run-instances \
+				--tag-specifications 'ResourceType=instance,Tags={Key=Name,Value="'$INSTANCENAME'"}' \
+				--image-id $TEMPLATEIMAGEID \
+				--security-group-ids $SECURITYGROUPS \
+				--count 1 \
+				--instance-type $INSTANCETYPE \
+				--key-name $KEYNAME \
+				--subnet-id $SUBNETS \
+				--block-device-mappings 'DeviceName=/dev/sdb,Ebs={VolumeSize="'$EBSVOLUMESIZEGB'",DeleteOnTermination=true,Encrypted=false,VolumeType=gp2}')
+		else
+			EC2RunOutput=$(aws ec2 run-instances \
+				--tag-specifications 'ResourceType=instance,Tags={Key=Name,Value="'$INSTANCENAME'"}' \
+				--image-id $TEMPLATEIMAGEID \
+				--security-group-ids $SECURITYGROUPS \
+				--count 1 \
+				--instance-type $INSTANCETYPE \
+				--key-name $KEYNAME \
+				--subnet-id $SUBNETS \
+				--launch-template LaunchTemplateId=$LAUNCHTEMPLATEID \
+				--block-device-mappings 'DeviceName=/dev/sdb,Ebs={VolumeSize="'$EBSVOLUMESIZEGB'",DeleteOnTermination=true,Encrypted=false,VolumeType=gp2}' )
+		fi
+
 	else
-		EC2RunOutput=$(aws ec2 run-instances \
-			--tag-specifications 'ResourceType=instance,Tags={Key=Name,Value="'$INSTANCENAME'"}' \
-			--image-id $TEMPLATEIMAGEID \
-			--security-group-ids $SECURITYGROUPS \
-			--count 1 \
-			--instance-type $INSTANCETYPE \
-			--key-name $KEYNAME \
-			--subnet-id $SUBNETS \
-			--launch-template LaunchTemplateId=$LAUNCHTEMPLATEID)
+
+		if [ $EC2RUNARGUMENT == "createAMI" ]; then
+			
+			EC2RunOutput=$(aws ec2 run-instances \
+				--tag-specifications 'ResourceType=instance,Tags={Key=Name,Value="'$INSTANCENAME'"}' \
+				--image-id $TEMPLATEIMAGEID \
+				--security-group-ids $SECURITYGROUPS \
+				--count 1 \
+				--instance-type $INSTANCETYPE \
+				--key-name $KEYNAME \
+				--subnet-id $SUBNETS)
+		else
+			EC2RunOutput=$(aws ec2 run-instances \
+				--tag-specifications 'ResourceType=instance,Tags={Key=Name,Value="'$INSTANCENAME'"}' \
+				--image-id $TEMPLATEIMAGEID \
+				--security-group-ids $SECURITYGROUPS \
+				--count 1 \
+				--instance-type $INSTANCETYPE \
+				--key-name $KEYNAME \
+				--subnet-id $SUBNETS \
+				--launch-template LaunchTemplateId=$LAUNCHTEMPLATEID)
+		fi
+
 	fi
 
 	echo "EC2RunOutput=$EC2RunOutput"
@@ -148,7 +176,7 @@ if [ $# -gt 10 ]; then
 	if [[ $EC2RUNARGUMENT == "runscript" ]]; then
 		echo "instance running..."
 		ssh -o UserKnownHostsFile=/dev/null \
-			-o StrictHostKeyChecking=no \
+			-o StrictHostKeyChecking=no -o IdentitiesOnly=yes \
 			-i ${AWSCONFIGOUTPUTDIRECTORY}${KEYNAME}.pem ec2-user@${instanceHostNamePublic} \
 			'bash -s' < ./${SCRIPTNAME}
 
@@ -165,7 +193,7 @@ if [ $# -gt 10 ]; then
 
 		echo "Connecting directly via ssh:"
 		ssh -o UserKnownHostsFile=/dev/null \
-			-o StrictHostKeyChecking=no \
+			-o StrictHostKeyChecking=no -o IdentitiesOnly=yes \
 			-i ${AWSCONFIGOUTPUTDIRECTORY}${KEYNAME}.pem ec2-user@${instanceHostNamePublic}
 
 	###########################################################
@@ -174,7 +202,7 @@ if [ $# -gt 10 ]; then
 	elif [[ $EC2RUNARGUMENT == "createAMI" ]]; then
 		echo "EC2RUNARGUMENT=$EC2RUNARGUMENT"
 		ssh -o UserKnownHostsFile=/dev/null \
-			-o StrictHostKeyChecking=no \
+			-o StrictHostKeyChecking=no -o IdentitiesOnly=yes \
 			-i ${AWSCONFIGOUTPUTDIRECTORY}${KEYNAME}.pem ec2-user@${instanceHostNamePublic} \
 			'bash -s' < ./${SCRIPTNAME}
 		echo "----------------------------------------"
