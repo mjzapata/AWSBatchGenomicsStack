@@ -14,32 +14,32 @@
 # OUTPUT: echo the image name and the 
 #TODO: test on single docker image
 
-if [[ $# -gt 5 ]]; then
-	DOCKERREPOSEARCHSTRING=$1
-	DOCKERRREPOVERSION=$2
-	JOBROLEARN=$3
-	JOBVCPUS=$4
-	JOBMEMORY=$5
-	STACKNAME=$6
+if [[ $# -eq 1 ]]; then
+	AWSCONFIGFILENAME=$1
+	#DOCKERREPOSEARCHSTRING=$1
+	#DOCKERRREPOVERSION=$2
+	#JOBROLEARN=$3
+	#JOBVCPUS=$4
+	#JOBMEMORY=$5
+	#STACKNAME=$6
 	#JOBDEFPREFIX=$6
-
-	dockersearchoutput=$(docker search $DOCKERREPOSEARCHSTRING | grep $DOCKERREPOSEARCHSTRING) #| grep $DOCKERREPOSEARCHSTRING)
+	source $AWSCONFIGFILENAME
+	dockersearchoutput=$(docker search "$DOCKERREPOSEARCHSTRING" | grep -E "^$DOCKERREPOSEARCHSTRING") #| grep $DOCKERREPOSEARCHSTRING)
+	
 	IFS=$'\t' #necessary to get tabs to parse correctly
 	repoimagelist=$(echo $dockersearchoutput | awk '//{print $1}')
 	#DEPLOYJOBDEFINITIONSOUTPUT='STACKNAME=$STACKNAME'
-	#DEPLOYJOBDEFINITIONSOUTPUT=""
+	#DEPLOYJOBDEFINITIONSOUTPUT="#!/bin/bash"
+	echo ""
 	while read -r line; do
 	    #echo "Image: $JOBIMAGE"
-	    # a lot of bash trickery to get the job output format to work with Nextflow.
-		# IFS=$'\t' #necessary to get tabs to parse correctly
 	    JOBIMAGE=${line}:${DOCKERRREPOVERSION}
 	    JOBIMAGENOSPECIAL=$(tr -s /: _ <<< "$JOBIMAGE")
 	    #JOBDEFINITIONNAME=${JOBDEFPREFIX}${STACKNAME}_${JOBIMAGENOSPECIAL}
 	   	JOBDEFINITIONNAME=${STACKNAME}_${JOBIMAGENOSPECIAL}
 
-
 	    JOBROLEARN=$JOBROLEARN
-	    JobDefoutput=$(./createBatchJobDefinition.sh $JOBDEFINITIONNAME $JOBIMAGE $JOBROLEARN $JOBVCPUS $JOBMEMORY)
+	    JobDefoutput=$(./createBatchJobDefinition.sh $JOBDEFINITIONNAME $JOBIMAGE $JOBIMAGENOSPECIAL $JOBROLEARN $JOBVCPUS $JOBMEMORY)
 
 		IFS=$'\t'
 		OFS=$'\t'
@@ -47,10 +47,11 @@ if [[ $# -gt 5 ]]; then
 		JobLineTrimmed=$(echo $JobLine | sed 's/^.*job-definition/job-definition:\//')
 		JOBDEFINITIONNAMEFULL=$(echo $JobLineTrimmed | awk '//{print $1}')
 
-		DEPLOYJOBDEFINITIONSOUTPUT=$(echo -e $DEPLOYJOBDEFINITIONSOUTPUT)'\n'$(echo -e ${JOBIMAGE}$'	'${JOBDEFINITIONNAMEFULL})
+		#DEPLOYJOBDEFINITIONSOUTPUT=$(echo -e $DEPLOYJOBDEFINITIONSOUTPUT)'\n'$(echo -e "image_${JOBIMAGENOSPECIAL}=${JOBDEFINITIONNAMEFULL}")
+		echo "image_${JOBIMAGENOSPECIAL}=${JOBDEFINITIONNAMEFULL}"
 
 	done <<< "$repoimagelist"
-	echo -e "$DEPLOYJOBDEFINITIONSOUTPUT"
+	#echo -e "$DEPLOYJOBDEFINITIONSOUTPUT"
 
 fi
 

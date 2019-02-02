@@ -5,14 +5,16 @@
 #script by allowing to run priveledged containers
 #and mounting the EFS in a location that docker can reach it.
 #This was the only way to get EFS to mount at boot time.
+#JOBIMAGENOSPECIAL not currently used.
 
 if [[ $# -gt 4 && $# -lt 7 ]]; then
 
 	JOBDEFINITIONNAME=$1
 	JOBIMAGE=$2
-	JOBROLEARN=$3
-	JOBVCPUS=$4
-	JOBMEMORY=$5
+  JOBIMAGENOSPECIAL=$3
+	JOBROLEARN=$4
+	JOBVCPUS=$5
+	JOBMEMORY=$6
 
 	if [ $# -eq 6 ]; then
 		COMMAND=$6

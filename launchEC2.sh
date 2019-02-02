@@ -142,27 +142,38 @@ if [ $# -gt 10 ]; then
 	echo "AWSCONFIGFILENAME=$AWSCONFIGFILENAME"
 	source $AWSCONFIGFILENAME
 	echo "AWSCONFIGOUTPUTDIRECTORY=$AWSCONFIGOUTPUTDIRECTORY"
+
+	#remove previous hosts
+	ssh-keygen -f "~/.ssh/known_hosts" -R $instanceHostNamePublic
+	KEYFILE=${AWSCONFIGOUTPUTDIRECTORY}${KEYNAME}.pem
+
 	if [ $EC2RUNARGUMENT != "createAMI" ]; then
-		#AWSCONFIGOUTPUTDIRECTORY=~/.aws
-		ssh ec2-user@${instanceHostNamePublic} -i ${AWSCONFIGOUTPUTDIRECTORY}${KEYNAME}.pem -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no "mkdir -p /home/ec2-user/.aws/"
-		ssh ec2-user@${instanceHostNamePublic} -i ${AWSCONFIGOUTPUTDIRECTORY}${KEYNAME}.pem -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no "mkdir -p /home/ec2-user/.nextflow/"
+		# ssh ec2-user@${instanceHostNamePublic} -i ${AWSCONFIGOUTPUTDIRECTORY}${KEYNAME}.pem -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no "mkdir -p /home/ec2-user/.aws/"
+		# -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -o IdentitiesOnly=yes
+		# don't check identity on first connect
+		SSH_OPTIONS=""
+
+		ssh ec2-user@${instanceHostNamePublic} -i ${KEYFILE} -o StrictHostKeyChecking=no "mkdir -p /home/ec2-user/.aws/"
+		ssh ec2-user@${instanceHostNamePublic} -i ${KEYFILE} "mkdir -p /home/ec2-user/.nextflow/"
 
 		# AWS Configuration 
 		echo "Creating remote directories"
-		scp -o UserKnownHostsFile=/dev/null -i ${AWSCONFIGOUTPUTDIRECTORY}${KEYNAME}.pem -o StrictHostKeyChecking=no $AWSCONFIGFILENAME ec2-user@${instanceHostNamePublic}:/home/ec2-user/.aws/
-		scp -o UserKnownHostsFile=/dev/null -i ${AWSCONFIGOUTPUTDIRECTORY}${KEYNAME}.pem -o StrictHostKeyChecking=no ${AWSCONFIGOUTPUTDIRECTORY}${KEYNAME}.pem ec2-user@${instanceHostNamePublic}:/home/ec2-user/.aws/
-		scp -o UserKnownHostsFile=/dev/null -i ${AWSCONFIGOUTPUTDIRECTORY}${KEYNAME}.pem -o StrictHostKeyChecking=no ${AWSCONFIGOUTPUTDIRECTORY}${STACKNAME}JobDefinitions.tsv ec2-user@${instanceHostNamePublic}:/home/ec2-user/.aws/
-		scp -o UserKnownHostsFile=/dev/null -i ${AWSCONFIGOUTPUTDIRECTORY}${KEYNAME}.pem -o StrictHostKeyChecking=no ${AWSCONFIGOUTPUTDIRECTORY}config ec2-user@${instanceHostNamePublic}:/home/ec2-user/.aws/
-		scp -o UserKnownHostsFile=/dev/null -i ${AWSCONFIGOUTPUTDIRECTORY}${KEYNAME}.pem -o StrictHostKeyChecking=no ${AWSCONFIGOUTPUTDIRECTORY}credentials ec2-user@${instanceHostNamePublic}:/home/ec2-user/.aws/
+		#scp -o UserKnownHostsFile=/dev/null -i ${AWSCONFIGOUTPUTDIRECTORY}${KEYNAME}.pem -o StrictHostKeyChecking=no 
+		#${AWSCONFIGOUTPUTDIRECTORY}${STACKNAME}JobDefinitions.tsv ec2-user@${instanceHostNamePublic}:/home/ec2-user/.aws/
+		scp -i ${KEYFILE} $AWSCONFIGFILENAME ec2-user@${instanceHostNamePublic}:/home/ec2-user/.aws/
+		scp -i ${KEYFILE} ${AWSCONFIGOUTPUTDIRECTORY}${KEYNAME}.pem ec2-user@${instanceHostNamePublic}:/home/ec2-user/.aws/
+		scp -i ${KEYFILE} ${AWSCONFIGOUTPUTDIRECTORY}config ec2-user@${instanceHostNamePublic}:/home/ec2-user/.aws/
+		scp -i ${KEYFILE} ${AWSCONFIGOUTPUTDIRECTORY}credentials ec2-user@${instanceHostNamePublic}:/home/ec2-user/.aws/
 
 		# Scripts for running the head node
-		scp -o UserKnownHostsFile=/dev/null -i ${AWSCONFIGOUTPUTDIRECTORY}${KEYNAME}.pem -o StrictHostKeyChecking=no launchEC2HeadNode.sh ec2-user@${instanceHostNamePublic}:/home/ec2-user/
+		#scp -i ${KEYFILE} launchEC2HeadNode.sh ec2-user@${instanceHostNamePublic}:/home/ec2-user/
+		scp -i ${KEYFILE} startHeadNode.sh ec2-user@${instanceHostNamePublic}:/home/ec2-user/
 
 		# Nextflow Configuration
-		scp -o UserKnownHostsFile=/dev/null -i ${AWSCONFIGOUTPUTDIRECTORY}${KEYNAME}.pem -o StrictHostKeyChecking=no ~/.nextflow/nextflow.config ec2-user@${instanceHostNamePublic}:/home/ec2-user/.nextflow/
+		scp -i ${KEYFILE} ~/.nextflow/config ec2-user@${instanceHostNamePublic}:/home/ec2-user/.nextflow/
 
-		
 	fi
+
 
 	#6.) SSH into the host and run the configure script then close it and create an AMI based on this image
 		# ssh trick to not check host keyfile https://linuxcommando.blogspot.com/2008/10/how-to-disable-ssh-host-key-checking.html
@@ -175,35 +186,34 @@ if [ $# -gt 10 ]; then
 	###########################################################
 	if [[ $EC2RUNARGUMENT == "runscript" ]]; then
 		echo "instance running..."
-		ssh -o UserKnownHostsFile=/dev/null \
-			-o StrictHostKeyChecking=no -o IdentitiesOnly=yes \
-			-i ${AWSCONFIGOUTPUTDIRECTORY}${KEYNAME}.pem ec2-user@${instanceHostNamePublic} \
+		ssh -i ${KEYFILE} ec2-user@${instanceHostNamePublic} \
 			'bash -s' < ./${SCRIPTNAME}
 
+		echo "disconnected from instance: $EC2RUNARGUMENT"
 	###########################################################
 	#######      EC2RunArgument=directconnect           #######
 	###########################################################
 	elif [[ $EC2RUNARGUMENT == "directconnect" ]]; then
 		echo "To re-connect to this instance later run:"
-		echo "ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -i ${AWSCONFIGOUTPUTDIRECTORY}${KEYNAME}.pem ec2-user@${instanceHostNamePublic}"
-		echo ""
-		echo "To shut this instance down, exit the instance and run:"
+		echo "ssh -i ${AWSCONFIGOUTPUTDIRECTORY}${KEYNAME}.pem ec2-user@${instanceHostNamePublic}"
+		echo "-------------------------------------------------------"
+		echo "To copy files to this instance run:"
+		echo "scp -i ${KEYFILE} MYFILENAME ec2-user@${instanceHostNamePublic}:/home/ec2-user/"
+		echo "-------------------------------------------------------"
+		echo "To shutdown this instance, exit the instance and run:"
 		echo "aws ec2 terminate-instances --instance-id $instanceID"
 		echo "-------------------------------------------------------"
 
 		echo "Connecting directly via ssh:"
-		ssh -o UserKnownHostsFile=/dev/null \
-			-o StrictHostKeyChecking=no -o IdentitiesOnly=yes \
-			-i ${AWSCONFIGOUTPUTDIRECTORY}${KEYNAME}.pem ec2-user@${instanceHostNamePublic}
+		ssh -i ${KEYFILE} ec2-user@${instanceHostNamePublic}
 
+		echo "disconnected from instance: $EC2RUNARGUMENT"
 	###########################################################
 	#########      EC2RunArgument=createAMI           #########
 	###########################################################
 	elif [[ $EC2RUNARGUMENT == "createAMI" ]]; then
 		echo "EC2RUNARGUMENT=$EC2RUNARGUMENT"
-		ssh -o UserKnownHostsFile=/dev/null \
-			-o StrictHostKeyChecking=no -o IdentitiesOnly=yes \
-			-i ${AWSCONFIGOUTPUTDIRECTORY}${KEYNAME}.pem ec2-user@${instanceHostNamePublic} \
+		ssh -i ${KEYFILE} ec2-user@${instanceHostNamePublic} \
 			'bash -s' < ./${SCRIPTNAME}
 		echo "----------------------------------------"
 		echo "----------------------------------------"
@@ -237,7 +247,6 @@ if [ $# -gt 10 ]; then
 		# 4.) shutdown
 		#TODO: Dry run,
 		aws ec2 terminate-instances --instance-ids $instanceID
-
 
 		#TODO: maybe don't need to do this....
 		# 6.) Cleanup, delete stack and key

@@ -48,7 +48,7 @@
 #NOTE: You get a maximum of 5 VPCS per region, each different stack name creates its own VPC
 SECONDS=0
 
-if [ $# -eq 16 ]; then
+if [ $# -eq 15 ]; then
 
 	STACKNAME=$1
 	COMPUTEENVIRONMENTNAME=$2
@@ -59,13 +59,12 @@ if [ $# -eq 16 ]; then
 	CUSTOMAMIFOREFS=$7
 	EBSVOLUMESIZEGB=$8
 	EFSPERFORMANCEMODE=$9
-	DOCKERREPOSEARCHSTRING=${10}
-	AWSCONFIGOUTPUTDIRECTORY=${11}
-	AWSCONFIGFILENAME=${12}
-	NEXTFLOWCONFIGOUTPUTDIRECTORY=${13}
-	REGION=${14}
-	KEYNAME=${15}
-	S3BUCKETNAME=${16}
+	AWSCONFIGOUTPUTDIRECTORY=${10}
+	AWSCONFIGFILENAME=${11}
+	NEXTFLOWCONFIGOUTPUTDIRECTORY=${12}
+	REGION=${13}
+	KEYNAME=${14}
+	S3BUCKETNAME=${15}
 	#VERBOSE=$7
 	#IMAGEID=$4
 	echo "STACKNAME=$STACKNAME" >> $AWSCONFIGFILENAME
@@ -77,7 +76,6 @@ if [ $# -eq 16 ]; then
 	echo "EBSVOLUMESIZEGB=$EBSVOLUMESIZEGB" >> $AWSCONFIGFILENAME
 	echo "MAXCPU=$MAXCPU"  >> $AWSCONFIGFILENAME
 	echo "DEFAULTAMI=$DEFAULTAMI"  >> $AWSCONFIGFILENAME
-	echo "DOCKERREPOSEARCHSTRING=$DOCKERREPOSEARCHSTRING"  >> $AWSCONFIGFILENAME
 	echo "REGION=$REGION" >> $AWSCONFIGFILENAME
 
 	ACCOUNTID=$(./getawsaccountid.sh)
@@ -89,19 +87,23 @@ if [ $# -eq 16 ]; then
 	#TODO: for S3 in regions outside us-east-1 https://docs.aws.amazon.com/cli/latest/reference/s3api/create-bucket.html 
 	#computeenvstatus=$()
 
-	#AMI Parameters
+	##################################################
+	# AMI Parameters for Custom AMI
+	##################################################
 	#this is only the instance type for creating AMIs
-	INSTANCETYPEFORAMICREATION=t2.micro 
 	#ami-0b9a214f40c38d5eb #latest as of 2018oct17
-	TEMPLATEIMAGEID=ami-06bec82fb46167b4f
-	#EBSVOLUMESIZEGB="50"
+	TEMPLATEIMAGEID=ami-00a0ec1744b47e7e3
+	INSTANCETYPEFORAMICREATION=t2.micro
+
 	#Additional identifiers for AMI
-	AMIIDENTIFIER=managerv5
+	AMIIDENTIFIER=managerv7
 	IMAGETAG=ImageRole
-	IMAGETAGVALUE=BLJManagerv5
+	IMAGETAGVALUE=BLJManagerv7
 	EFSTAG=BLJEFSPerformanceMode
 	EFSTAGVALUE=$EFSPERFORMANCEMODE
-	#Compute Environment Parameters
+
+	##################################################
+	# Compute Environment Parameters
 	#TODO: check if compute environment exists!!!
 	COMPUTEENVPRIORITY=10
 	echo "COMPUTEENVPRIORITY=$COMPUTEENVPRIORITY"
@@ -196,7 +198,7 @@ if [ $# -eq 16 ]; then
 		./createcloudformationstack.sh ${STACKNAME} $STACKFILE ParameterKey=\"NetworkAccessIP\",ParameterValue="$MYPUBLICIPADDRESS"
 	fi
 	#######################################################################################
-	#2.) check if stack exists once more
+	#1.b) check if stack exists once more
 	#######################################################################################
 	stackstatus=$(./getcloudformationstack.sh $STACKNAME)
 	if [ "$stackstatus" == "Stack exists" ]; then
@@ -230,16 +232,18 @@ if [ $# -eq 16 ]; then
 		echo "SUBNETS=$SUBNETS" >> $AWSCONFIGFILENAME
 		efsID=$(./getcloudformationstack.sh $STACKNAME FileSystemId)
 
-		LAUNCHTEMPLATEID=$(./getcloudformationstack.sh $STACKNAME LaunchTemplateId)
-		echo "LAUNCHTEMPLATEID=$LAUNCHTEMPLATEID" >> $AWSCONFIGFILENAME
-		#Name might be better to use later, will need to label it as an output under outputs! 
-		 #LaunchTemplateName=$(./getcloudformationstack.sh $STACKNAME LaunchTemplateName)
+		HEADNODELAUNCHTEMPLATEID=$(./getcloudformationstack.sh $STACKNAME HeadNodeLaunchTemplateId)
+		echo "HEADNODELAUNCHTEMPLATEID=$HEADNODELAUNCHTEMPLATEID" >> $AWSCONFIGFILENAME
 
+		BATCHNODELAUNCHTEMPLATEID=$(./getcloudformationstack.sh $STACKNAME BatchNodeLaunchTemplateId)
+		echo "BATCHNODELAUNCHTEMPLATEID=$BATCHNODELAUNCHTEMPLATEID" >> $AWSCONFIGFILENAME
+		#Name might be better to use later, will need to label it as an output under outputs! 
+		#LaunchTemplateName=$(./getcloudformationstack.sh $STACKNAME LaunchTemplateName)
 
         #######################################################################################
-		#3.) Check for AMI
+		#1.c) Check for AMI
 		#######################################################################################
-		#3.a) Check if default AMI exists
+		#1.c) Check if default AMI exists
 		# if the default AMI is not found OR if the user has specified "no" as the DEFAULTAMI
 		# then a custom AMI will be created
 		if [[ $DEFAULTAMI == "no" ]]; then
@@ -259,7 +263,7 @@ if [ $# -eq 16 ]; then
 			echo "CREATING new AMI...."
 			EC2RUNARGUMENT="createAMI"
 			INSTANCENAME="CREATEAMI"
-		#3.b)  Check if AMI with custom tags exists
+		#1.c)  Check if AMI with custom tags exists
 			#TODO: clean up the getec2images call. maybe rename functions
 			#If it doesn't exist ask if you want to create an AMI using the 
 			#if [ $IMAGEIDStatus == "image not found" ]; then
@@ -267,56 +271,59 @@ if [ $# -eq 16 ]; then
 	    		read -p "Image with tag: ${IMAGETAG}, value: ${IMAGETAGVALUE} does not exist. Do you want to create it?: " yn
 	    		case $yn in
 	        		[Yy]* ) ./launchEC2.sh $STACKNAME $TEMPLATEIMAGEID $INSTANCETYPEFORAMICREATION $KEYNAME $EBSVOLUMESIZEGB $SUBNETS $BASTIONSECURITYGROUP \
-											$INSTANCENAME $EC2RUNARGUMENT $LAUNCHTEMPLATEID $AWSCONFIGFILENAME configureEC2forAMI.sh \
+											$INSTANCENAME $EC2RUNARGUMENT $HEADNODELAUNCHTEMPLATEID $AWSCONFIGFILENAME configureEC2forAMI.sh \
 											$AMIIDENTIFIER $IMAGETAG $IMAGETAGVALUE; break;;
 	        		[Nn]* ) exit;;
 	        		* ) echo "Please answer yes or no.";;
 	    		esac
 			done
-			# ./launchEC2.sh $STACKNAME $TEMPLATEIMAGEID $INSTANCETYPEFORAMICREATION $KEYNAME $EBSVOLUMESIZEGB $SUBNETS $BASTIONSECURITYGROUP \
-			# 				$MYPUBLICIPADDRESS $INSTANCENAME $EC2RUNARGUMENT $LAUNCHTEMPLATEID configureEC2forAMI.sh \
-			# 				$AMIIDENTIFIER $IMAGETAG $IMAGETAGVALUE
-			#image ID is the 6th column in the outputstring
 			IMAGEID=$(echo $imageTagStatus | grep IMAGES | grep ami | awk '//{print $6}')
 
 		fi
 		echo "IMAGEID=$IMAGEID" >> $AWSCONFIGFILENAME
 
-
-
 		################################################################################################
-		#4.) Create Batch Computing environment
+		#2.) Create Batch Computing environment
 		####################################################################################################
 		echo "----------------------------------------------------------------------------------------------"
-		echo "4.) creating compute environment: $COMPUTEENVIRONMENTNAME       ------------------------------"
-		echo "----------------------------------------------------------------------------------------------"
+		echo "2.) creating Compute Environment and Job Queue              ----------------------------------"
 		echo "creating compute environment: $COMPUTEENVIRONMENTNAME"
+
+		COMPUTERESOURCES="type=SPOT,minvCpus=0,maxvCpus=$MAXCPU,desiredvCpus=$DESIREDCPUS,instanceTypes=optimal,
+		imageId=$IMAGEID,subnets=$SUBNETS,securityGroupIds=$BATCHSECURITYGROUP,ec2KeyPair=$KEYNAME,
+		instanceRole=$INSTANCEROLE,bidPercentage=$SPOTPERCENT,spotIamFleetRole=$IAMFLEETROLE,
+		launchTemplate={launchTemplateId=$BATCHNODELAUNCHTEMPLATEID}"
+		
+		COMPUTERESOURCES="$(echo -e "${COMPUTERESOURCES}" | tr -d '[:space:]')"
+
+		# batchCreateOutput=$(aws batch create-compute-environment --compute-environment-name $COMPUTEENVIRONMENTNAME \
+		# --type MANAGED --state ENABLED --service-role ${SERVICEROLE} \
+		# --compute-resources type=SPOT,minvCpus=0,maxvCpus=$MAXCPU,desiredvCpus=$DESIREDCPUS,instanceTypes=optimal,imageId=$IMAGEID,subnets=$SUBNETS,securityGroupIds=$BATCHSECURITYGROUP,ec2KeyPair=$KEYNAME,instanceRole=$INSTANCEROLE,bidPercentage=$SPOTPERCENT,spotIamFleetRole=$IAMFLEETROLE,launchTemplate={launchTemplateId=$BATCHNODELAUNCHTEMPLATEID})
+		
 		batchCreateOutput=$(aws batch create-compute-environment --compute-environment-name $COMPUTEENVIRONMENTNAME \
 		--type MANAGED --state ENABLED --service-role ${SERVICEROLE} \
-		--compute-resources type=SPOT,minvCpus=0,maxvCpus=$MAXCPU,desiredvCpus=$DESIREDCPUS,instanceTypes=optimal,imageId=$IMAGEID,subnets=$SUBNETS,securityGroupIds=$BATCHSECURITYGROUP,ec2KeyPair=$KEYNAME,instanceRole=$INSTANCEROLE,bidPercentage=$SPOTPERCENT,spotIamFleetRole=$IAMFLEETROLE,launchTemplate={launchTemplateId=$LAUNCHTEMPLATEID})
-		echo "$batchOutput"
+		--compute-resources "$COMPUTERESOURCES")
 		echo "$batchCreateOutput"
 		./sleepProgressBar.sh 3 4
 
-
 		#######################################################################################
-		#5.) Create Job Queue
+		#2.a) Create Job Queue
 		#######################################################################################
+		echo "----------------------------------------------------------------------------------------------"
+		echo "creating compute environment: $QUEUENAME"
 		queueCreateOutput=$(aws batch create-job-queue --job-queue-name $QUEUENAME \
 			--compute-environment-order order=0,computeEnvironment=$COMPUTEENVIRONMENTNAME  \
 			--priority $COMPUTEENVPRIORITY \
 			--state ENABLED)
-
 		echo $queueCreateOutput
-		
-
+		echo "----------------------------------------------------------------------------------------------"
 		#######################################################################################
 		#6.) Print success message
 		#######################################################################################
 		echo "----------------------------------------------------------------------------------------------"
 		timeinminutes=$(awk "BEGIN {print $SECONDS/60}")
 		echo "SUCCESS!"
-		echo "BLJ Stack, AMI, and compute environment deployed in: $timeinminutes minutes ($SECONDS seconds)"
+		echo "STACK: $STACKNAME, S3 Bucket, EFS, compute environment, Job Queue deployed in: $timeinminutes minutes ($SECONDS seconds)"
 		echo "----------------------------------------------------------------------------------------------"
 
 		#######################################################################################
@@ -330,18 +337,12 @@ if [ $# -eq 16 ]; then
 		# Note, the cpus and memory can be overridden at runtime in each nextflow process.
 		#######################################################################################
 		echo "----------------------------------------------------------------------------------------------"
-		echo "7.) Create Job Definition  -------------------------------------------------------------------"
+		echo "3.) Create Job Definition  -------------------------------------------------------------------"
 		echo "----------------------------------------------------------------------------------------------"
-		DOCKERRREPOVERSION="latest"
-		JOBVCPUS=2      #can be overridden at runtime
-		JOBMEMORY=1000	#can be overriden at runtime
-		#JOBDEFPREFIX=$(tr -s /: _ <<< "$DOCKERREPOSEARCHSTRING") #biolockj
-		# outputs two columns 
-		#DOCKER_IMAGE    JOBDEFINITION   Tab hack with awk
-		BLJBatchJobsDeployOutput=$(./updateBatchJobDefinitions.sh $DOCKERREPOSEARCHSTRING $DOCKERRREPOVERSION $JOBROLEARN $JOBVCPUS $JOBMEMORY $STACKNAME)  #$JOBDEFPREFIX
-		echo -e "$BLJBatchJobsDeployOutput"
-		echo -e $BLJBatchJobsDeployOutput > ${AWSCONFIGOUTPUTDIRECTORY}${STACKNAME}JobDefinitions.tsv
-		awk -v OFS="\t" '$1=$1' ${AWSCONFIGOUTPUTDIRECTORY}${STACKNAME}JobDefinitions.tsv
+		#BLJBatchJobsDeployOutput=$(./updateBatchJobDefinitions.sh $DOCKERREPOSEARCHSTRING $DOCKERRREPOVERSION $JOBROLEARN $JOBVCPUS $JOBMEMORY $STACKNAME)  #$JOBDEFPREFIX
+		BLJBatchJobsDeployOutput=$(./updateBatchJobDefinitions.sh $AWSCONFIGFILENAME)
+		echo "$BLJBatchJobsDeployOutput"
+		echo "$BLJBatchJobsDeployOutput" >> $AWSCONFIGFILENAME
 
 		echo "----------------------------------------------------------------------------------------------"
 		echo "----------------------------------------------------------------------------------------------"
@@ -355,14 +356,18 @@ if [ $# -eq 16 ]; then
 		echo "copy and paste this into a file named nextflow.config and change the values for accessKey and secretKey"
 		AWSACCESSKEY='mysecretaccesskeyid'
 		AWSSECRETKEY='mysecretkey'
-		nextflowconfig=$(./printnextflowconfig.sh $QUEUENAME $AWSACCESSKEY $AWSSECRETKEY)
+		nextflowconfig=$(./printnextflowconfig.sh $AWSCONFIGFILENAME) # $QUEUENAME $AWSACCESSKEY $AWSSECRETKEY)
 		
-		echo $nextflowconfig > "${NEXTFLOWCONFIGOUTPUTDIRECTORY}nextflow.config"
+		echo $nextflowconfig > "${NEXTFLOWCONFIGOUTPUTDIRECTORY}config"
 
 		echo "----------------------------------------------------------------------------------------------"
-		echo "9.) Launch EC2 and connect directly MIKE   ---------------------------------------------------"
+		echo "9.a) Configuration files saved to: "
+		echo "$NEXTFLOWCONFIGOUTPUTDIRECTORYconfig"
+		echo "$AWSCONFIGFILENAME"
 		echo "----------------------------------------------------------------------------------------------"
+		echo "9.b) Launch EC2 and connect directly:  -------------------------------------------------------"
 		echo "./launchEC2HeadNode.sh directconnect $STACKNAME t2.micro"
+		echo "----------------------------------------------------------------------------------------------"
 
 	else
 		echo "stack could not be found or created"

@@ -1,5 +1,6 @@
 *.pem
 nextflow.config
+testscript.sh
 .nextflow*
 nextflow/testprintnextflow/
 nextflow/testmultipledownloadgzip/

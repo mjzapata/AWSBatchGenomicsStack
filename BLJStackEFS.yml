@@ -271,10 +271,41 @@ Resources:
     Metadata:
       'AWS::CloudFormation::Designer':
         id: 6a0a382e-57d1-4fa4-944d-fe8dcbebb648
-  LaunchTemplate:
+  HeadNodeLaunchTemplate:
     Type: "AWS::EC2::LaunchTemplate"
     Properties:
-      LaunchTemplateName: !Join [ "-", [ !Ref "AWS::StackName", "BLJEFSTemplate" ] ]
+      LaunchTemplateName: !Join [ "-", [ !Ref "AWS::StackName", "HeadNodeTemplateWithEFS" ] ]
+      LaunchTemplateData:
+        UserData:
+          Fn::Base64: !Sub |
+            MIME-Version: 1.0
+            Content-Type: multipart/mixed; boundary="==MYBOUNDARY=="
+            
+            --==MYBOUNDARY==
+            Content-Type: text/cloud-config; charset="us-ascii"
+            
+            package_update: true
+
+            packages:
+            - amazon-efs-utils
+            
+            runcmd:
+            - yum update -y
+            - file_system_id_01=${FileSystem}
+            - efs_directory=/mnt/efs
+            - mkdir -p ${!efs_directory}
+            - echo "${!file_system_id_01}:/ ${!efs_directory} efs defaults,_netdev" >> /etc/fstab
+            - mount -a -t efs defaults
+            - chown -R ec2-user:ec2-user ${!efs_directory}
+            
+            --==MYBOUNDARY==--
+    Metadata:
+      'AWS::CloudFormation::Designer':
+        id: a2cdae54-64a6-41d6-8565-9eadf5bef1bc
+  BatchNodeLaunchTemplate:
+    Type: "AWS::EC2::LaunchTemplate"
+    Properties:
+      LaunchTemplateName: !Join [ "-", [ !Ref "AWS::StackName", "BatchNodeTemplateWithEFS" ] ]
       LaunchTemplateData:
         UserData:
           Fn::Base64: !Sub |
@@ -293,11 +324,13 @@ Resources:
             - mkdir -p ${!efs_directory}
             - echo "${!file_system_id_01}:/ ${!efs_directory} efs defaults,_netdev" >> /etc/fstab
             - mount -a -t efs defaults
+            - chown -R ec2-user:ec2-user ${!efs_directory}
             
             --==MYBOUNDARY==--
     Metadata:
       'AWS::CloudFormation::Designer':
         id: a2cdae54-64a6-41d6-8565-9eadf5bef1bc
+
 Outputs:
   Subnet:
     Value: !Ref Subnet
@@ -317,8 +350,10 @@ Outputs:
     Value: !Ref BatchServiceRole
   FileSystemId:
     Value: !Ref FileSystem
-  LaunchTemplateId:
-    Value: !Ref LaunchTemplate
+  HeadNodeLaunchTemplateId:
+    Value: !Ref HeadNodeLaunchTemplate
+  BatchNodeLaunchTemplateId:
+    Value: !Ref BatchNodeLaunchTemplate
 Metadata:
   'AWS::CloudFormation::Designer':
     4d9dff45-f244-46b4-bc94-72252bc75793:
