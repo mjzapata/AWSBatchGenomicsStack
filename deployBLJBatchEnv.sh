@@ -20,6 +20,7 @@ print_help() {
     echo "Run this command to test your results: docker search mydockerhubreponame | grep -E mydockerhubreponame"
     echo ""
     echo "-When the resources are no longer needed, run the delete command."
+    echo "MYSTACKNAME must be alphanumeric.  No underscores."
     echo ""
     echo "Usage: ./deployBLJBatchEnv.sh help"
     echo "Usage: ./deployBLJBatchEnv.sh create MYSTACKNAME mydockerhubreponame1"
@@ -130,7 +131,8 @@ else
             ./sleepProgressBar.sh 6 10
 
             ./awskeypair.sh delete $KEYNAME ${AWSCONFIGOUTPUTDIRECTORY}
-
+            
+            
             rm $AWSCONFIGFILENAME
             rm ${NEXTFLOWCONFIGOUTPUTDIRECTORY}config
 

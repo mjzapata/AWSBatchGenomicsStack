@@ -29,11 +29,13 @@ TIMELINENAME=${CONTAINERREPORTPATH}mytimelinefilename.html
 FLOWCHARTNAME=${CONTAINERREPORTPATH}myflowchart.html
 
 #/usr/local/bin/nextflow (in the container)
-ENTRYPOINT=/usr/local/bin/nextflow
+#ENTRYPOINT=/usr/local/bin/nextflow
+ENTRYPOINT=nextflow
 
 
 # bash trick with single and double quotes to get the COMMAND to be seen as a single argument
-COMMAND="' run . \
+COMMAND="' run $FLOWFILENAME \
+-c /flows/nextflow.config \
 -with-trace ${TRACENAME} \
 -with-timeline ${TIMELINENAME} \
 -with-dag ${FLOWCHARTNAME} \
@@ -46,8 +48,17 @@ docker run --rm -it --name nextflow \
 -v ${HOSTREPORTPATH}:${CONTAINERREPORTPATH} \
 -v ${NEXTFLOWHOSTCONFIGDIRECTORY}:${NEXTFLOWCONTAINERCONFIGDIRECTORY} \
 -v ${AWSHOSTCONFIGDIRECTORY}:${AWSCONTAINERCONFIGDIRECTORY} \
---entrypoint "${ENTRYPOINT}" $IMAGENAME -c $COMMAND
+--entrypoint "nextflow" $IMAGENAME -c $COMMAND
 
+
+
+docker run --rm -it --name nextflow \
+-v ${HOSTFLOWPATH}:${CONTAINERFLOWPATH} \
+-w ${CONTAINERFLOWPATH} \
+-v ${HOSTREPORTPATH}:${CONTAINERREPORTPATH} \
+-v ${NEXTFLOWHOSTCONFIGDIRECTORY}:${NEXTFLOWCONTAINERCONFIGDIRECTORY} \
+-v ${AWSHOSTCONFIGDIRECTORY}:${AWSCONTAINERCONFIGDIRECTORY} \
+--entrypoint "/usr/local/bin/nextflow" $IMAGENAME -c "run . -w s3://mytestbucketmz123/2018_02_03_testNextflowNode"
 
 
 #COMMAND='run /flows/main.nf -c /flows/nextflow.config -with-trace

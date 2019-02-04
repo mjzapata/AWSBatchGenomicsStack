@@ -1,4 +1,4 @@
-FROM ubuntu:latest
+FROM biolockj/manager:latest
 
 ARG DEBIAN_FRONTEND=noninteractive
 
