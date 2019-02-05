@@ -343,24 +343,19 @@ if [ $# -eq 15 ]; then
 		BLJBatchJobsDeployOutput=$(./updateBatchJobDefinitions.sh $AWSCONFIGFILENAME)
 		echo "$BLJBatchJobsDeployOutput"
 		echo "$BLJBatchJobsDeployOutput" >> $AWSCONFIGFILENAME
-
 		echo "----------------------------------------------------------------------------------------------"
-		echo "----------------------------------------------------------------------------------------------"
-
-		#######################################################################################
+		#####################################################################################################
 		#8.) Print Nextflow Config
-		#######################################################################################
+		#####################################################################################################
 		echo "----------------------------------------------------------------------------------------------"
 		echo "8.) Print Nextflow Config   ------------------------------------------------------------------"
 		echo "----------------------------------------------------------------------------------------------"
-		echo "copy and paste this into a file named nextflow.config and change the values for accessKey and secretKey"
-		AWSACCESSKEY='mysecretaccesskeyid'
-		AWSSECRETKEY='mysecretkey'
 		nextflowconfig=$(./printnextflowconfig.sh $AWSCONFIGFILENAME) # $QUEUENAME $AWSACCESSKEY $AWSSECRETKEY)
-		
+		echo $nextflowconfig
 		echo $nextflowconfig > "${NEXTFLOWCONFIGOUTPUTDIRECTORY}config"
-		echo "----------------------------------------------------------------------------------------------"
-echo '
+		echo "--------------------------------------------------------------------------------------------------------------"
+		echo -n "--------------------------------------------------------------------------------------------------------------"
+echo -n '
                   ___  _       __   _____                  ____            __            __                
                  /   || |     / /  / ___/                 / __ )  ____ _  / /_  _____   / /_               
                 / /| || | /| / /   \__ \                 / __  | / __ `/ / __/ / ___/  / __ \              
@@ -373,15 +368,21 @@ echo '
 \____/   \___/ /_/ /_/ \____/ /_/ /_/ /_/ /_/   \___/  /____/         /____/  \__/  \__,_/  \___/  /_/|_|  
                                                                                                           
 '
-
-		echo "----------------------------------------------------------------------------------------------"
-		echo "9.a) Configuration files saved to: "
+		echo "--------------------------------------------------------------------------------------------------------------"
+		echo "--------------------------------------------------------------------------------------------------------------"
+		echo "9.) Configuration files saved to: "
 		echo "$NEXTFLOWCONFIGOUTPUTDIRECTORYconfig"
 		echo "$AWSCONFIGFILENAME"
-		echo "----------------------------------------------------------------------------------------------"
-		echo "9.b) Launch EC2 and connect directly:  -------------------------------------------------------"
+		echo "-----------------------------------------------------------------------------------"
+		echo "10.a) Launch EC2 and run script directly:  ----------------------------------------"
+		echo "    -This option runs a script directly through ssh on the head node"
+		echo "./launchEC2HeadNode.sh runscript $STACKNAME t2.micro PATHTOMYSCRIPT.sh"
+		echo "-----------------------------------------------------------------------------------"		
+		echo "10.b) Launch EC2 and connect directly:  -------------------------------------------"
+		echo "     -This option runs an EC2 instance, copies associated credentials and"
+		echo "     creates an ssh connect directly to the headnode"
 		echo "./launchEC2HeadNode.sh directconnect $STACKNAME t2.micro"
-		echo "----------------------------------------------------------------------------------------------"
+		echo "-----------------------------------------------------------------------------------"
 
 	else
 		echo "stack could not be found or created"

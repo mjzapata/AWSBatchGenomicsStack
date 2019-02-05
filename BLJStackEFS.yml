@@ -137,20 +137,26 @@ Resources:
     Metadata:
       'AWS::CloudFormation::Designer':
         id: 7ad20dce-085e-463f-9df6-283f5a7d9d3a
-  Subnet:
+  Subnet1:
     Type: 'AWS::EC2::Subnet'
     Properties:
-      CidrBlock: 10.0.0.0/26
+      CidrBlock: 10.0.0.0/24
       VpcId: !Ref VPC
       MapPublicIpOnLaunch: 'True'
     Metadata:
       'AWS::CloudFormation::Designer':
         id: 87ccb9df-192a-4548-97f8-e7aa00fce39b
+  Subnet2:
+    Type: 'AWS::EC2::Subnet'
+    Properties:
+      CidrBlock: 10.0.1.0/24
+      VpcId: !Ref VPC
+      MapPublicIpOnLaunch: 'True'
   NetworkInterfaces:
     Type: 'AWS::EC2::NetworkInterface'
     Properties:
       Description: "Network interface for Bastion Node"
-      SubnetId: !Ref Subnet
+      SubnetId: !Ref Subnet1
       GroupSet:
         - Ref: BatchSecurityGroup
         - Ref: BastionSecurityGroup
@@ -163,14 +169,19 @@ Resources:
     Metadata:
       'AWS::CloudFormation::Designer':
         id: 37fc803d-6834-41a9-b4f7-4bc4d978d40f
-  SubnetRouteTableAssociation:
+  SubnetRouteTableAssociation1:
     Type: 'AWS::EC2::SubnetRouteTableAssociation'
     Properties:
       RouteTableId: !Ref RouteTable
-      SubnetId: !Ref Subnet
+      SubnetId: !Ref Subnet1
     Metadata:
       'AWS::CloudFormation::Designer':
         id: 63060ecd-552e-4088-a4eb-e152be2eaa9c
+  SubnetRouteTableAssociation2:
+    Type: 'AWS::EC2::SubnetRouteTableAssociation'
+    Properties:
+      RouteTableId: !Ref RouteTable
+      SubnetId: !Ref Subnet2
   BatchServiceRole:
     Type: 'AWS::IAM::Role'
     Properties:
@@ -259,15 +270,26 @@ Resources:
     Metadata:
       'AWS::CloudFormation::Designer':
         id: e3143b62-7cb1-4dea-87cd-5e0f290e684b
-  MountTarget:
+  MountTarget1:
     Type: 'AWS::EFS::MountTarget'
     Properties:
       FileSystemId:
         Ref: FileSystem
       SubnetId:
-        Ref: Subnet
+        Ref: Subnet1
       SecurityGroups:
         - Ref: BastionSecurityGroup
+        - Ref: BatchSecurityGroup
+  MountTarget2:
+    Type: 'AWS::EFS::MountTarget'
+    Properties:
+      FileSystemId:
+        Ref: FileSystem
+      SubnetId:
+        Ref: Subnet2
+      SecurityGroups:
+        - Ref: BastionSecurityGroup
+        - Ref: BatchSecurityGroup
     Metadata:
       'AWS::CloudFormation::Designer':
         id: 6a0a382e-57d1-4fa4-944d-fe8dcbebb648
@@ -332,8 +354,10 @@ Resources:
         id: a2cdae54-64a6-41d6-8565-9eadf5bef1bc
 
 Outputs:
-  Subnet:
-    Value: !Ref Subnet
+  Subnet1:
+    Value: !Ref Subnet1
+  Subnet2:
+    Value: !Ref Subnet2
   BatchSecurityGroup:
     Value: !Ref BatchSecurityGroup
   BastionSecurityGroup:

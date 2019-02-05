@@ -35,6 +35,10 @@ if [ $# -gt 10 ]; then
 	#replace comma of Security groups with spaces
 	SECURITYGROUPS=`echo "$SECURITYGROUPS" | tr ',' ' '`
 	echo "SECURITYGROUPS=$SECURITYGROUPS"
+
+	#TODO: more elegant way of choosing subnet
+	SUBNET=$(echo "$SUBNETS" | cut -f2 -d",")
+
 	#run EC2 instances: https://docs.aws.amazon.com/cli/latest/reference/ec2/run-instances.html
 	# https://docs.aws.amazon.com/cli/latest/userguide/cli-ec2-launch.html
 	if [[ $EBSVOLUMESIZEGB > 1 ]]; then
@@ -47,7 +51,7 @@ if [ $# -gt 10 ]; then
 				--count 1 \
 				--instance-type $INSTANCETYPE \
 				--key-name $KEYNAME \
-				--subnet-id $SUBNETS \
+				--subnet-id $SUBNET \
 				--block-device-mappings 'DeviceName=/dev/sdb,Ebs={VolumeSize="'$EBSVOLUMESIZEGB'",DeleteOnTermination=true,Encrypted=false,VolumeType=gp2}')
 		else
 			EC2RunOutput=$(aws ec2 run-instances \
@@ -57,7 +61,7 @@ if [ $# -gt 10 ]; then
 				--count 1 \
 				--instance-type $INSTANCETYPE \
 				--key-name $KEYNAME \
-				--subnet-id $SUBNETS \
+				--subnet-id $SUBNET \
 				--launch-template LaunchTemplateId=$LAUNCHTEMPLATEID \
 				--block-device-mappings 'DeviceName=/dev/sdb,Ebs={VolumeSize="'$EBSVOLUMESIZEGB'",DeleteOnTermination=true,Encrypted=false,VolumeType=gp2}' )
 		fi
@@ -73,7 +77,7 @@ if [ $# -gt 10 ]; then
 				--count 1 \
 				--instance-type $INSTANCETYPE \
 				--key-name $KEYNAME \
-				--subnet-id $SUBNETS)
+				--subnet-id $SUBNET)
 		else
 			EC2RunOutput=$(aws ec2 run-instances \
 				--tag-specifications 'ResourceType=instance,Tags={Key=Name,Value="'$INSTANCENAME'"}' \
@@ -82,7 +86,7 @@ if [ $# -gt 10 ]; then
 				--count 1 \
 				--instance-type $INSTANCETYPE \
 				--key-name $KEYNAME \
-				--subnet-id $SUBNETS \
+				--subnet-id $SUBNET \
 				--launch-template LaunchTemplateId=$LAUNCHTEMPLATEID)
 		fi
 
@@ -148,7 +152,8 @@ if [ $# -gt 10 ]; then
 	KEYFILE=${AWSCONFIGOUTPUTDIRECTORY}${KEYNAME}.pem
 
 	if [ $EC2RUNARGUMENT != "createAMI" ]; then
-		# ssh ec2-user@${instanceHostNamePublic} -i ${AWSCONFIGOUTPUTDIRECTORY}${KEYNAME}.pem -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no "mkdir -p /home/ec2-user/.aws/"
+		# ssh ec2-user@${instanceHostNamePublic} -i ${AWSCONFIGOUTPUTDIRECTORY}${KEYNAME}.pem \
+		# -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no "mkdir -p /home/ec2-user/.aws/" \
 		# -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -o IdentitiesOnly=yes
 		# don't check identity on first connect
 		SSH_OPTIONS=""

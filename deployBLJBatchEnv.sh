@@ -45,7 +45,7 @@ else
 
         COMPUTEENVIRONMENTNAME=${STACKNAME}ComputeEnv
         QUEUENAME=${STACKNAME}Queue
-        SPOTPERCENT=70
+        SPOTPERCENT=75
         MAXCPU=1024
         EBSVOLUMESIZEGB=0
 
@@ -131,8 +131,8 @@ else
             ./sleepProgressBar.sh 6 10
 
             ./awskeypair.sh delete $KEYNAME ${AWSCONFIGOUTPUTDIRECTORY}
-            
-            
+
+
             rm $AWSCONFIGFILENAME
             rm ${NEXTFLOWCONFIGOUTPUTDIRECTORY}config
 
