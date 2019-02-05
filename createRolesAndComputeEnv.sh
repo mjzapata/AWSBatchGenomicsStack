@@ -286,7 +286,7 @@ if [ $# -eq 15 ]; then
 		#2.) Create Batch Computing environment
 		####################################################################################################
 		echo "----------------------------------------------------------------------------------------------"
-		echo "2.) creating Compute Environment and Job Queue              ----------------------------------"
+		echo "2.) creating Compute Environment and Job Queue   ---------------------------------------------"
 		echo "creating compute environment: $COMPUTEENVIRONMENTNAME"
 
 		COMPUTERESOURCES="type=SPOT,minvCpus=0,maxvCpus=$MAXCPU,desiredvCpus=$DESIREDCPUS,instanceTypes=optimal,

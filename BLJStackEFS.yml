@@ -140,6 +140,7 @@ Resources:
   Subnet1:
     Type: 'AWS::EC2::Subnet'
     Properties:
+      AvailabilityZone: !Select [0, !GetAZs '']
       CidrBlock: 10.0.0.0/24
       VpcId: !Ref VPC
       MapPublicIpOnLaunch: 'True'
@@ -149,6 +150,7 @@ Resources:
   Subnet2:
     Type: 'AWS::EC2::Subnet'
     Properties:
+      AvailabilityZone: !Select [1, !GetAZs '']
       CidrBlock: 10.0.1.0/24
       VpcId: !Ref VPC
       MapPublicIpOnLaunch: 'True'
