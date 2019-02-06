@@ -23,8 +23,9 @@ print_help() {
     echo "MYSTACKNAME must be alphanumeric.  No underscores."
     echo ""
     echo "Usage: ./deployBLJBatchEnv.sh help"
-    echo "Usage: ./deployBLJBatchEnv.sh create MYSTACKNAME mydockerhubreponame1"
-    echo "Usage: ./deployBLJBatchEnv.sh create MYSTACKNAME \"mydockerhubreponame1|mydockerhubreponame2|mydockerhubreponame3\""
+    echo "Usage: ./deployBLJBatchEnv.sh create MYSTACKNAME mydockerhubreponame1 autogenerate"
+    echo "Usage: ./deployBLJBatchEnv.sh create MYSTACKNAME mydockerhubreponame1 MYS3BUCKETNAME"
+    echo "Usage: ./deployBLJBatchEnv.sh create MYSTACKNAME \"mydockerhubreponame1|mydockerhubreponame2|mydockerhubreponame3\" MYS3BUCKETNAME"
     echo "Usage: ./deployBLJBatchEnv.sh delete MYSTACKNAME"
     echo ""
 }
