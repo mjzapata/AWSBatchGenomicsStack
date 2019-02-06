@@ -86,7 +86,7 @@ if [ $# -eq 15 ]; then
 	#TODO: create a seperate script for the compute environment
 	#TODO: for S3 in regions outside us-east-1 https://docs.aws.amazon.com/cli/latest/reference/s3api/create-bucket.html 
 	#computeenvstatus=$()
-
+	
 	##################################################
 	# AMI Parameters for Custom AMI
 	##################################################

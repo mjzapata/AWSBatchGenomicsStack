@@ -1,7 +1,6 @@
 #!/bin/bash
 
-
-#PROFILE=default
+#PROFILE=batchcompute
 #REGION=us-east-1
 #OUTPUTFORMAT=text
 #AWSACCESSKEYID=mysecretkeyid
@@ -20,12 +19,11 @@ if [ $# -eq 5 ]; then
 	#unlock the files
 	chmod -R 777 ~/.aws/*
 
-	echo -e "[${PROFILE}]\noutput = ${OUTPUTFORMAT}\nregion = ${REGION}" > ~/.aws/config
+	echo -e "[profile ${PROFILE}]\noutput = ${OUTPUTFORMAT}\nregion = ${REGION}" > ~/.aws/config
 	echo -e "[${PROFILE}]\naws_access_key_id = ${AWSACCESSKEYID}\naws_secret_access_key = ${AWSSECRETACCESSKEY}" > ~/.aws/credentials
 
 	#relock the files
 	chmod -R 600 ~/.aws/*
-
 
 else
 

@@ -5,7 +5,7 @@
 
 #also check if there are currently any instances using any of these resources?
 #get the ID and tell them to run the shutdown
-
+#AWS_PROFILE=batchcompute
 
 ARGUMENT=$1
 
@@ -25,9 +25,8 @@ print_help() {
     echo "Usage: ./deployBLJBatchEnv.sh help"
     echo "Usage: ./deployBLJBatchEnv.sh create MYSTACKNAME mydockerhubreponame1"
     echo "Usage: ./deployBLJBatchEnv.sh create MYSTACKNAME \"mydockerhubreponame1|mydockerhubreponame2|mydockerhubreponame3\""
-    echo "Usage: ./deployBLJBatchEnv.sh delete MYSTACKNAME"    
+    echo "Usage: ./deployBLJBatchEnv.sh delete MYSTACKNAME"
     echo ""
-
 }
 
 if [ $ARGUMENT == "help" ] || [ $ARGUMENT == "--help" ] || [ $ARGUMENT == "-h" ]; then
@@ -82,6 +81,7 @@ else
             echo "#!/bin/bash" > $AWSCONFIGFILENAME
             echo "" >> $AWSCONFIGFILENAME
             echo "AWSCONFIGFILENAME=$AWSCONFIGFILENAME" >> $AWSCONFIGFILENAME
+            #echo "AWS_PROFILE=$AWS_PROFILE" >> $AWSCONFIGFILENAME
             echo "DOCKERREPOSEARCHSTRING=\"$DOCKERREPOSEARCHSTRING\"" >> $AWSCONFIGFILENAME
             echo "DOCKERRREPOVERSION=$DOCKERRREPOVERSION" >> $AWSCONFIGFILENAME
             echo "JOBVCPUS=$JOBVCPUS" >> $AWSCONFIGFILENAME

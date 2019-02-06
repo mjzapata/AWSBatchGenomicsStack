@@ -37,7 +37,7 @@ if [ $# -gt 10 ]; then
 	echo "SECURITYGROUPS=$SECURITYGROUPS"
 
 	#TODO: more elegant way of choosing subnet
-	SUBNET=$(echo "$SUBNETS" | cut -f2 -d",")
+	SUBNET=$(echo "$SUBNETS" | cut -f1 -d",")
 
 	#run EC2 instances: https://docs.aws.amazon.com/cli/latest/reference/ec2/run-instances.html
 	# https://docs.aws.amazon.com/cli/latest/userguide/cli-ec2-launch.html
@@ -155,27 +155,31 @@ if [ $# -gt 10 ]; then
 		# ssh ec2-user@${instanceHostNamePublic} -i ${AWSCONFIGOUTPUTDIRECTORY}${KEYNAME}.pem \
 		# -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no "mkdir -p /home/ec2-user/.aws/" \
 		# -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -o IdentitiesOnly=yes
-		# don't check identity on first connect
-		SSH_OPTIONS=""
+		# Docs on the proper way to ssh
+		# https://superuser.com/questions/187779/too-many-authentication-failures-for-username
+		# https://serverfault.com/questions/36291/how-to-recover-from-too-many-authentication-failures-for-user-root
 
-		ssh ec2-user@${instanceHostNamePublic} -i ${KEYFILE} -o StrictHostKeyChecking=no "mkdir -p /home/ec2-user/.aws/"
-		ssh ec2-user@${instanceHostNamePublic} -i ${KEYFILE} "mkdir -p /home/ec2-user/.nextflow/"
+		# don't check identity on first connect
+		SSH_OPTIONS="-o IdentitiesOnly=yes"
+
+		ssh ec2-user@${instanceHostNamePublic} -i ${KEYFILE} $SSH_OPTIONS -o StrictHostKeyChecking=no "mkdir -p /home/ec2-user/.aws/"
+		ssh ec2-user@${instanceHostNamePublic} -i ${KEYFILE} $SSH_OPTIONS "mkdir -p /home/ec2-user/.nextflow/"
 
 		# AWS Configuration 
 		echo "Creating remote directories"
 		#scp -o UserKnownHostsFile=/dev/null -i ${AWSCONFIGOUTPUTDIRECTORY}${KEYNAME}.pem -o StrictHostKeyChecking=no 
 		#${AWSCONFIGOUTPUTDIRECTORY}${STACKNAME}JobDefinitions.tsv ec2-user@${instanceHostNamePublic}:/home/ec2-user/.aws/
-		scp -i ${KEYFILE} $AWSCONFIGFILENAME ec2-user@${instanceHostNamePublic}:/home/ec2-user/.aws/
-		scp -i ${KEYFILE} ${AWSCONFIGOUTPUTDIRECTORY}${KEYNAME}.pem ec2-user@${instanceHostNamePublic}:/home/ec2-user/.aws/
-		scp -i ${KEYFILE} ${AWSCONFIGOUTPUTDIRECTORY}config ec2-user@${instanceHostNamePublic}:/home/ec2-user/.aws/
-		scp -i ${KEYFILE} ${AWSCONFIGOUTPUTDIRECTORY}credentials ec2-user@${instanceHostNamePublic}:/home/ec2-user/.aws/
+		scp -i ${KEYFILE} $SSH_OPTIONS $AWSCONFIGFILENAME ec2-user@${instanceHostNamePublic}:/home/ec2-user/.aws/
+		scp -i ${KEYFILE} $SSH_OPTIONS ${AWSCONFIGOUTPUTDIRECTORY}${KEYNAME}.pem ec2-user@${instanceHostNamePublic}:/home/ec2-user/.aws/
+		scp -i ${KEYFILE} $SSH_OPTIONS ${AWSCONFIGOUTPUTDIRECTORY}config ec2-user@${instanceHostNamePublic}:/home/ec2-user/.aws/
+		scp -i ${KEYFILE} $SSH_OPTIONS ${AWSCONFIGOUTPUTDIRECTORY}credentials ec2-user@${instanceHostNamePublic}:/home/ec2-user/.aws/
 
 		# Scripts for running the head node
 		#scp -i ${KEYFILE} launchEC2HeadNode.sh ec2-user@${instanceHostNamePublic}:/home/ec2-user/
-		scp -i ${KEYFILE} startHeadNode.sh ec2-user@${instanceHostNamePublic}:/home/ec2-user/
+		scp -i ${KEYFILE} $SSH_OPTIONS startHeadNode.sh ec2-user@${instanceHostNamePublic}:/home/ec2-user/
 
 		# Nextflow Configuration
-		scp -i ${KEYFILE} ~/.nextflow/config ec2-user@${instanceHostNamePublic}:/home/ec2-user/.nextflow/
+		scp -i ${KEYFILE} $SSH_OPTIONS ~/.nextflow/config ec2-user@${instanceHostNamePublic}:/home/ec2-user/.nextflow/
 
 	fi
 
@@ -191,7 +195,7 @@ if [ $# -gt 10 ]; then
 	###########################################################
 	if [[ $EC2RUNARGUMENT == "runscript" ]]; then
 		echo "instance running..."
-		ssh -i ${KEYFILE} ec2-user@${instanceHostNamePublic} \
+		ssh -v -i ${KEYFILE} ec2-user@${instanceHostNamePublic} $SSH_OPTIONS \
 			'bash -s' < ./${SCRIPTNAME}
 
 		echo "disconnected from instance: $EC2RUNARGUMENT"
@@ -210,7 +214,7 @@ if [ $# -gt 10 ]; then
 		echo "-------------------------------------------------------"
 
 		echo "Connecting directly via ssh:"
-		ssh -i ${KEYFILE} ec2-user@${instanceHostNamePublic}
+		ssh -v -i ${KEYFILE} ec2-user@${instanceHostNamePublic} $SSH_OPTIONS 
 
 		echo "disconnected from instance: $EC2RUNARGUMENT"
 	###########################################################
@@ -218,7 +222,7 @@ if [ $# -gt 10 ]; then
 	###########################################################
 	elif [[ $EC2RUNARGUMENT == "createAMI" ]]; then
 		echo "EC2RUNARGUMENT=$EC2RUNARGUMENT"
-		ssh -i ${KEYFILE} ec2-user@${instanceHostNamePublic} \
+		ssh -v -i ${KEYFILE} ec2-user@${instanceHostNamePublic} $SSH_OPTIONS \
 			'bash -s' < ./${SCRIPTNAME}
 		echo "----------------------------------------"
 		echo "----------------------------------------"
