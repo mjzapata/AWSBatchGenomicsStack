@@ -51,7 +51,6 @@ docker run --rm -it --name nextflow \
 --entrypoint "nextflow" $IMAGENAME -c $COMMAND
 
 
-
 docker run --rm -it --name nextflow \
 -v ${HOSTFLOWPATH}:${CONTAINERFLOWPATH} \
 -w ${CONTAINERFLOWPATH} \
