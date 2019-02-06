@@ -38,6 +38,7 @@ else
 
         # Job Definition
         DOCKERREPOSEARCHSTRING=$3
+        S3BUCKETNAME=$4
         DOCKERRREPOVERSION="latest"
         JOBVCPUS=2      #can be overridden at runtime
         JOBMEMORY=1000  #can be overriden at runtime
@@ -66,9 +67,8 @@ else
 
         #S3 buckets will NOT be deleted when running "./deployBLJBatchEnv delete"
         #autogenerate is a keyword that creates a bucket named ${STACKNAME}{randomstring}, eg Stack1_oijergoi4itf94j94
-        S3BUCKETNAME=autogenerate
 
-    	if [ "$ARGUMENT" == "create" ] && [ $# -eq 3 ]; then
+    	if [ "$ARGUMENT" == "create" ] && [ $# -eq 4 ]; then
             
             #DEFAULTAMI=ami-06bec82fb46167b4f #IMAGES
             echo "Finding Latest Amazon Linux AMI ID..."

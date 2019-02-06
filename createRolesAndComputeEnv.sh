@@ -86,7 +86,7 @@ if [ $# -eq 15 ]; then
 	#TODO: create a seperate script for the compute environment
 	#TODO: for S3 in regions outside us-east-1 https://docs.aws.amazon.com/cli/latest/reference/s3api/create-bucket.html 
 	#computeenvstatus=$()
-	
+
 	##################################################
 	# AMI Parameters for Custom AMI
 	##################################################
@@ -211,8 +211,6 @@ if [ $# -eq 15 ]; then
 		JOBROLEARN=$(./getcloudformationstack.sh $STACKNAME ECSTaskRole)
 		echo "JOBROLEARN=$JOBROLEARN" >> $AWSCONFIGFILENAME
 		
-		#INSTANCEROLE=$(./getcloudformationstack.sh $STACKNAME EcsInstanceRoleArn)
-		#INSTANCEROLE=arn:aws:iam::${ACCOUNTID}:role/${INSTANCEROLE}
 		INSTANCEROLE=$(./getcloudformationstack.sh $STACKNAME IamInstanceProfileArn)
 		INSTANCEROLE=arn:aws:iam::${ACCOUNTID}:instance-profile/${INSTANCEROLE}
 		echo "INSTANCEROLE=$INSTANCEROLE" >> $AWSCONFIGFILENAME
@@ -221,8 +219,7 @@ if [ $# -eq 15 ]; then
 		# allows security group creation for each instance?  Public for web facing, private for batch?
 		BASTIONSECURITYGROUP=$(./getcloudformationstack.sh $STACKNAME BastionSecurityGroup)
 		#BATCHSECURITYGROUP=$(./getcloudformationstack.sh $STACKNAME BatchSecurityGroup)  #TODO: change the json and this to have a name that returns a different value
-		BATCHSECURITYGROUP=$BASTIONSECURITYGROUP
-		#BATCHSECURITYGROUP=$BASTIONSECURITYGROUP  #TODO delete this and uncomment later
+		BATCHSECURITYGROUP=$BASTIONSECURITYGROUP #TODO delete this and uncomment later
 
 		SECURITYGROUPS="$BASTIONSECURITYGROUP,$BATCHSECURITYGROUP"
 
