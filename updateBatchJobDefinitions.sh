@@ -26,6 +26,10 @@ if [[ $# -eq 1 ]]; then
 	source $AWSCONFIGFILENAME
 	dockersearchoutput=$(docker search "$DOCKERREPOSEARCHSTRING" | grep -E "^$DOCKERREPOSEARCHSTRING") #| grep $DOCKERREPOSEARCHSTRING)
 	
+	if [ $DOCKERREPOSEARCHSTRING ?? 'biolockj' ]; then
+		dockersearchoutput=$(docker search "$DOCKERREPOSEARCHSTRING" | grep -E "^$DOCKERREPOSEARCHSTRING" | grep -v _basic | grep -v _manager) 
+	fi
+	
 	IFS=$'\t' #necessary to get tabs to parse correctly
 	repoimagelist=$(echo $dockersearchoutput | awk '//{print $1}')
 	#DEPLOYJOBDEFINITIONSOUTPUT='STACKNAME=$STACKNAME'

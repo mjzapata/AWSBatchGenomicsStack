@@ -133,7 +133,6 @@ else
 
             ./awskeypair.sh delete $KEYNAME ${AWSCONFIGOUTPUTDIRECTORY}
 
-
             rm $AWSCONFIGFILENAME
             rm ${NEXTFLOWCONFIGOUTPUTDIRECTORY}config
 

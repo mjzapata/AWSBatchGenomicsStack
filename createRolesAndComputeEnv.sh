@@ -4,9 +4,6 @@
 # variable names and iam template drawn fromfrom the AWS batch genomics tutorial pipeline (below) and modified to work with NextFlow.
 # https://github.com/aws-samples/aws-batch-genomics/blob/master/README.md
 
-#NOTE: On the "BASTIONSECURITYGROUP", Currently, for security, this restricts access to a range of IP addresses.  
-#NOTE: All ports will appear blocked if your public IP address changes from the security group was created.  
-
 #Things only created once: IAM stack, security group, network (one public, one private/or use the default?  What about one in between???)
 
 #Questions for Sarah:  EBS.  Am I provisioning 1TB for one instance or for each instance?
@@ -173,9 +170,10 @@ if [ $# -eq 15 ]; then
 	# reduce the last number to be more leniant about ip a ddresses, for example if a university has multiple IPs
 	#Get local public IPaddress https://askubuntu.com/questions/95910/command-for-determining-my-public-ip 
 	# curl -s checkip.dyndns.org | sed -e 's/.*Current IP Address: //' -e 's/<.*$//'  
-	MYPUBLICIPADDRESS=$(curl -s checkip.dyndns.org | sed -e 's/.*Current IP Address: //' -e 's/<.*$//' )
-	MASK=32
-	MYPUBLICIPADDRESS=${MYPUBLICIPADDRESS}"/"${MASK}
+	#MYPUBLICIPADDRESS=$(curl -s checkip.dyndns.org | sed -e 's/.*Current IP Address: //' -e 's/<.*$//' )
+	#MASK=32
+	#MYPUBLICIPADDRESS=${MYPUBLICIPADDRESS}"/"${MASK}
+	MYPUBLICIPADDRESS=$(./ipTools.sh getip)
 	echo "MYPUBLICIPADDRESS=$MYPUBLICIPADDRESS" >> $AWSCONFIGFILENAME
 
 	#1.) Check for key and create if it doesn't exist.  This is a keypair for ssh into EC2.
