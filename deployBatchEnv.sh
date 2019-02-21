@@ -22,11 +22,11 @@ print_help() {
     echo "-When the resources are no longer needed, run the delete command."
     echo "MYSTACKNAME must be alphanumeric.  No underscores."
     echo ""
-    echo "Usage: ./deployBLJBatchEnv.sh help"
-    echo "Usage: ./deployBLJBatchEnv.sh create MYSTACKNAME mydockerhubreponame1 autogenerate"
-    echo "Usage: ./deployBLJBatchEnv.sh create MYSTACKNAME mydockerhubreponame1 MYS3BUCKETNAME"
-    echo "Usage: ./deployBLJBatchEnv.sh create MYSTACKNAME \"mydockerhubreponame1|mydockerhubreponame2|mydockerhubreponame3\" MYS3BUCKETNAME"
-    echo "Usage: ./deployBLJBatchEnv.sh delete MYSTACKNAME"
+    echo "Usage: ./deployBatchEnv.sh help"
+    echo "Usage: ./deployBatchEnv.sh create MYSTACKNAME mydockerhubreponame1 autogenerate"
+    echo "Usage: ./deployBatchEnv.sh create MYSTACKNAME mydockerhubreponame1 MYS3BUCKETNAME"
+    echo "Usage: ./deployBatchEnv.sh create MYSTACKNAME \"mydockerhubreponame1|mydockerhubreponame2|mydockerhubreponame3\" MYS3BUCKETNAME"
+    echo "Usage: ./deployBatchEnv.sh delete MYSTACKNAME"
     echo ""
 }
 
