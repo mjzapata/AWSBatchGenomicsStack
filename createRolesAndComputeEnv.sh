@@ -224,7 +224,8 @@ if [ $# -eq 14 ]; then
 		echo "----------------------------------------------------------------------------------------------"
 		echo "3.) Create Job Definition  -------------------------------------------------------------------"
 		echo "----------------------------------------------------------------------------------------------"
-		#BLJBatchJobsDeployOutput=$(./updateBatchJobDefinitions.sh $DOCKERREPOSEARCHSTRING $DOCKERRREPOVERSION $JOBROLEARN $JOBVCPUS $JOBMEMORY $STACKNAME)  #$JOBDEFPREFIX
+		#BLJBatchJobsDeployOutput=$(./updateBatchJobDefinitions.sh $DOCKERREPOSEARCHSTRING $DOCKERRREPOVERSION 
+		#                          $JOBROLEARN $JOBVCPUS $JOBMEMORY $STACKNAME)  #$JOBDEFPREFIX
 		BLJBatchJobsDeployOutput=$(./updateBatchJobDefinitions.sh $STACKNAME)
 		echo "$BLJBatchJobsDeployOutput"
 		echo "$BLJBatchJobsDeployOutput" >> $AWSCONFIGFILENAME
