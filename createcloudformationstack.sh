@@ -1,7 +1,8 @@
 #!/bin/bash
 
 
-#aws --region us-east-1 cloudformation create-stack --stack-name stackBLJ --template-body file://Managed_EC2_and_Spot_Batch_Environment.json --capabilities CAPABILITY_IAM
+#aws --region us-east-1 cloudformation create-stack --stack-name stackBLJ 
+		#--template-body file://Managed_EC2_and_Spot_Batch_Environment.json --capabilities CAPABILITY_IAM
 
 #InternalAccessSecurityGroup
 #aws cloudformation create-stack \
@@ -32,11 +33,11 @@ if [ $# -eq 2 ]; then
 		echo "-----------------------------------------------------------------------------------------"
 		# wait loop to check for creating.  could take a few minutes
 		# Then "Stack exists"
-		stackstatus=$(./getcloudformationstack.sh $STACKNAME)
+		stackstatus=$(./support/getcloudformationstack.sh $STACKNAME)
 		totaltime=0
 		while [ "$stackstatus" != "Stack exists" ]
 		do
-			stackstatus=$(./getcloudformationstack.sh $STACKNAME) 
+			stackstatus=$(./support/getcloudformationstack.sh $STACKNAME) 
 			echo "."
 			sleep 10s
 			totaltime=$((totaltime+10))
@@ -62,13 +63,13 @@ elif [[ $# -gt 2 ]]; then
 		echo "-----------------------------------------------------------------------------------------"
 		# wait loop to check for creating.  could take a few minutes
 		# Then "Stack exists"
-		stackstatus=$(./getcloudformationstack.sh $STACKNAME)
+		stackstatus=$(./support/getcloudformationstack.sh $STACKNAME)
 		totaltime=0
 		echo "|------------------------------------------|"
 		echo -n "<"
 		while [ "$stackstatus" != "Stack exists" ]
 		do
-			stackstatus=$(./getcloudformationstack.sh $STACKNAME) 
+			stackstatus=$(./support/getcloudformationstack.sh $STACKNAME) 
 			echo -n "."
 			sleep 5s
 			totaltime=$((totaltime+5))
@@ -76,14 +77,13 @@ elif [[ $# -gt 2 ]]; then
 		echo ">"
 		echo "Stack $STACKNAME created in $totaltime seconds"
 
-
-		#TODO: make another elif for a parameter file instead
-
 else
 	echo "Usage: ./createcloudformation.sh [mystackname] delete  delete given stack (may take some time)"
 	echo "Usage: ./createcloudformation.sh [mystackname] [mystackfile] (will take several minutes to create all resources)"
 	echo "Usage: ./createcloudformation.sh [mystackname] [mystackfile] --parameters [additional parameterstring]"
-	echo "example: ./createcloudformation.sh [mystackname] [mystackfile] \"--parameters ParameterKey="NetworkAccessIP",ParameterValue="my.ip.add.ress/32\" "     (possible parameters must be specified in cloudformation template ahead of time in the parameters section)"
+	echo -n "example: ./createcloudformation.sh [mystackname] [mystackfile] "
+	echo "\"--parameters ParameterKey="NetworkAccessIP",ParameterValue="my.ip.add.ress/32\" ""
+	echo "(possible parameters must be specified in cloudformation template ahead of time in the parameters section)"
 	echo "the cloudformation stack included here allows for ssh only from the specified IP address ranges following CIDR notation"
 fi
 

@@ -227,7 +227,7 @@ if [ $# -gt 10 ]; then
 
 		#run it with the script configureEC2forAMI.sh   https://stackoverflow.com/questions/305035/how-to-use-ssh-to-run-a-shell-script-on-a-remote-machine 
 		imageID=$(aws ec2 create-image --instance-id $instanceID --name BLJAMI${AMIIDENTIFIER}-${EBSVOLUMESIZEGB}GB_DOCKER)  #--description enter a description
-		imageStatus=$(./getec2images.sh $imageID status)
+		imageStatus=$(./support/getec2images.sh $imageID status)
 		echo "Creating AMI. This may take a minute"
 		echo "|--------------------|"
 		echo -n "<."

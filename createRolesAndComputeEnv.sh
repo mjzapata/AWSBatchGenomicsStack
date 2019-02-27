@@ -54,9 +54,9 @@ if [ $# -eq 14 ]; then
 	echo "DEFAULTAMI=$DEFAULTAMI"  >> $AWSCONFIGFILENAME
 	echo "REGION=$REGION" >> $AWSCONFIGFILENAME
 
-	ACCOUNTID=$(./getawsaccountid.sh)
-	stackstatus=$(./getcloudformationstack.sh $STACKNAME)
-	DESIREDCPUS=0 #this is the minimum reserved CPUS.  Specifying more than 0 will waste money unless you are putting out batch jobs 24/7
+	ACCOUNTID=$(./support/getawsaccountid.sh)
+	stackstatus=$(./support/getcloudformationstack.sh $STACKNAME)
+	DESIREDCPUS=0 #this is the MINIMUM reserved CPUS
 	echo "DESIREDCPUS=$DESIREDCPUS" >> $AWSCONFIGFILENAME
 
 	##################################################
@@ -76,7 +76,8 @@ if [ $# -eq 14 ]; then
 	#######################################################################################
 	#0.) S3 Bucket
 	# Check if S3 bucket with name beginning with $STACKNAME exists. If not, create it.
-	# Note: the S3 buckets must be GLOBALLY unique. A random string is appended to the stackname to make duplicates less probably
+	# Note: the S3 buckets must be GLOBALLY unique. 
+	# A random string is appended to the stackname to make duplicates less probably
 	#
 	#######################################################################################
 	echo "----------------------------------------------------------------------"
@@ -118,7 +119,7 @@ if [ $# -eq 14 ]; then
 	echo "----------------------------------------------------------------------------------------------"
 	echo "1.) Deploy Cloudformation Stack  -------------------------------------------------------------"
 	echo "----------------------------------------------------------------------------------------------"
-	stackstatus=$(./getcloudformationstack.sh $STACKNAME)
+	stackstatus=$(./support/getcloudformationstack.sh $STACKNAME)
 	if [ "$stackstatus" == "Stack exists" ]; then
 		echo $stackstatus
 	else
@@ -127,42 +128,43 @@ if [ $# -eq 14 ]; then
 	#######################################################################################
 	#1.b) check if stack exists once more
 	#######################################################################################
-	stackstatus=$(./getcloudformationstack.sh $STACKNAME)
+	stackstatus=$(./support/getcloudformationstack.sh $STACKNAME)
 	if [ "$stackstatus" == "Stack exists" ]; then
-		SERVICEROLE=$(./getcloudformationstack.sh $STACKNAME BatchServiceRoleArn)
+		SERVICEROLE=$(./support/getcloudformationstack.sh $STACKNAME BatchServiceRoleArn)
 		echo "SERVICEROLE=$SERVICEROLE" >> $AWSCONFIGFILENAME
 		#TODO: check these aren't empty
-		IAMFLEETROLE=$(./getcloudformationstack.sh $STACKNAME SpotIamFleetRoleArn)
+		IAMFLEETROLE=$(./support/getcloudformationstack.sh $STACKNAME SpotIamFleetRoleArn)
 		IAMFLEETROLE=arn:aws:iam::${ACCOUNTID}:role/${IAMFLEETROLE}
 		echo "IAMFLEETROLE=$IAMFLEETROLE" >> $AWSCONFIGFILENAME
-		JOBROLEARN=$(./getcloudformationstack.sh $STACKNAME ECSTaskRole)
+		JOBROLEARN=$(./support/getcloudformationstack.sh $STACKNAME ECSTaskRole)
 		echo "JOBROLEARN=$JOBROLEARN" >> $AWSCONFIGFILENAME
 		
-		INSTANCEROLE=$(./getcloudformationstack.sh $STACKNAME IamInstanceProfileArn)
+		INSTANCEROLE=$(./support/getcloudformationstack.sh $STACKNAME IamInstanceProfileArn)
 		INSTANCEROLE=arn:aws:iam::${ACCOUNTID}:instance-profile/${INSTANCEROLE}
 		echo "INSTANCEROLE=$INSTANCEROLE" >> $AWSCONFIGFILENAME
 
 		#Note: creating a security group with IP rules?  See  Page 6 of Creating a new AMI
 		# allows security group creation for each instance?  Public for web facing, private for batch?
-		BASTIONSECURITYGROUP=$(./getcloudformationstack.sh $STACKNAME BastionSecurityGroup)
-		#BATCHSECURITYGROUP=$(./getcloudformationstack.sh $STACKNAME BatchSecurityGroup)  #TODO: change the json and this to have a name that returns a different value
+		BASTIONSECURITYGROUP=$(./support/getcloudformationstack.sh $STACKNAME BastionSecurityGroup)
+		#BATCHSECURITYGROUP=$(./support/getcloudformationstack.sh $STACKNAME BatchSecurityGroup)  
+		#TODO: change the json and this to have a name that returns a different value
 		BATCHSECURITYGROUP=$BASTIONSECURITYGROUP #TODO delete this and uncomment later
 
 		SECURITYGROUPS="$BASTIONSECURITYGROUP,$BATCHSECURITYGROUP"
 
 		echo "BATCHSECURITYGROUP=$BATCHSECURITYGROUP" >> $AWSCONFIGFILENAME
 		echo "BASTIONSECURITYGROUP=$BASTIONSECURITYGROUP" >> $AWSCONFIGFILENAME
-		SUBNETS=$(./getcloudformationstack.sh $STACKNAME Subnet)  #replaced getsubnets
+		SUBNETS=$(./support/getcloudformationstack.sh $STACKNAME Subnet)
 		echo "SUBNETS=$SUBNETS" >> $AWSCONFIGFILENAME
-		efsID=$(./getcloudformationstack.sh $STACKNAME FileSystemId)
+		efsID=$(./support/getcloudformationstack.sh $STACKNAME FileSystemId)
 
-		HEADNODELAUNCHTEMPLATEID=$(./getcloudformationstack.sh $STACKNAME HeadNodeLaunchTemplateId)
+		HEADNODELAUNCHTEMPLATEID=$(./support/getcloudformationstack.sh $STACKNAME HeadNodeLaunchTemplateId)
 		echo "HEADNODELAUNCHTEMPLATEID=$HEADNODELAUNCHTEMPLATEID" >> $AWSCONFIGFILENAME
 
-		BATCHNODELAUNCHTEMPLATEID=$(./getcloudformationstack.sh $STACKNAME BatchNodeLaunchTemplateId)
+		BATCHNODELAUNCHTEMPLATEID=$(./support/getcloudformationstack.sh $STACKNAME BatchNodeLaunchTemplateId)
 		echo "BATCHNODELAUNCHTEMPLATEID=$BATCHNODELAUNCHTEMPLATEID" >> $AWSCONFIGFILENAME
 		#Name might be better to use later, will need to label it as an output under outputs! 
-		#LaunchTemplateName=$(./getcloudformationstack.sh $STACKNAME LaunchTemplateName)
+		#LaunchTemplateName=$(./support/getcloudformationstack.sh $STACKNAME LaunchTemplateName)
 
         #######################################################################################
 		#1.c) Check for AMI (depricated)
@@ -234,7 +236,7 @@ if [ $# -eq 14 ]; then
 		echo "----------------------------------------------------------------------------------------------"
 		echo "4.) Print Nextflow Config   ------------------------------------------------------------------"
 		echo "----------------------------------------------------------------------------------------------"
-		nextflowconfig=$(./printnextflowconfig.sh $STACKNAME) # $QUEUENAME $AWSACCESSKEY $AWSSECRETKEY)
+		nextflowconfig=$(./printnextflowconfig.sh $STACKNAME)
 		echo $nextflowconfig
 		echo $nextflowconfig > "${NEXTFLOWCONFIGOUTPUTDIRECTORY}config"
 		echo "--------------------------------------------------------------------------------------------------------------"

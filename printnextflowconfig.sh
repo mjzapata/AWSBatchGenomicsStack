@@ -34,6 +34,6 @@ aws {
 echo ""
 
 else
-    echo "error, usage: ./printnextflowconfig AWSCONFIGFILENAME"
+    echo "error, usage: ./printnextflowconfig STACKNAME"
 fi
 
