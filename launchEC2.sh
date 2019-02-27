@@ -1,14 +1,15 @@
 #!/bin/bash
 
-#aws ec2 run-instances --image-id ami-xxxxxxxx --count 1 --instance-type t2.micro --key-name MyKeyPair --security-group-ids sg-xxxxxxxx --subnet-id subnet-xxxxxxxx
-
-#TODO: count number of arguments!!!
-
 # Use this template image to create the BLJ image with more EBS memory
-#TODO: this script is called sevearl times from createRolesAndComputeEnv.sh
 # Argument 14 is an overload argument. WATCH OUT.
 
 #TODO: Massively simplify this
+
+source ~/.profile
+AWSCONFIGFILENAME=${BATCHAWSDEPLOY_HOME}${STACKNAME}.sh
+echo "AWSCONFIGFILENAME=$AWSCONFIGFILENAME"
+source $AWSCONFIGFILENAME
+echo "BATCHAWSDEPLOY_HOME=$BATCHAWSDEPLOY_HOME"
 
 if [ $# -gt 10 ]; then
 
@@ -142,11 +143,6 @@ if [ $# -gt 10 ]; then
 	#TODO: redo all input arguments and put an argument specifically for if I want to copy the configs
 	#TODO: change absolute paths
 	#------------------------------------------------------------------------------------------------
-	AWSCONFIGFILENAME=${BATCHAWSDEPLOY_HOME}${STACKNAME}.sh
-	echo "AWSCONFIGFILENAME=$AWSCONFIGFILENAME"
-
-	source $AWSCONFIGFILENAME
-	echo "BATCHAWSDEPLOY_HOME=$BATCHAWSDEPLOY_HOME"
 
 	#remove previous hosts
 	ssh-keygen -f "~/.ssh/known_hosts" -R $instanceHostNamePublic

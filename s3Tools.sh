@@ -2,6 +2,10 @@
 
 ARGUMENT=$1
 
+source ~/.profile
+AWSCONFIGFILENAME=${BATCHAWSDEPLOY_HOME}${STACKNAME}.sh
+source $AWSCONFIGFILENAME
+
 print_error(){
 	echo "This script accepts X arguments"
 	echo "Usage: ./s3Tools.sh create S3BUCKETNAME STACKNAME"
@@ -11,9 +15,6 @@ if [ $# -gt 1 ]; then
 
 	S3BUCKETNAME=$2
 	STACKNAME=$3
-	#source ~/.profile
-	AWSCONFIGFILENAME=${BATCHAWSDEPLOY_HOME}${STACKNAME}.sh
-	source $AWSCONFIGFILENAME
 
 	if [ "$ARGUMENT" == "create" ]; then
 		########## AUTOGENERATE BUCKET NAME ##########

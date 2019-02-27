@@ -62,19 +62,23 @@ else
         # Check for the existence of this variable.
         # if it doesn't exist, add it to the path
         #  -backup ~/.profile to ~/.profile_[day_month_year]
-        if [ -f ~/.bash_profile ]; then
-            BASHFILE=~/.bash_profile
-        else
-            BASHFILE=~/.bashrc
-        fi
-
-        source $BASHFILE
+        
+        #if [ -f ~/.bash_profile ]; then
+        #    BASHFILE=~/.bash_profile
+        #else
+        #    BASHFILE=~/.bashrc
+        #fi
+        #echo BASHFILE=$BASHFILE
+        #source $BASHFILE
+        #echo BATCHAWSDEPLOY_HOME=$BATCHAWSDEPLOY_HOME
+        source ~/.profile
+        cat BATCHAWSDEPLOY_HOME=$BATCHAWSDEPLOY_HOME
         if [ -z "$BATCHAWSDEPLOY_HOME" ]; then
             BATCHAWSDEPLOY_HOME=~/.batchawsdeploy/
             now="$(date +'%d-%m-%Y')"
-            cp ${BASHFILE} ${BASHFILE}_backup_$now
-            echo "export BATCHAWSDEPLOY_HOME=$BATCHAWSDEPLOY_HOME" >> ${BASHFILE}
-            source $BASHFILE
+            cp ~/.profile ~/.profile_backup_$now
+            echo "export BATCHAWSDEPLOY_HOME=$BATCHAWSDEPLOY_HOME" >> ~/.profile
+            source ~/.profile
         fi
         mkdir -p $BATCHAWSDEPLOY_HOME
 

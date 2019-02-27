@@ -1,17 +1,14 @@
 #!/bin/bash
 #usage: 
 #./printnextflowconfig AWSCONFIGFILENAME
-
-#resources:
 #https://stackoverflow.com/questions/918886/how-do-i-split-a-string-on-a-delimiter-in-bash
-#Without EFS
+
+source ~/.profile
+AWSCONFIGFILENAME=${BATCHAWSDEPLOY_HOME}${STACKNAME}.sh
+source $AWSCONFIGFILENAME
 
 if [ $# -eq 1 ]; then
 STACKNAME=$1
-#source ~/.profile
-
-AWSCONFIGFILENAME=${BATCHAWSDEPLOY_HOME}${STACKNAME}.sh
-source $AWSCONFIGFILENAME
 
 echo ""
 echo "
