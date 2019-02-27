@@ -33,11 +33,11 @@ if [ $# -eq 2 ]; then
 		echo "-----------------------------------------------------------------------------------------"
 		# wait loop to check for creating.  could take a few minutes
 		# Then "Stack exists"
-		stackstatus=$(./support/getcloudformationstack.sh $STACKNAME)
+		stackstatus=$(./getcloudformationstack.sh $STACKNAME)
 		totaltime=0
 		while [ "$stackstatus" != "Stack exists" ]
 		do
-			stackstatus=$(./support/getcloudformationstack.sh $STACKNAME) 
+			stackstatus=$(./getcloudformationstack.sh $STACKNAME) 
 			echo "."
 			sleep 10s
 			totaltime=$((totaltime+10))
@@ -63,13 +63,13 @@ elif [[ $# -gt 2 ]]; then
 		echo "-----------------------------------------------------------------------------------------"
 		# wait loop to check for creating.  could take a few minutes
 		# Then "Stack exists"
-		stackstatus=$(./support/getcloudformationstack.sh $STACKNAME)
+		stackstatus=$(./getcloudformationstack.sh $STACKNAME)
 		totaltime=0
 		echo "|------------------------------------------|"
 		echo -n "<"
 		while [ "$stackstatus" != "Stack exists" ]
 		do
-			stackstatus=$(./support/getcloudformationstack.sh $STACKNAME) 
+			stackstatus=$(./getcloudformationstack.sh $STACKNAME) 
 			echo -n "."
 			sleep 5s
 			totaltime=$((totaltime+5))

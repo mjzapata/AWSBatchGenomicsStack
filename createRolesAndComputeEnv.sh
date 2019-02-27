@@ -54,8 +54,8 @@ if [ $# -eq 14 ]; then
 	echo "DEFAULTAMI=$DEFAULTAMI"  >> $AWSCONFIGFILENAME
 	echo "REGION=$REGION" >> $AWSCONFIGFILENAME
 
-	ACCOUNTID=$(./support/getawsaccountid.sh)
-	stackstatus=$(./support/getcloudformationstack.sh $STACKNAME)
+	ACCOUNTID=$(./getawsaccountid.sh)
+	stackstatus=$(./getcloudformationstack.sh $STACKNAME)
 	DESIREDCPUS=0 #this is the MINIMUM reserved CPUS
 	echo "DESIREDCPUS=$DESIREDCPUS" >> $AWSCONFIGFILENAME
 
@@ -119,7 +119,7 @@ if [ $# -eq 14 ]; then
 	echo "----------------------------------------------------------------------------------------------"
 	echo "1.) Deploy Cloudformation Stack  -------------------------------------------------------------"
 	echo "----------------------------------------------------------------------------------------------"
-	stackstatus=$(./support/getcloudformationstack.sh $STACKNAME)
+	stackstatus=$(./getcloudformationstack.sh $STACKNAME)
 	if [ "$stackstatus" == "Stack exists" ]; then
 		echo $stackstatus
 	else
@@ -128,25 +128,25 @@ if [ $# -eq 14 ]; then
 	#######################################################################################
 	#1.b) check if stack exists once more
 	#######################################################################################
-	stackstatus=$(./support/getcloudformationstack.sh $STACKNAME)
+	stackstatus=$(./getcloudformationstack.sh $STACKNAME)
 	if [ "$stackstatus" == "Stack exists" ]; then
-		SERVICEROLE=$(./support/getcloudformationstack.sh $STACKNAME BatchServiceRoleArn)
+		SERVICEROLE=$(./getcloudformationstack.sh $STACKNAME BatchServiceRoleArn)
 		echo "SERVICEROLE=$SERVICEROLE" >> $AWSCONFIGFILENAME
 		#TODO: check these aren't empty
-		IAMFLEETROLE=$(./support/getcloudformationstack.sh $STACKNAME SpotIamFleetRoleArn)
+		IAMFLEETROLE=$(./getcloudformationstack.sh $STACKNAME SpotIamFleetRoleArn)
 		IAMFLEETROLE=arn:aws:iam::${ACCOUNTID}:role/${IAMFLEETROLE}
 		echo "IAMFLEETROLE=$IAMFLEETROLE" >> $AWSCONFIGFILENAME
-		JOBROLEARN=$(./support/getcloudformationstack.sh $STACKNAME ECSTaskRole)
+		JOBROLEARN=$(./getcloudformationstack.sh $STACKNAME ECSTaskRole)
 		echo "JOBROLEARN=$JOBROLEARN" >> $AWSCONFIGFILENAME
 		
-		INSTANCEROLE=$(./support/getcloudformationstack.sh $STACKNAME IamInstanceProfileArn)
+		INSTANCEROLE=$(./getcloudformationstack.sh $STACKNAME IamInstanceProfileArn)
 		INSTANCEROLE=arn:aws:iam::${ACCOUNTID}:instance-profile/${INSTANCEROLE}
 		echo "INSTANCEROLE=$INSTANCEROLE" >> $AWSCONFIGFILENAME
 
 		#Note: creating a security group with IP rules?  See  Page 6 of Creating a new AMI
 		# allows security group creation for each instance?  Public for web facing, private for batch?
-		BASTIONSECURITYGROUP=$(./support/getcloudformationstack.sh $STACKNAME BastionSecurityGroup)
-		#BATCHSECURITYGROUP=$(./support/getcloudformationstack.sh $STACKNAME BatchSecurityGroup)  
+		BASTIONSECURITYGROUP=$(./getcloudformationstack.sh $STACKNAME BastionSecurityGroup)
+		#BATCHSECURITYGROUP=$(./getcloudformationstack.sh $STACKNAME BatchSecurityGroup)  
 		#TODO: change the json and this to have a name that returns a different value
 		BATCHSECURITYGROUP=$BASTIONSECURITYGROUP #TODO delete this and uncomment later
 
@@ -154,17 +154,17 @@ if [ $# -eq 14 ]; then
 
 		echo "BATCHSECURITYGROUP=$BATCHSECURITYGROUP" >> $AWSCONFIGFILENAME
 		echo "BASTIONSECURITYGROUP=$BASTIONSECURITYGROUP" >> $AWSCONFIGFILENAME
-		SUBNETS=$(./support/getcloudformationstack.sh $STACKNAME Subnet)
+		SUBNETS=$(./getcloudformationstack.sh $STACKNAME Subnet)
 		echo "SUBNETS=$SUBNETS" >> $AWSCONFIGFILENAME
-		efsID=$(./support/getcloudformationstack.sh $STACKNAME FileSystemId)
+		efsID=$(./getcloudformationstack.sh $STACKNAME FileSystemId)
 
-		HEADNODELAUNCHTEMPLATEID=$(./support/getcloudformationstack.sh $STACKNAME HeadNodeLaunchTemplateId)
+		HEADNODELAUNCHTEMPLATEID=$(./getcloudformationstack.sh $STACKNAME HeadNodeLaunchTemplateId)
 		echo "HEADNODELAUNCHTEMPLATEID=$HEADNODELAUNCHTEMPLATEID" >> $AWSCONFIGFILENAME
 
-		BATCHNODELAUNCHTEMPLATEID=$(./support/getcloudformationstack.sh $STACKNAME BatchNodeLaunchTemplateId)
+		BATCHNODELAUNCHTEMPLATEID=$(./getcloudformationstack.sh $STACKNAME BatchNodeLaunchTemplateId)
 		echo "BATCHNODELAUNCHTEMPLATEID=$BATCHNODELAUNCHTEMPLATEID" >> $AWSCONFIGFILENAME
 		#Name might be better to use later, will need to label it as an output under outputs! 
-		#LaunchTemplateName=$(./support/getcloudformationstack.sh $STACKNAME LaunchTemplateName)
+		#LaunchTemplateName=$(./getcloudformationstack.sh $STACKNAME LaunchTemplateName)
 
         #######################################################################################
 		#1.c) Check for AMI (depricated)

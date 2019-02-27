@@ -9,6 +9,10 @@
 #get the ID and tell them to run the shutdown
 #AWS_PROFILE=batchcompute
 
+#PATH=$PATH:~/Documents/github/aws/AWSBatchGenomicsStack
+#PATH=$PATH:~/Documents/github/aws/AWSBatchGenomicsStack/support
+
+
 ARGUMENT=$1
 
 print_help() {
@@ -102,10 +106,10 @@ else
             #DEFAULTAMI=ami-06bec82fb46167b4f #IMAGES
             echo "Finding Latest Amazon Linux AMI ID..."
             #TODO: if is-empty, set a default, in case this breaks in the future. 
-            DEFAULTAMI=$(./support/getLatestAMI.sh $REGION amzn2-ami-ecs-hvm 2019 x86_64)
+            DEFAULTAMI=$(./getLatestAMI.sh $REGION amzn2-ami-ecs-hvm 2019 x86_64)
             echo "DEFAULTAMI=$DEFAULTAMI"
             echo ""
-            
+
             #Create AWS config file and start writing values
             touch "$AWSCONFIGFILENAME"
             echo "#!/bin/bash" > $AWSCONFIGFILENAME
