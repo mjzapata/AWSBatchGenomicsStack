@@ -33,11 +33,11 @@ if [ $# -eq 2 ]; then
 		echo "-----------------------------------------------------------------------------------------"
 		# wait loop to check for creating.  could take a few minutes
 		# Then "Stack exists"
-		stackstatus=$(./getcloudformationstack.sh $STACKNAME)
+		stackstatus=$(getcloudformationstack.sh $STACKNAME)
 		totaltime=0
 		while [ "$stackstatus" != "Stack exists" ]
 		do
-			stackstatus=$(./getcloudformationstack.sh $STACKNAME) 
+			stackstatus=$(getcloudformationstack.sh $STACKNAME) 
 			echo "."
 			sleep 10s
 			totaltime=$((totaltime+10))
@@ -63,13 +63,13 @@ elif [[ $# -gt 2 ]]; then
 		echo "-----------------------------------------------------------------------------------------"
 		# wait loop to check for creating.  could take a few minutes
 		# Then "Stack exists"
-		stackstatus=$(./getcloudformationstack.sh $STACKNAME)
+		stackstatus=$(getcloudformationstack.sh $STACKNAME)
 		totaltime=0
 		echo "|------------------------------------------|"
 		echo -n "<"
 		while [ "$stackstatus" != "Stack exists" ]
 		do
-			stackstatus=$(./getcloudformationstack.sh $STACKNAME) 
+			stackstatus=$(getcloudformationstack.sh $STACKNAME) 
 			echo -n "."
 			sleep 5s
 			totaltime=$((totaltime+5))
@@ -78,10 +78,10 @@ elif [[ $# -gt 2 ]]; then
 		echo "Stack $STACKNAME created in $totaltime seconds"
 
 else
-	echo "Usage: ./createcloudformation.sh [mystackname] delete  delete given stack (may take some time)"
-	echo "Usage: ./createcloudformation.sh [mystackname] [mystackfile] (will take several minutes to create all resources)"
-	echo "Usage: ./createcloudformation.sh [mystackname] [mystackfile] --parameters [additional parameterstring]"
-	echo -n "example: ./createcloudformation.sh [mystackname] [mystackfile] "
+	echo "Usage: createcloudformation.sh [mystackname] delete  delete given stack (may take some time)"
+	echo "Usage: createcloudformation.sh [mystackname] [mystackfile] (will take several minutes to create all resources)"
+	echo "Usage: createcloudformation.sh [mystackname] [mystackfile] --parameters [additional parameterstring]"
+	echo -n "example: createcloudformation.sh [mystackname] [mystackfile] "
 	echo "\"--parameters ParameterKey="NetworkAccessIP",ParameterValue="my.ip.add.ress/32\" ""
 	echo "(possible parameters must be specified in cloudformation template ahead of time in the parameters section)"
 	echo "the cloudformation stack included here allows for ssh only from the specified IP address ranges following CIDR notation"

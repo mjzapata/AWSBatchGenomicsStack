@@ -28,12 +28,12 @@ print_help() {
     echo "-When the resources are no longer needed, run the delete command."
     echo "MYSTACKNAME must be alphanumeric.  No underscores."
     echo ""
-    echo "Usage: ./deployBatchEnv.sh help"
-    echo "Usage: ./deployBatchEnv.sh create MYSTACKNAME mydockerhubreponame1 autogenerate"
-    echo "Usage: ./deployBatchEnv.sh create MYSTACKNAME mydockerhubreponame1 MYS3BUCKETNAME"
-    echo -n "Usage: ./deployBatchEnv.sh create MYSTACKNAME "
+    echo "Usage: deployBatchEnv.sh help"
+    echo "Usage: deployBatchEnv.sh create MYSTACKNAME mydockerhubreponame1 autogenerate"
+    echo "Usage: deployBatchEnv.sh create MYSTACKNAME mydockerhubreponame1 MYS3BUCKETNAME"
+    echo -n "Usage: deployBatchEnv.sh create MYSTACKNAME "
     echo "\"mydockerhubreponame1|mydockerhubreponame2|mydockerhubreponame3\" MYS3BUCKETNAME"
-    echo "Usage: ./deployBatchEnv.sh delete MYSTACKNAME"
+    echo "Usage: deployBatchEnv.sh delete MYSTACKNAME"
     echo ""
 }
 
@@ -76,7 +76,6 @@ else
         #source $BASHFILE
         #echo BATCHAWSDEPLOY_HOME=$BATCHAWSDEPLOY_HOME
         source ~/.profile
-        cat BATCHAWSDEPLOY_HOME=$BATCHAWSDEPLOY_HOME
         if [ -z "$BATCHAWSDEPLOY_HOME" ]; then
             BATCHAWSDEPLOY_HOME=~/.batchawsdeploy/
             now="$(date +'%d-%m-%Y')"
@@ -98,7 +97,7 @@ else
         AWSCONFIGFILENAME=${BATCHAWSDEPLOY_HOME}${STACKNAME}.sh
         echo "AWSCONFIGFILENAME=$AWSCONFIGFILENAME"
 
-        #S3 buckets will NOT be deleted when running "./deployBLJBatchEnv delete"
+        #S3 buckets will NOT be deleted when running "deployBLJBatchEnv delete"
         #autogenerate is a keyword that creates a bucket named ${STACKNAME}{randomstring}, eg Stack1_oijergoi4itf94j94
 
     	if [ "$ARGUMENT" == "create" ] && [ $# -eq 4 ]; then
@@ -106,7 +105,7 @@ else
             #DEFAULTAMI=ami-06bec82fb46167b4f #IMAGES
             echo "Finding Latest Amazon Linux AMI ID..."
             #TODO: if is-empty, set a default, in case this breaks in the future. 
-            DEFAULTAMI=$(./getLatestAMI.sh $REGION amzn2-ami-ecs-hvm 2019 x86_64)
+            DEFAULTAMI=$(getLatestAMI.sh $REGION amzn2-ami-ecs-hvm 2019 x86_64)
             echo "DEFAULTAMI=$DEFAULTAMI"
             echo ""
 
@@ -122,7 +121,7 @@ else
             echo "JOBMEMORY=$JOBMEMORY" >> $AWSCONFIGFILENAME
             echo "NEXTFLOWCONFIGOUTPUTDIRECTORY=$NEXTFLOWCONFIGOUTPUTDIRECTORY" >> $AWSCONFIGFILENAME
 
-    	   ./createRolesAndComputeEnv.sh $STACKNAME $COMPUTEENVIRONMENTNAME $QUEUENAME $SPOTPERCENT $MAXCPU \
+    	   createRolesAndComputeEnv.sh $STACKNAME $COMPUTEENVIRONMENTNAME $QUEUENAME $SPOTPERCENT $MAXCPU \
                     $DEFAULTAMI $CUSTOMAMIFOREFS $EBSVOLUMESIZEGB $EFSPERFORMANCEMODE $AWSCONFIGOUTPUTDIRECTORY \
                     $NEXTFLOWCONFIGOUTPUTDIRECTORY $REGION $KEYNAME $S3BUCKETNAME
 
@@ -140,15 +139,15 @@ else
             # EFS mount target for fs-56d23cb6 (fsmt-42d00fa3)
             echo "deleting job queue $QUEUENAME"
             aws batch update-job-queue --job-queue $QUEUENAME --state DISABLED
-            ./sleepProgressBar.sh 5 5
+            sleepProgressBar.sh 5 5
             aws batch delete-job-queue --job-queue $QUEUENAME
-            ./sleepProgressBar.sh 5 8
+            sleepProgressBar.sh 5 8
             #delete compute environment which is dependent on queue
             echo "deleting compute environment $COMPUTEENVIRONMENTNAME"
             aws batch update-compute-environment --compute-environment $COMPUTEENVIRONMENTNAME --state DISABLED
-            ./sleepProgressBar.sh 5 6
+            sleepProgressBar.sh 5 6
             aws batch delete-compute-environment --compute-environment $COMPUTEENVIRONMENTNAME
-            ./sleepProgressBar.sh 5 8
+            sleepProgressBar.sh 5 8
             #delete cloudformation stack
 
             #delete job definition
@@ -156,8 +155,8 @@ else
             # get a list of all jobdefs that start with $STACKNAME
             echo "deleting cloudformation stack $STACKNAME"
             aws cloudformation delete-stack --stack-name $STACKNAME
-            ./sleepProgressBar.sh 6 10
-            ./awskeypair.sh delete $KEYNAME ${BATCHAWSDEPLOY_HOME}
+            sleepProgressBar.sh 6 10
+            awskeypair.sh delete $KEYNAME ${BATCHAWSDEPLOY_HOME}
 
             rm $AWSCONFIGFILENAME
             rm ${NEXTFLOWCONFIGOUTPUTDIRECTORY}config

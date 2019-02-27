@@ -1,6 +1,6 @@
 #!/bin/bash
 
-#Example: ./sleepProgressBar.sh 5 6
+#Example: sleepProgressBar.sh 5 6
 #sleeps interval of 5 seconds, 6 times
 
 

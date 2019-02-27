@@ -21,7 +21,7 @@ Default output format []:text
 ```
 git clone https://github.com/mjzapata/BLJBatchAWS.git
 cd BLJBatchAWS
-./deployBLJBatchEnv.sh create MYSTACKNAME
+deployBLJBatchEnv.sh create MYSTACKNAME
 ```
 5.) Install Nextflow and create a nextflow configuration file that specifies the Batch service role that was created during the compute environment startup.
 

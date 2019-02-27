@@ -114,14 +114,14 @@ if [ $# -gt 10 ]; then
 	# RUNNING or ???  TERMINATED  (actually returns nothing) second row third column
 
 
-	systemstatus=$(./getinstance.sh $instanceID systemstatus)
+	systemstatus=$(getinstance.sh $instanceID systemstatus)
 	systemtime=0
 	echo "Starting EC2 instance. This will take a few minutes: "
 	echo "|-----------------------|"
 	echo -n "["
 	while [ "$systemstatus" != "ok" ]
 	do
-		systemstatus=$(./getinstance.sh $instanceID systemstatus) 
+		systemstatus=$(getinstance.sh $instanceID systemstatus) 
 		echo -n "."
 		sleep 10s
 		systemtime=$((systemtime+10))
@@ -130,13 +130,13 @@ if [ $# -gt 10 ]; then
 	echo " Instance:  $instanceID  created in $systemtime seconds"
 
 	# get IP address, and hostname (#TODO, get public hostname)
-	instanceIPInternal=$(./getinstance.sh $instanceID ipaddress)
+	instanceIPInternal=$(getinstance.sh $instanceID ipaddress)
 	echo "instanceIP=$instanceIP"
-	instanceHostNameInternal=$(./getinstance.sh $instanceID hostname)
+	instanceHostNameInternal=$(getinstance.sh $instanceID hostname)
 	echo "instanceHostNameInternal=$instanceHostNameInternal"
-	instanceIPPublic=$(./getinstance.sh $instanceID ipaddresspublic)
+	instanceIPPublic=$(getinstance.sh $instanceID ipaddresspublic)
 	echo "instanceIP=$instanceIPPublic"
-	instanceHostNamePublic=$(./getinstance.sh $instanceID hostnamepublic)
+	instanceHostNamePublic=$(getinstance.sh $instanceID hostnamepublic)
 	echo "instanceHostNamePublic=$instanceHostNamePublic"
 
 	#------------------------------------------------------------------------------------------------
@@ -193,7 +193,7 @@ if [ $# -gt 10 ]; then
 	if [[ $EC2RUNARGUMENT == "runscript" ]]; then
 		echo "instance running..."
 		ssh -v -i ${KEYFILE} ec2-user@${instanceHostNamePublic} $SSH_OPTIONS \
-			'bash -s' < ./${SCRIPTNAME}
+			'bash -s' < ${SCRIPTNAME}
 
 		echo "disconnected from instance: $EC2RUNARGUMENT"
 	###########################################################
@@ -220,21 +220,21 @@ if [ $# -gt 10 ]; then
 	elif [[ $EC2RUNARGUMENT == "createAMI" ]]; then
 		echo "EC2RUNARGUMENT=$EC2RUNARGUMENT"
 		ssh -v -i ${KEYFILE} ec2-user@${instanceHostNamePublic} $SSH_OPTIONS \
-			'bash -s' < ./${SCRIPTNAME}
+			'bash -s' < ${SCRIPTNAME}
 		echo "----------------------------------------"
 		echo "----------------------------------------"
 		echo "Check for any errors in the AMI creation:"
 
 		#run it with the script configureEC2forAMI.sh   https://stackoverflow.com/questions/305035/how-to-use-ssh-to-run-a-shell-script-on-a-remote-machine 
 		imageID=$(aws ec2 create-image --instance-id $instanceID --name BLJAMI${AMIIDENTIFIER}-${EBSVOLUMESIZEGB}GB_DOCKER)  #--description enter a description
-		imageStatus=$(./getec2images.sh $imageID status)
+		imageStatus=$(getec2images.sh $imageID status)
 		echo "Creating AMI. This may take a minute"
 		echo "|--------------------|"
 		echo -n "<."
 		imagetime=0
 		while [ "$imageStatus" != "available" ]
 		do
-			imageStatus=$(./getec2images.sh $imageID status)
+			imageStatus=$(getec2images.sh $imageID status)
 			echo -n "."
 			sleep 5s
 			imagetime=$((imagetime+5))
@@ -256,13 +256,13 @@ if [ $# -gt 10 ]; then
 
 		#TODO: maybe don't need to do this....
 		# 6.) Cleanup, delete stack and key
-		#./awskeypair.sh delete $KEYNAME
-		#./createcloudformationstack.sh $STACKNAME "delete"
+		#awskeypair.sh delete $KEYNAME
+		#createcloudformationstack.sh $STACKNAME "delete"
 	fi
 
 
 else
-	echo "Usage: ./createAMI.sh STACKNAME TEMPLATEIMAGEID INSTANCETYPEFORAMICREATION KEYNAME EBSVOLUMESIZEGB AMIIDENTIFIER IMAGETAG IMAGETAGVALUE SUBNETS SECURITYGROUPS MYPUBLICIPADDRESS"
+	echo "Usage: createAMI.sh STACKNAME TEMPLATEIMAGEID INSTANCETYPEFORAMICREATION KEYNAME EBSVOLUMESIZEGB AMIIDENTIFIER IMAGETAG IMAGETAGVALUE SUBNETS SECURITYGROUPS MYPUBLICIPADDRESS"
 fi
 
 

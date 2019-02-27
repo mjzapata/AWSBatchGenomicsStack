@@ -3,8 +3,8 @@
 #THIS SCRIPT IS NOT USED IN THE MAIN PIPELINE ANYMORE.  Only here for experimental purposes.
 
 #to delete a filesystem:
-#efsID=$(./createEFS.sh describe $EFSCREATIONTOKEN)
-#./createEFS.sh delete $efsID
+#efsID=$(createEFS.sh describe $EFSCREATIONTOKEN)
+#createEFS.sh delete $efsID
 
 ARGUMENT=$1
 if [ $# -gt 1 ]; then
@@ -48,14 +48,14 @@ if [ $# -gt 1 ]; then
 		echo $mountOutput
 	else
 		echo "usage: "
-		echo "usage: ./createEFS.sh describe [EFSCREATIONTOKEN]  (returns efsID)"
-		echo "usage: ./createEFS.sh create EFSCREATIONTOKEN EFSPERFORMANCEMODE EFSTHROUGHPUTMODE EFSENCRYPTEDMODE EFSTAG EFSTAGVALUE"
-		echo "usage: ./createEFS.sh delete efsID"
+		echo "usage: createEFS.sh describe [EFSCREATIONTOKEN]  (returns efsID)"
+		echo "usage: createEFS.sh create EFSCREATIONTOKEN EFSPERFORMANCEMODE EFSTHROUGHPUTMODE EFSENCRYPTEDMODE EFSTAG EFSTAGVALUE"
+		echo "usage: createEFS.sh delete efsID"
 	fi
 else
 	echo "usage: "
-	echo "usage: ./createEFS.sh describe [EFSCREATIONTOKEN]  (returns efsID)"
-	echo "usage: ./createEFS.sh create EFSCREATIONTOKEN EFSPERFORMANCEMODE EFSTHROUGHPUTMODE EFSENCRYPTEDMODE EFSTAG EFSTAGVALUE"
-	echo "usage: ./createEFS.sh delete efsID"
+	echo "usage: createEFS.sh describe [EFSCREATIONTOKEN]  (returns efsID)"
+	echo "usage: createEFS.sh create EFSCREATIONTOKEN EFSPERFORMANCEMODE EFSTHROUGHPUTMODE EFSENCRYPTEDMODE EFSTAG EFSTAGVALUE"
+	echo "usage: createEFS.sh delete efsID"
 fi
 

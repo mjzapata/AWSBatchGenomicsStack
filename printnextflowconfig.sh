@@ -1,6 +1,6 @@
 #!/bin/bash
 #usage: 
-#./printnextflowconfig AWSCONFIGFILENAME
+#printnextflowconfig AWSCONFIGFILENAME
 #https://stackoverflow.com/questions/918886/how-do-i-split-a-string-on-a-delimiter-in-bash
 
 if [ $# -eq 1 ]; then
@@ -34,6 +34,6 @@ aws {
 echo ""
 
 else
-    echo "error, usage: ./printnextflowconfig STACKNAME"
+    echo "error, usage: printnextflowconfig STACKNAME"
 fi
 

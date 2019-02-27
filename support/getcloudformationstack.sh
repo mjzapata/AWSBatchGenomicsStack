@@ -1,9 +1,9 @@
 #!/bin/bash
 
 #1 argument, check and see if stack named (command argument) exists, if not ask if you want to create it
-# ./getlcloudformationstack.sh mystackname
+# getlcloudformationstack.sh mystackname
 #2 arguments
-# ./getlcloudformationstack.sh mystackname 
+# getlcloudformationstack.sh mystackname 
 	# options:  ecsTaskRole    spotFleetRole    ecsInstanceRole   lambdaBatchExecutionRole   awsBatchServiceRole
 
 # 1.) if one argument is provided check the status of the stack
@@ -61,19 +61,19 @@ elif [ $# -eq 2 ]; then
 else
 
 	echo "Your command line contains $# arguments"
-	echo "Usage:  ./getlcloudformationstack.sh mystackname                       #check if stack exists"
-	echo "Usage:  ./getlcloudformationstack.sh mystackname output                #get all outputs"
-	echo "Usage:  ./getlcloudformationstack.sh mystackname outputvaluename       #get value of specific output"
+	echo "Usage:  getlcloudformationstack.sh mystackname                       #check if stack exists"
+	echo "Usage:  getlcloudformationstack.sh mystackname output                #get all outputs"
+	echo "Usage:  getlcloudformationstack.sh mystackname outputvaluename       #get value of specific output"
 	echo "outputvaluename:  ecsTaskRole    spotFleetRole    ecsInstanceRole   lambdaBatchExecutionRole   awsBatchServiceRole"
 	# if [ $# -lt 1 ]; then
 	# 	echo "Your command line contains $# arguments"
-	#     echo "Usage: \n  ./getlcloudformationstack.sh mystackname"
-	#     echo "Usage: \n  ./getlcloudformationstack.sh mystackname servicerolename"
+	#     echo "Usage: \n  getlcloudformationstack.sh mystackname"
+	#     echo "Usage: \n  getlcloudformationstack.sh mystackname servicerolename"
 	
 	# elif [ $# -gt 2 ]; then
 	# 	echo "Your command line contains $# arguments"
-	#     echo "Usage: \n  ./getlcloudformationstack.sh mystackname servicerolename"
-	#     echo "Usage: \n  ./getlcloudformationstack.sh mystackname"
+	#     echo "Usage: \n  getlcloudformationstack.sh mystackname servicerolename"
+	#     echo "Usage: \n  getlcloudformationstack.sh mystackname"
 	# fi
 
 fi

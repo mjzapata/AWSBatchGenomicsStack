@@ -7,8 +7,8 @@ function print_help(){
 	echo "This script accepts one or two arguments."
 	echo "This script is used to either return the users local IP address or
 	update the ingress IP address of the stack's security group"
-	echo "usage: ./ipTools.sh getip"
-	echo "usage: ./ipTools.sh updatesg STACKNAME"
+	echo "usage: ipTools.sh getip"
+	echo "usage: ipTools.sh updatesg STACKNAME"
 }
 
 function return_ip(){

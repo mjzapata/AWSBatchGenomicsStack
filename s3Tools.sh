@@ -3,7 +3,7 @@ ARGUMENT=$1
 
 print_error(){
 	echo "This script accepts X arguments"
-	echo "Usage: ./s3Tools.sh create S3BUCKETNAME STACKNAME"
+	echo "Usage: s3Tools.sh create S3BUCKETNAME STACKNAME"
 }
 
 if [ $# -gt 1 ]; then

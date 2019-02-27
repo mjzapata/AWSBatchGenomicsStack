@@ -59,13 +59,13 @@ if [ $# -gt 12 ]; then
 
 	#get instance status and wait for it to run
 	# RUNNING or ???  TERMINATED  (actually returns nothing) second row third column
-	instancestatus=$(./getinstance.sh $instanceID status)
+	instancestatus=$(getinstance.sh $instanceID status)
 	instancetime=0
 	echo "Starting EC2 instance. This may take a minute"
 
 	while [ "$instancestatus" != "running" ]
 	do
-		instancestatus=$(./getinstance.sh $instanceID status) 
+		instancestatus=$(getinstance.sh $instanceID status) 
 		echo "."
 		sleep 10s
 		instancetime=$((instancetime+10))
@@ -73,8 +73,8 @@ if [ $# -gt 12 ]; then
 	echo " Instance:  $instanceID  created in $instancetime seconds"
 
 	# get IP address, and hostname (#TODO, get public hostname)
-	instanceIP=$(./getinstance.sh $instanceID ipaddress)
-	instanceHostName=$(./getinstance.sh $instanceID hostname)
+	instanceIP=$(getinstance.sh $instanceID ipaddress)
+	instanceHostName=$(getinstance.sh $instanceID hostname)
 
 	#join the instance to the right security group, 
 	aws ec2 modify-instance-attribute --instance-id $instanceID --groups $BASTIONSECURITYGROUP
@@ -87,21 +87,21 @@ if [ $# -gt 12 ]; then
 	ssh -o UserKnownHostsFile=/dev/null \
 		-o StrictHostKeyChecking=no \
 		-i ${KEYNAME}.pem ec2-user@${instanceIP} \
-		'bash -s' < ./${SCRIPTNAME} "${efsID}"
+		'bash -s' < ${SCRIPTNAME} "${efsID}"
 	echo "----------------------------------------"
 	echo "----------------------------------------"
 	echo "Check for any errors in the AMI creation"
 
 	#run it with the script configureEC2forAMI.sh   https://stackoverflow.com/questions/305035/how-to-use-ssh-to-run-a-shell-script-on-a-remote-machine 
 	imageID=$(aws ec2 create-image --instance-id $instanceID --name BLJAMI${AMIIDENTIFIER}-${EBSVOLUMESIZEGB}GB_DOCKER)  #--description enter a description
-	imageStatus=$(./getec2images.sh $imageID status)
+	imageStatus=$(getec2images.sh $imageID status)
 	echo "creating AMI. This may take a minute"
 	echo "|--------------------|"
 	echo -n "<."
 	imagetime=0
 	while [ "$imageStatus" != "available" ]
 	do
-		imageStatus=$(./getec2images.sh $imageID status)
+		imageStatus=$(getec2images.sh $imageID status)
 		echo -n "."
 		sleep 5s
 		imagetime=$((imagetime+5))
@@ -124,10 +124,10 @@ if [ $# -gt 12 ]; then
 
 	#TODO: maybe don't need to do this....
 	# 6.) Cleanup, delete stack and key
-	#./awskeypair.sh delete $KEYNAME
-	#./createcloudformationstack.sh $STACKNAME "delete"
+	#awskeypair.sh delete $KEYNAME
+	#createcloudformationstack.sh $STACKNAME "delete"
 
 
 else
-	echo "Usage: ./createAMI.sh $STACKNAME $TEMPLATEIMAGEID $INSTANCETYPEFORAMICREATION $KEYNAME $EBSVOLUMESIZEGB $AMIIDENTIFIER $STACKFILE $IMAGETAG $IMAGETAGVALUE $SUBNETS $BASTIONSECURITYGROUP $MYPUBLICIPADDRESS"
+	echo "Usage: createAMI.sh $STACKNAME $TEMPLATEIMAGEID $INSTANCETYPEFORAMICREATION $KEYNAME $EBSVOLUMESIZEGB $AMIIDENTIFIER $STACKFILE $IMAGETAG $IMAGETAGVALUE $SUBNETS $BASTIONSECURITYGROUP $MYPUBLICIPADDRESS"
 fi

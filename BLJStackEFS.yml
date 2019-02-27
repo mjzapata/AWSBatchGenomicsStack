@@ -7,7 +7,7 @@ Description: >-
   allow access from the user's current IP Address The other scripts pull the
   ARNs of these resources to: 1.) Create a keypair 2.) Create an AMI with
   expanded Docker storage space and miniconda 3.) setup a compute environment
-  and queue Usage: ./CreateRolesAndComputeEnvironment.sh [arguments]
+  and queue Usage: CreateRolesAndComputeEnvironment.sh [arguments]
 Parameters:
   NetworkAccessIP:
     Description: Source that has SSH access to the bastion host. (i.e. 50.32.108.38/32)

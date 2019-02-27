@@ -19,8 +19,8 @@ if [ $# -eq 2 ]; then
 		fi
 
 	else
-		echo "Usage:  ./getec2images.sh [imageID] [argument]"
-		echo "Usage:  ./getec2images.sh tags [imagetag] [imagetagvalue]"
+		echo "Usage:  getec2images.sh [imageID] [argument]"
+		echo "Usage:  getec2images.sh tags [imagetag] [imagetagvalue]"
 
 	fi
 
@@ -32,13 +32,13 @@ elif [ $# -gt 2 ]; then
 		IMAGETAGVALUE=$3
 		aws ec2 describe-images --filters "Name=tag:$IMAGETAG,Values=$IMAGETAGVALUE"
 	else
-		echo "Usage:  ./getec2images.sh [imageID] [argument]"
-		echo "Usage:  ./getec2images.sh tags [imagetag] [imagetagvalue]"
+		echo "Usage:  getec2images.sh [imageID] [argument]"
+		echo "Usage:  getec2images.sh tags [imagetag] [imagetagvalue]"
 	fi
 
 else
-	echo "Usage:  ./getec2images.sh [imageID] [argument]"
-	echo "Usage:  ./getec2images.sh tags [imagetag] [imagetagvalue]"
+	echo "Usage:  getec2images.sh [imageID] [argument]"
+	echo "Usage:  getec2images.sh tags [imagetag] [imagetagvalue]"
 
 fi
 

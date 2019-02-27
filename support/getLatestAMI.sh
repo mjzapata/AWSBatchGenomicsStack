@@ -16,7 +16,7 @@ else
 
 echo "This script finds the latest amazon ami and returns the AMI image ID.
 Usage example: 
-./getLatestAMI.sh us-east-1 amzn2-ami-ecs-hvm 2019 x86_64"
+getLatestAMI.sh us-east-1 amzn2-ami-ecs-hvm 2019 x86_64"
 
 fi
 

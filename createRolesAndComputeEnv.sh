@@ -54,8 +54,8 @@ if [ $# -eq 14 ]; then
 	echo "DEFAULTAMI=$DEFAULTAMI"  >> $AWSCONFIGFILENAME
 	echo "REGION=$REGION" >> $AWSCONFIGFILENAME
 
-	ACCOUNTID=$(./getawsaccountid.sh)
-	stackstatus=$(./getcloudformationstack.sh $STACKNAME)
+	ACCOUNTID=$(getawsaccountid.sh)
+	stackstatus=$(getcloudformationstack.sh $STACKNAME)
 	DESIREDCPUS=0 #this is the MINIMUM reserved CPUS
 	echo "DESIREDCPUS=$DESIREDCPUS" >> $AWSCONFIGFILENAME
 
@@ -90,7 +90,7 @@ if [ $# -eq 14 ]; then
 	#REGION
 	#S3BUCKETNAME
 	#check for BLJ bucket (TODO: turn this into a function)
-	./s3Tools.sh create $S3BUCKETNAME $STACKNAME
+	s3Tools.sh create $S3BUCKETNAME $STACKNAME
 
 	#######################################################################################
 	#STACK and Cloudformation Parameters 
@@ -103,11 +103,11 @@ if [ $# -eq 14 ]; then
 	#MYPUBLICIPADDRESS=$(curl -s checkip.dyndns.org | sed -e 's/.*Current IP Address: //' -e 's/<.*$//' )
 	#MASK=32
 	#MYPUBLICIPADDRESS=${MYPUBLICIPADDRESS}"/"${MASK}
-	MYPUBLICIPADDRESS=$(./ipTools.sh getip)
+	MYPUBLICIPADDRESS=$(ipTools.sh getip)
 	echo "MYPUBLICIPADDRESS=$MYPUBLICIPADDRESS" >> $AWSCONFIGFILENAME
 
 	#1.) Check for key and create if it doesn't exist.  This is a keypair for ssh into EC2.
-	./awskeypair.sh create $KEYNAME ${BATCHAWSDEPLOY_HOME}
+	awskeypair.sh create $KEYNAME ${BATCHAWSDEPLOY_HOME}
 	#TODO: 1.a) also create secret access key: aws iam create-access-key --user-name  for nextflow login instead of SSH
 	#option to create and delete one of these on every run for extra security??????
 	#TODO: https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_access-keys.html#Using_CreateAccessKey_CLIAPI
@@ -119,34 +119,34 @@ if [ $# -eq 14 ]; then
 	echo "----------------------------------------------------------------------------------------------"
 	echo "1.) Deploy Cloudformation Stack  -------------------------------------------------------------"
 	echo "----------------------------------------------------------------------------------------------"
-	stackstatus=$(./getcloudformationstack.sh $STACKNAME)
+	stackstatus=$(getcloudformationstack.sh $STACKNAME)
 	if [ "$stackstatus" == "Stack exists" ]; then
 		echo $stackstatus
 	else
-		./createcloudformationstack.sh ${STACKNAME} $STACKFILE ParameterKey=\"NetworkAccessIP\",ParameterValue="$MYPUBLICIPADDRESS"
+		createcloudformationstack.sh ${STACKNAME} $STACKFILE ParameterKey=\"NetworkAccessIP\",ParameterValue="$MYPUBLICIPADDRESS"
 	fi
 	#######################################################################################
 	#1.b) check if stack exists once more
 	#######################################################################################
-	stackstatus=$(./getcloudformationstack.sh $STACKNAME)
+	stackstatus=$(getcloudformationstack.sh $STACKNAME)
 	if [ "$stackstatus" == "Stack exists" ]; then
-		SERVICEROLE=$(./getcloudformationstack.sh $STACKNAME BatchServiceRoleArn)
+		SERVICEROLE=$(getcloudformationstack.sh $STACKNAME BatchServiceRoleArn)
 		echo "SERVICEROLE=$SERVICEROLE" >> $AWSCONFIGFILENAME
 		#TODO: check these aren't empty
-		IAMFLEETROLE=$(./getcloudformationstack.sh $STACKNAME SpotIamFleetRoleArn)
+		IAMFLEETROLE=$(getcloudformationstack.sh $STACKNAME SpotIamFleetRoleArn)
 		IAMFLEETROLE=arn:aws:iam::${ACCOUNTID}:role/${IAMFLEETROLE}
 		echo "IAMFLEETROLE=$IAMFLEETROLE" >> $AWSCONFIGFILENAME
-		JOBROLEARN=$(./getcloudformationstack.sh $STACKNAME ECSTaskRole)
+		JOBROLEARN=$(getcloudformationstack.sh $STACKNAME ECSTaskRole)
 		echo "JOBROLEARN=$JOBROLEARN" >> $AWSCONFIGFILENAME
 		
-		INSTANCEROLE=$(./getcloudformationstack.sh $STACKNAME IamInstanceProfileArn)
+		INSTANCEROLE=$(getcloudformationstack.sh $STACKNAME IamInstanceProfileArn)
 		INSTANCEROLE=arn:aws:iam::${ACCOUNTID}:instance-profile/${INSTANCEROLE}
 		echo "INSTANCEROLE=$INSTANCEROLE" >> $AWSCONFIGFILENAME
 
 		#Note: creating a security group with IP rules?  See  Page 6 of Creating a new AMI
 		# allows security group creation for each instance?  Public for web facing, private for batch?
-		BASTIONSECURITYGROUP=$(./getcloudformationstack.sh $STACKNAME BastionSecurityGroup)
-		#BATCHSECURITYGROUP=$(./getcloudformationstack.sh $STACKNAME BatchSecurityGroup)  
+		BASTIONSECURITYGROUP=$(getcloudformationstack.sh $STACKNAME BastionSecurityGroup)
+		#BATCHSECURITYGROUP=$(getcloudformationstack.sh $STACKNAME BatchSecurityGroup)  
 		#TODO: change the json and this to have a name that returns a different value
 		BATCHSECURITYGROUP=$BASTIONSECURITYGROUP #TODO delete this and uncomment later
 
@@ -154,17 +154,17 @@ if [ $# -eq 14 ]; then
 
 		echo "BATCHSECURITYGROUP=$BATCHSECURITYGROUP" >> $AWSCONFIGFILENAME
 		echo "BASTIONSECURITYGROUP=$BASTIONSECURITYGROUP" >> $AWSCONFIGFILENAME
-		SUBNETS=$(./getcloudformationstack.sh $STACKNAME Subnet)
+		SUBNETS=$(getcloudformationstack.sh $STACKNAME Subnet)
 		echo "SUBNETS=$SUBNETS" >> $AWSCONFIGFILENAME
-		efsID=$(./getcloudformationstack.sh $STACKNAME FileSystemId)
+		efsID=$(getcloudformationstack.sh $STACKNAME FileSystemId)
 
-		HEADNODELAUNCHTEMPLATEID=$(./getcloudformationstack.sh $STACKNAME HeadNodeLaunchTemplateId)
+		HEADNODELAUNCHTEMPLATEID=$(getcloudformationstack.sh $STACKNAME HeadNodeLaunchTemplateId)
 		echo "HEADNODELAUNCHTEMPLATEID=$HEADNODELAUNCHTEMPLATEID" >> $AWSCONFIGFILENAME
 
-		BATCHNODELAUNCHTEMPLATEID=$(./getcloudformationstack.sh $STACKNAME BatchNodeLaunchTemplateId)
+		BATCHNODELAUNCHTEMPLATEID=$(getcloudformationstack.sh $STACKNAME BatchNodeLaunchTemplateId)
 		echo "BATCHNODELAUNCHTEMPLATEID=$BATCHNODELAUNCHTEMPLATEID" >> $AWSCONFIGFILENAME
 		#Name might be better to use later, will need to label it as an output under outputs! 
-		#LaunchTemplateName=$(./getcloudformationstack.sh $STACKNAME LaunchTemplateName)
+		#LaunchTemplateName=$(getcloudformationstack.sh $STACKNAME LaunchTemplateName)
 
         #######################################################################################
 		#1.c) Check for AMI (depricated)
@@ -191,7 +191,7 @@ if [ $# -eq 14 ]; then
 		--type MANAGED --state ENABLED --service-role ${SERVICEROLE} \
 		--compute-resources "$COMPUTERESOURCES")
 		echo "$batchCreateOutput"
-		./sleepProgressBar.sh 3 4
+		sleepProgressBar.sh 3 4
 
 		#######################################################################################
 		#2.a) Create Job Queue
@@ -226,9 +226,9 @@ if [ $# -eq 14 ]; then
 		echo "----------------------------------------------------------------------------------------------"
 		echo "3.) Create Job Definition  -------------------------------------------------------------------"
 		echo "----------------------------------------------------------------------------------------------"
-		#BLJBatchJobsDeployOutput=$(./updateBatchJobDefinitions.sh $DOCKERREPOSEARCHSTRING $DOCKERRREPOVERSION 
+		#BLJBatchJobsDeployOutput=$(updateBatchJobDefinitions.sh $DOCKERREPOSEARCHSTRING $DOCKERRREPOVERSION 
 		#                          $JOBROLEARN $JOBVCPUS $JOBMEMORY $STACKNAME)  #$JOBDEFPREFIX
-		BLJBatchJobsDeployOutput=$(./updateBatchJobDefinitions.sh $STACKNAME)
+		BLJBatchJobsDeployOutput=$(updateBatchJobDefinitions.sh $STACKNAME)
 		echo "$BLJBatchJobsDeployOutput"
 		echo "$BLJBatchJobsDeployOutput" >> $AWSCONFIGFILENAME
 		echo "----------------------------------------------------------------------------------------------"
@@ -236,7 +236,7 @@ if [ $# -eq 14 ]; then
 		echo "----------------------------------------------------------------------------------------------"
 		echo "4.) Print Nextflow Config   ------------------------------------------------------------------"
 		echo "----------------------------------------------------------------------------------------------"
-		nextflowconfig=$(./printnextflowconfig.sh $STACKNAME)
+		nextflowconfig=$(printnextflowconfig.sh $STACKNAME)
 		echo $nextflowconfig
 		echo $nextflowconfig > "${NEXTFLOWCONFIGOUTPUTDIRECTORY}config"
 		echo "--------------------------------------------------------------------------------------------------------------"
@@ -262,12 +262,12 @@ echo -n '
 		echo "-----------------------------------------------------------------------------------"
 		echo "10.a) Launch EC2 and run script directly:  ----------------------------------------"
 		echo "    -This option runs a script directly through ssh on the head node"
-		echo "./launchEC2HeadNode.sh runscript $STACKNAME t2.micro PATHTOMYSCRIPT.sh"
+		echo "launchEC2HeadNode.sh runscript $STACKNAME t2.micro PATHTOMYSCRIPT.sh"
 		echo "-----------------------------------------------------------------------------------"		
 		echo "10.b) Launch EC2 and connect directly:  -------------------------------------------"
 		echo "     -This option runs an EC2 instance, copies associated credentials and"
 		echo "     creates an ssh connect directly to the headnode"
-		echo "./launchEC2HeadNode.sh directconnect $STACKNAME t2.micro"
+		echo "launchEC2HeadNode.sh directconnect $STACKNAME t2.micro"
 		echo "-----------------------------------------------------------------------------------"
 
 	else
@@ -276,7 +276,7 @@ echo -n '
 else
 	echo "Your command line contains $# arguments"
 	echo "usage: 14 arguments: "
-	echo -n " ./createRolesAndComputeEnv.sh STACKNAME COMPUTEENVIRONMENTNAME QUEUENAME SPOTPERCENT MAXCPU DEFAULTAMI "
+	echo -n " createRolesAndComputeEnv.sh STACKNAME COMPUTEENVIRONMENTNAME QUEUENAME SPOTPERCENT MAXCPU DEFAULTAMI "
 	echo "CUSTOMAMIFOREFS EBSVOLUMESIZEGB EFSPERFORMANCEMODE DOCKERREPOSEARCHSTRING S3BUCKETNAME"
 
 fi
@@ -293,6 +293,6 @@ fi
 # important note: not having S3 access in the original template was causing S3 puts to fail from nextflow running on the instance:
 # https://groups.google.com/forum/#!msg/nextflow/87hI5C831Ok/2pgdP5FOBwAJ
 
-# ./createRolesAndComputeEnv.sh BLJStack1 BLJComputeEnvironment1 BLJQueue1 60 1024
+# createRolesAndComputeEnv.sh BLJStack1 BLJComputeEnvironment1 BLJQueue1 60 1024
 #TO READ: https://docs.aws.amazon.com/cli/latest/userguide/cli-ec2-sg.html#configuring-a-security-group
 

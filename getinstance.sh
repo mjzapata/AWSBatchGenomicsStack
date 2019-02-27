@@ -109,7 +109,7 @@ if [ $# -eq 2 ]; then
 
 
 	else
-		echo "Usage: ./getinstance.sh instanceID valuetoquery, such as ipaddress, hostname, status"
+		echo "Usage: getinstance.sh instanceID valuetoquery, such as ipaddress, hostname, status"
 	fi
 
 
