@@ -12,6 +12,12 @@
 #PATH=$PATH:~/Documents/github/aws/AWSBatchGenomicsStack
 #PATH=$PATH:~/Documents/github/aws/AWSBatchGenomicsStack/support
 
+if [ ! -f "~/.batchawsdeploy/config" ]; then
+    echo "~/.batchawsdeploy/config does not exist"
+    echo "did you run installBatchDeployer.sh?"
+    exit 1
+fi
+source ~/.batchawsdeploy/config
 
 ARGUMENT=$1
 
@@ -62,28 +68,6 @@ else
 
         CUSTOMAMIFOREFS="no"
         EFSPERFORMANCEMODE=maxIO  #or generalPurpose
-
-        # Check for the existence of this variable.
-        # if it doesn't exist, add it to the path
-        #  -backup ~/.profile to ~/.profile_[day_month_year]
-        
-        #if [ -f ~/.bash_profile ]; then
-        #    BASHFILE=~/.bash_profile
-        #else
-        #    BASHFILE=~/.bashrc
-        #fi
-        #echo BASHFILE=$BASHFILE
-        #source $BASHFILE
-        #echo BATCHAWSDEPLOY_HOME=$BATCHAWSDEPLOY_HOME
-        source ~/.profile
-        if [ -z "$BATCHAWSDEPLOY_HOME" ]; then
-            BATCHAWSDEPLOY_HOME=~/.batchawsdeploy/
-            now="$(date +'%d-%m-%Y')"
-            cp ~/.profile ~/.profile_backup_$now
-            echo "export BATCHAWSDEPLOY_HOME=$BATCHAWSDEPLOY_HOME" >> ~/.profile
-            source ~/.profile
-        fi
-        mkdir -p $BATCHAWSDEPLOY_HOME
 
         NEXTFLOWCONFIGOUTPUTDIRECTORY=~/.nextflow/
         mkdir -p $NEXTFLOWCONFIGOUTPUTDIRECTORY
@@ -156,7 +140,7 @@ else
             echo "deleting cloudformation stack $STACKNAME"
             aws cloudformation delete-stack --stack-name $STACKNAME
             sleepProgressBar.sh 6 10
-            awskeypair.sh delete $KEYNAME ${BATCHAWSDEPLOY_HOME}
+            awskeypair.sh delete $KEYNAME
 
             rm $AWSCONFIGFILENAME
             rm ${NEXTFLOWCONFIGOUTPUTDIRECTORY}config

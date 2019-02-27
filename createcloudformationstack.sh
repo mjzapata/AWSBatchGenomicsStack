@@ -22,6 +22,9 @@ if [ $# -eq 2 ]; then
 		aws cloudformation delete-stack --stack-name $STACKNAME
 		echo "Stack $STACKNAME deleted"
 	else
+		source ~/.batchawsdeploy/config
+		STACKFILE=${BATCHAWSDEPLOY_HOME}$STACKFILE
+		echo "using file: $STACKFILE"
 		output=$(aws cloudformation create-stack \
 		--template-body file://${STACKFILE} \
 		--stack-name $STACKNAME \

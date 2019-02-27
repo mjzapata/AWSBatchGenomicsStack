@@ -16,8 +16,7 @@
 
 if [[ $# -eq 1 ]]; then
 	STACKNAME=$1
-	source ~/.profile
-	AWSCONFIGFILENAME=${BATCHAWSDEPLOY_HOME}${STACKNAME}.sh
+	AWSCONFIGFILENAME=~/.batchawsdeploy/${STACKNAME}.sh
 	source $AWSCONFIGFILENAME
 	dockersearchoutput=$(docker search "$DOCKERREPOSEARCHSTRING" | grep -E "^$DOCKERREPOSEARCHSTRING") #| grep $DOCKERREPOSEARCHSTRING)
 	

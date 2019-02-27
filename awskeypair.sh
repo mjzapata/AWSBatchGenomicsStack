@@ -8,9 +8,8 @@ ARGUMENT=$1
 
 if [ $# -eq 3 ]; then
 	KEYNAME=$2
-	BATCHAWSDEPLOY_HOME=$3
 
-	if [ "$ARGUMENT" == "create" ] && [ ! -f ${BATCHAWSDEPLOY_HOME}${KEYNAME}.pem ]; then
+	if [ "$ARGUMENT" == "create" ] && [ ! -f ~/.batchawsdeploy/${KEYNAME}.pem ]; then
 	#if [ "$ARGUMENT" == "create" ]; then
 		#TODO: what if the output file is empty
 		# if a key by that name does not exist in the described key-pairs, create it.  Otherwise, do nothing

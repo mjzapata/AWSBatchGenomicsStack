@@ -25,8 +25,8 @@ SECONDS=0
 if [ $# -eq 14 ]; then
 
 	STACKNAME=$1
-	source ~/.profile
-	AWSCONFIGFILENAME=${BATCHAWSDEPLOY_HOME}${STACKNAME}.sh
+	source ~/.batchawsdeploy/config
+	AWSCONFIGFILENAME=~/.batchawsdeploy/${STACKNAME}.sh
 	source $AWSCONFIGFILENAME
 
 	COMPUTEENVIRONMENTNAME=$2
@@ -108,7 +108,7 @@ if [ $# -eq 14 ]; then
 	echo "MYPUBLICIPADDRESS=$MYPUBLICIPADDRESS" >> $AWSCONFIGFILENAME
 
 	#1.) Check for key and create if it doesn't exist.  This is a keypair for ssh into EC2.
-	awskeypair.sh create $KEYNAME ${BATCHAWSDEPLOY_HOME}
+	awskeypair.sh create $KEYNAME
 	#TODO: 1.a) also create secret access key: aws iam create-access-key --user-name  for nextflow login instead of SSH
 	#option to create and delete one of these on every run for extra security??????
 	#TODO: https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_access-keys.html#Using_CreateAccessKey_CLIAPI
@@ -125,6 +125,7 @@ if [ $# -eq 14 ]; then
 		echo $stackstatus
 	else
 		createcloudformationstack.sh ${STACKNAME} $STACKFILE ParameterKey=\"NetworkAccessIP\",ParameterValue="$MYPUBLICIPADDRESS"
+		which createcloudformationstack.sh
 	fi
 	#######################################################################################
 	#1.b) check if stack exists once more
