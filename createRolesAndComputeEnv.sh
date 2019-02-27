@@ -41,7 +41,7 @@ if [ $# -eq 14 ]; then
 	REGION=${12}
 	KEYNAME=${13}
 	S3BUCKETNAME=${14}
-	#VERBOSE=$7
+	#VERBOSE=
 
 	echo "STACKNAME=$STACKNAME" >> $AWSCONFIGFILENAME
 	echo "AWSCONFIGOUTPUTDIRECTORY=$AWSCONFIGOUTPUTDIRECTORY"  >> $AWSCONFIGFILENAME
@@ -66,13 +66,6 @@ if [ $# -eq 14 ]; then
 	#ami-0b9a214f40c38d5eb #latest as of 2018oct17
 	TEMPLATEIMAGEID=ami-00a0ec1744b47e7e3
 	INSTANCETYPEFORAMICREATION=t2.micro
-
-	#Additional identifiers for AMI
-	AMIIDENTIFIER=managerv7
-	IMAGETAG=ImageRole
-	IMAGETAGVALUE=BLJManagerv7
-	EFSTAG=BLJEFSPerformanceMode
-	EFSTAGVALUE=$EFSPERFORMANCEMODE
 
 	##################################################
 	# Compute Environment Parameters
@@ -174,6 +167,14 @@ if [ $# -eq 14 ]; then
         #######################################################################################
 		#1.c) Check for AMI
 		#######################################################################################
+		
+		#Additional identifiers for AMI
+		AMIIDENTIFIER=managerv7
+		IMAGETAG=ImageRole
+		IMAGETAGVALUE=BLJManagerv7
+		EFSTAG=BLJEFSPerformanceMode
+		EFSTAGVALUE=$EFSPERFORMANCEMODE
+
 		#1.c) Check if default AMI exists
 		# if the default AMI is not found OR if the user has specified "no" as the DEFAULTAMI
 		# then a custom AMI will be created
