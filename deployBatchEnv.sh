@@ -78,7 +78,7 @@ else
         KEYNAME=${STACKNAME}KeyPair
 
         #Can check if this file already exists before proceeding?
-        AWSCONFIGFILENAME=${BATCHAWSDEPLOY_HOME}${STACKNAME}.sh
+        AWSCONFIGFILENAME=~/.batchawsdeploy/${STACKNAME}.sh
         echo "AWSCONFIGFILENAME=$AWSCONFIGFILENAME"
 
         #S3 buckets will NOT be deleted when running "deployBLJBatchEnv delete"
