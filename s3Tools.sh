@@ -16,9 +16,6 @@ if [ $# -gt 1 ]; then
 
 	if [ "$ARGUMENT" == "create" ]; then
 		########## AUTOGENERATE BUCKET NAME ##########
-		echo "----------------------------------------------------------------------"
-		echo "0.) S3 Bucket: "
-		echo "----------------------------------------------------------------------"
 		#TODO: rand generator not yet tested on LINUX:
 		#  -https://stackoverflow.com/questions/2793812/generate-a-random-filename-in-unix-shell 
 		#TODO: set more permissions
@@ -33,7 +30,7 @@ if [ $# -gt 1 ]; then
 		S3BUCKETNAME=$(echo "$S3BUCKETNAME" | tr '[:upper:]' '[:lower:]')
 
 		IFS=$'\t' #necessary to get tabs to parse correctly
-		if [ $S3BUCKETNAME == 'autogenerate' ]; then
+		if [ $S3BUCKETNAME == 'autogenerate' ] || [ $S3BUCKETNAME == 'autocreate' ]; then
 			nametocheck=$STACKNAMELOWERCASE
 			s3bucketlist="$(aws s3api list-buckets)"
 			matchingbucket=$(echo $s3bucketlist | grep BUCKETS | grep $nametocheck)
