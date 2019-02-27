@@ -25,11 +25,10 @@ if [ $# -gt 10 ]; then
 	INSTANCENAME=$8
 	EC2RUNARGUMENT=${9}
 	LAUNCHTEMPLATEID=${10}
-	AWSCONFIGFILENAME=${11}
-	SCRIPTNAME=${12}
-	AMIIDENTIFIER=${13}
-	IMAGETAG=${14}
-	IMAGETAGVALUE=${15}
+	SCRIPTNAME=${11}
+	AMIIDENTIFIER=${12}
+	IMAGETAG=${13}
+	IMAGETAGVALUE=${14}
 	#efsID=${14}
 
 	#replace comma of Security groups with spaces
@@ -143,13 +142,15 @@ if [ $# -gt 10 ]; then
 	#TODO: redo all input arguments and put an argument specifically for if I want to copy the configs
 	#TODO: change absolute paths
 	#------------------------------------------------------------------------------------------------
+	AWSCONFIGFILENAME=${BATCHAWSDEPLOY_HOME}${STACKNAME}.sh
 	echo "AWSCONFIGFILENAME=$AWSCONFIGFILENAME"
+
 	source $AWSCONFIGFILENAME
-	echo "AWSCONFIGOUTPUTDIRECTORY=$AWSCONFIGOUTPUTDIRECTORY"
+	echo "BATCHAWSDEPLOY_HOME=$BATCHAWSDEPLOY_HOME"
 
 	#remove previous hosts
 	ssh-keygen -f "~/.ssh/known_hosts" -R $instanceHostNamePublic
-	KEYFILE=${AWSCONFIGOUTPUTDIRECTORY}${KEYNAME}.pem
+	KEYFILE=${BATCHAWSDEPLOY_HOME}${KEYNAME}.pem
 
 	if [ $EC2RUNARGUMENT != "createAMI" ]; then
 		# ssh ec2-user@${instanceHostNamePublic} -i ${AWSCONFIGOUTPUTDIRECTORY}${KEYNAME}.pem \
@@ -204,7 +205,7 @@ if [ $# -gt 10 ]; then
 	###########################################################
 	elif [[ $EC2RUNARGUMENT == "directconnect" ]]; then
 		echo "To re-connect to this instance later run:"
-		echo "ssh -i ${AWSCONFIGOUTPUTDIRECTORY}${KEYNAME}.pem ec2-user@${instanceHostNamePublic}"
+		echo "ssh -i ${BATCHAWSDEPLOY_HOME}${KEYNAME}.pem ec2-user@${instanceHostNamePublic}"
 		echo "-------------------------------------------------------"
 		echo "To copy files to this instance run:"
 		echo "scp -i ${KEYFILE} MYFILENAME ec2-user@${instanceHostNamePublic}:/home/ec2-user/"

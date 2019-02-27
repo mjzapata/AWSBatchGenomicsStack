@@ -6,46 +6,23 @@
 
 #Things only created once: IAM stack, security group, network (one public, one private/or use the default?  What about one in between???)
 
-#Questions for Sarah:  EBS.  Am I provisioning 1TB for one instance or for each instance?
-# subnets? Security groups?  Which do I create, need a public IP?
-
-#TODO: check for manager API, and various compute-node APIs
 #TODO: There are currently several hardcoded values for us-east-1
 #TODO: create High and low priority like in the tutorial later, with linked Queues and one that is ON DEMAND
-#TODO: autocreate an AIM role with the minimal capabilities and paste it into nextflow output
-# EFS: This operation requires permissions for the elasticfilesystem:CreateFileSystem action.
+#TODO: autocreate an IAM role with the minimal capabilities and paste it into aws config
 
 #TODO: validate IP ADDRESS
 
 #TODO: EFS
 # The PerformanceMode of the file system.   https://docs.aws.amazon.com/cli/latest/reference/efs/create-file-system.html
-# We recommend generalPurpose performance mode for most file systems. 
-#File systems using the maxIO performance mode can scale to higher 
-#levels of aggregate throughput and operations per second with a tradeoff of slightly higher 
-#latencies for most file operations. This can't be changed after the file system has been created.
-
-
-#PUBLIC image created 12_12_2018
-#BLJAMImanager-50GB_DOCKER   ami-01a9c10af27d4d2a8    725685564787/BLJAMImanager-50GB_DOCKER    725685564787
-#output this: 
-#output 
+# We recommend generalPurpose performance mode for most file systems. File systems using the maxIO 
+# performance mode can scale to higher levels of aggregate throughput and operations per second with a tradeoff of 
+# slightly higher latencies for most file operations. This can't be changed after the file system has been created.
 
 #TODO: error handling for compute environment and job queue that already exist
 
-#TODO: Automatically print out nextflow.config template, filled in.
-#  including the access key and secret key?  restrict file access for config file to "user"??  
-#   or should I use the .pem
-
-#TODO: might delete the original compute environments since they have a different AMI??
-#TODO: create a random S3 bucket, try to keep it as empty as possible
-#TODO: make printnextflow more generic so it can be called with just a stackname?
-
-#TODO: hardcoded region in the progress of EC2 deployment and cloudformation
-
-#NOTE: You get a maximum of 5 VPCS per region, each different stack name creates its own VPC
 SECONDS=0
 
-if [ $# -eq 15 ]; then
+if [ $# -eq 14 ]; then
 
 	STACKNAME=$1
 	COMPUTEENVIRONMENTNAME=$2
@@ -57,13 +34,13 @@ if [ $# -eq 15 ]; then
 	EBSVOLUMESIZEGB=$8
 	EFSPERFORMANCEMODE=$9
 	AWSCONFIGOUTPUTDIRECTORY=${10}
-	AWSCONFIGFILENAME=${11}
-	NEXTFLOWCONFIGOUTPUTDIRECTORY=${12}
-	REGION=${13}
-	KEYNAME=${14}
-	S3BUCKETNAME=${15}
+	NEXTFLOWCONFIGOUTPUTDIRECTORY=${11}
+	REGION=${12}
+	KEYNAME=${13}
+	S3BUCKETNAME=${14}
 	#VERBOSE=$7
 	#IMAGEID=$4
+	AWSCONFIGFILENAME=${BATCHAWSDEPLOY_HOME}${STACKNAME}.sh
 	echo "STACKNAME=$STACKNAME" >> $AWSCONFIGFILENAME
 	echo "AWSCONFIGOUTPUTDIRECTORY=$AWSCONFIGOUTPUTDIRECTORY"  >> $AWSCONFIGFILENAME
 	echo "KEYNAME=$KEYNAME" >> $AWSCONFIGFILENAME
@@ -79,10 +56,6 @@ if [ $# -eq 15 ]; then
 	stackstatus=$(./getcloudformationstack.sh $STACKNAME)
 	DESIREDCPUS=0 #this is the minimum reserved CPUS.  Specifying more than 0 will waste money unless you are putting out batch jobs 24/7
 	echo "DESIREDCPUS=$DESIREDCPUS" >> $AWSCONFIGFILENAME
-
-	#TODO: create a seperate script for the compute environment
-	#TODO: for S3 in regions outside us-east-1 https://docs.aws.amazon.com/cli/latest/reference/s3api/create-bucket.html 
-	#computeenvstatus=$()
 
 	##################################################
 	# AMI Parameters for Custom AMI
@@ -121,46 +94,7 @@ if [ $# -eq 15 ]; then
 	#REGION
 	#S3BUCKETNAME
 	#check for BLJ bucket (TODO: turn this into a function)
-	echo "looking for bucket: $S3BUCKETNAME"
-	echo "forcing bucket names to lowercase"
-	STACKNAMELOWERCASE=$(echo "$STACKNAME" | tr '[:upper:]' '[:lower:]')
-	S3BUCKETNAME=$(echo "$S3BUCKETNAME" | tr '[:upper:]' '[:lower:]')
-
-	IFS=$'\t' #necessary to get tabs to parse correctly
-	if [[ $S3BUCKETNAME == 'autogenerate' ]]; then
-		nametocheck=$STACKNAMELOWERCASE
-		s3bucketlist="$(aws s3api list-buckets)"
-		matchingbucket=$(echo $s3bucketlist | grep BUCKETS | grep $nametocheck)
-		bucketexists=$(echo -n $matchingbucket | wc -m)
-		if [[ $bucketexists -gt 1 ]]; then
-			S3BUCKETNAME=$(echo $matchingbucket  | awk '//{print $3}')
-			echo "Bucket EXISTS with previously randomly generated name: $S3BUCKETNAME"
-		else
-			#create a new bucket with name $STACKNAMELOWERCASE followed by a random string
-			randlength=24
-			randstring=$(cat /dev/urandom | env LC_CTYPE=C tr -cd 'a-f0-9' | head -c $randlength)
-			S3BUCKETNAME=${STACKNAMELOWERCASE}-${randstring}
-			s3CreateString=$(aws s3api create-bucket --bucket $S3BUCKETNAME --region $REGION)
-			echo "Bucket CREATED with randomly generated name: $S3BUCKETNAME"
-			echo "$s3CreateString"
-		fi
-	else
-		nametocheck=$S3BUCKETNAME
-		s3bucketlist=$(aws s3api list-buckets)
-		# grep -w to check for an exact match for the bucketname
-		matchingbucket=$(echo $s3bucketlist | grep -w $nametocheck)
-		bucketexists=$(echo -n $matchingbucket | wc -m)
-		if [[ $bucketexists -gt 1 ]]; then
-			#S3BUCKETNAME=$(echo $matchingbucket  | awk '//{print $3}')
-			echo "matchingbucket named:  $matchingbucket"
-			echo "Bucket EXISTS with name: $S3BUCKETNAME"
-		else
-			s3CreateString=$(aws s3api create-bucket --bucket $S3BUCKETNAME --region $REGION)
-			echo "Bucket CREATED with name: $S3BUCKETNAME"
-			echo "$s3CreateString"
-		fi
-	fi
-	echo "S3BUCKETNAME=$S3BUCKETNAME" >> $AWSCONFIGFILENAME
+	./s3Tools.sh create $S3BUCKETNAME $STACKNAME
 
 	#######################################################################################
 	#STACK and Cloudformation Parameters 
@@ -177,7 +111,7 @@ if [ $# -eq 15 ]; then
 	echo "MYPUBLICIPADDRESS=$MYPUBLICIPADDRESS" >> $AWSCONFIGFILENAME
 
 	#1.) Check for key and create if it doesn't exist.  This is a keypair for ssh into EC2.
-	./awskeypair.sh create $KEYNAME ${AWSCONFIGOUTPUTDIRECTORY}
+	./awskeypair.sh create $KEYNAME ${BATCHAWSDEPLOY_HOME}
 	#TODO: 1.a) also create secret access key: aws iam create-access-key --user-name  for nextflow login instead of SSH
 	#option to create and delete one of these on every run for extra security??????
 	#TODO: https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_access-keys.html#Using_CreateAccessKey_CLIAPI
@@ -266,7 +200,7 @@ if [ $# -eq 15 ]; then
 	    		read -p "Image with tag: ${IMAGETAG}, value: ${IMAGETAGVALUE} does not exist. Do you want to create it?: " yn
 	    		case $yn in
 	        		[Yy]* ) ./launchEC2.sh $STACKNAME $TEMPLATEIMAGEID $INSTANCETYPEFORAMICREATION $KEYNAME $EBSVOLUMESIZEGB $SUBNETS $BASTIONSECURITYGROUP \
-											$INSTANCENAME $EC2RUNARGUMENT $HEADNODELAUNCHTEMPLATEID $AWSCONFIGFILENAME configureEC2forAMI.sh \
+											$INSTANCENAME $EC2RUNARGUMENT $HEADNODELAUNCHTEMPLATEID configureEC2forAMI.sh \
 											$AMIIDENTIFIER $IMAGETAG $IMAGETAGVALUE; break;;
 	        		[Nn]* ) exit;;
 	        		* ) echo "Please answer yes or no.";;
@@ -283,6 +217,7 @@ if [ $# -eq 15 ]; then
 		echo "----------------------------------------------------------------------------------------------"
 		echo "2.) creating Compute Environment and Job Queue   ---------------------------------------------"
 		echo "creating compute environment: $COMPUTEENVIRONMENTNAME"
+		echo "----------------------------------------------------------------------------------------------"
 
 		COMPUTERESOURCES="type=SPOT,minvCpus=0,maxvCpus=$MAXCPU,desiredvCpus=$DESIREDCPUS,instanceTypes=optimal,
 		imageId=$IMAGEID,subnets=$SUBNETS,securityGroupIds=$BATCHSECURITYGROUP,ec2KeyPair=$KEYNAME,
@@ -291,9 +226,6 @@ if [ $# -eq 15 ]; then
 		
 		COMPUTERESOURCES="$(echo -e "${COMPUTERESOURCES}" | tr -d '[:space:]')"
 
-		# batchCreateOutput=$(aws batch create-compute-environment --compute-environment-name $COMPUTEENVIRONMENTNAME \
-		# --type MANAGED --state ENABLED --service-role ${SERVICEROLE} \
-		# --compute-resources type=SPOT,minvCpus=0,maxvCpus=$MAXCPU,desiredvCpus=$DESIREDCPUS,instanceTypes=optimal,imageId=$IMAGEID,subnets=$SUBNETS,securityGroupIds=$BATCHSECURITYGROUP,ec2KeyPair=$KEYNAME,instanceRole=$INSTANCEROLE,bidPercentage=$SPOTPERCENT,spotIamFleetRole=$IAMFLEETROLE,launchTemplate={launchTemplateId=$BATCHNODELAUNCHTEMPLATEID})
 		
 		batchCreateOutput=$(aws batch create-compute-environment --compute-environment-name $COMPUTEENVIRONMENTNAME \
 		--type MANAGED --state ENABLED --service-role ${SERVICEROLE} \
@@ -322,7 +254,7 @@ if [ $# -eq 15 ]; then
 		echo "----------------------------------------------------------------------------------------------"
 
 		#######################################################################################
-		#7.) Create Job Definition
+		#3.) Create Job Definition
 		# Create ONE Job defintion for ONE container
 		# The purpose of creating a seperate job definition to work with nextflow is that
 		# containers need to be declared as "priviledged" in order to mount EFS volumes.
@@ -335,17 +267,15 @@ if [ $# -eq 15 ]; then
 		echo "3.) Create Job Definition  -------------------------------------------------------------------"
 		echo "----------------------------------------------------------------------------------------------"
 		#BLJBatchJobsDeployOutput=$(./updateBatchJobDefinitions.sh $DOCKERREPOSEARCHSTRING $DOCKERRREPOVERSION $JOBROLEARN $JOBVCPUS $JOBMEMORY $STACKNAME)  #$JOBDEFPREFIX
-		BLJBatchJobsDeployOutput=$(./updateBatchJobDefinitions.sh $AWSCONFIGFILENAME)
+		BLJBatchJobsDeployOutput=$(./updateBatchJobDefinitions.sh $STACKNAME)
 		echo "$BLJBatchJobsDeployOutput"
 		echo "$BLJBatchJobsDeployOutput" >> $AWSCONFIGFILENAME
 		echo "----------------------------------------------------------------------------------------------"
-		#####################################################################################################
-		#8.) Print Nextflow Config
-		#####################################################################################################
+
 		echo "----------------------------------------------------------------------------------------------"
-		echo "8.) Print Nextflow Config   ------------------------------------------------------------------"
+		echo "4.) Print Nextflow Config   ------------------------------------------------------------------"
 		echo "----------------------------------------------------------------------------------------------"
-		nextflowconfig=$(./printnextflowconfig.sh $AWSCONFIGFILENAME) # $QUEUENAME $AWSACCESSKEY $AWSSECRETKEY)
+		nextflowconfig=$(./printnextflowconfig.sh $STACKNAME) # $QUEUENAME $AWSACCESSKEY $AWSSECRETKEY)
 		echo $nextflowconfig
 		echo $nextflowconfig > "${NEXTFLOWCONFIGOUTPUTDIRECTORY}config"
 		echo "--------------------------------------------------------------------------------------------------------------"
@@ -385,7 +315,8 @@ echo -n '
 else
 	echo "Your command line contains $# arguments"
 	echo "usage: sixteen arguments: "
-	echo " ./createRolesAndComputeEnv.sh STACKNAME COMPUTEENVIRONMENTNAME QUEUENAME SPOTPERCENT MAXCPU DEFAULTAMI CUSTOMAMIFOREFS EBSVOLUMESIZEGB EFSPERFORMANCEMODE DOCKERREPOSEARCHSTRING AWSCONFIGOUTPUTDIRECTORY S3BUCKETNAME"
+	echo -n " ./createRolesAndComputeEnv.sh STACKNAME COMPUTEENVIRONMENTNAME QUEUENAME SPOTPERCENT MAXCPU DEFAULTAMI "
+	echo "CUSTOMAMIFOREFS EBSVOLUMESIZEGB EFSPERFORMANCEMODE DOCKERREPOSEARCHSTRING S3BUCKETNAME"
 
 fi
 

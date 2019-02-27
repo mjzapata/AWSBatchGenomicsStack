@@ -8,18 +8,18 @@ ARGUMENT=$1
 
 if [ $# -eq 3 ]; then
 	KEYNAME=$2
-	AWSCONFIGOUTPUTDIRECTORY=$3
+	BATCHAWSDEPLOY_HOME=$3
 
-	if [ "$ARGUMENT" == "create" ] && [ ! -f ${AWSCONFIGOUTPUTDIRECTORY}${KEYNAME}.pem ]; then
+	if [ "$ARGUMENT" == "create" ] && [ ! -f ${BATCHAWSDEPLOY_HOME}${KEYNAME}.pem ]; then
 	#if [ "$ARGUMENT" == "create" ]; then
 		#TODO: what if the output file is empty
 		# if a key by that name does not exist in the described key-pairs, create it.  Otherwise, do nothing
 		keydescription=$(aws ec2 describe-key-pairs)
 		keystatus=$(echo "$keydescription" | grep -c "$KEYNAME")
 		if [ $keystatus -eq 0 ]; then
-			aws ec2 create-key-pair --key-name $KEYNAME --query 'KeyMaterial' --output text > ${AWSCONFIGOUTPUTDIRECTORY}${KEYNAME}.pem
+			aws ec2 create-key-pair --key-name $KEYNAME --query 'KeyMaterial' --output text > ${BATCHAWSDEPLOY_HOME}${KEYNAME}.pem
 			#this is a security requirement for keypairs to be used
-			chmod 400 ${AWSCONFIGOUTPUTDIRECTORY}${KEYNAME}.pem
+			chmod 400 ${BATCHAWSDEPLOY_HOME}${KEYNAME}.pem
 		else
 			echo "key with name: $KEYNAME  already exists!"
 		fi
@@ -30,8 +30,8 @@ if [ $# -eq 3 ]; then
 
 	elif [ "$ARGUMENT" == "delete" ]; then
 		echo "deleting $KEYNAME"
-		chmod 777 ${AWSCONFIGOUTPUTDIRECTORY}${KEYNAME}.pem
-		rm ${AWSCONFIGOUTPUTDIRECTORY}${KEYNAME}.pem
+		chmod 777 ${BATCHAWSDEPLOY_HOME}${KEYNAME}.pem
+		rm ${BATCHAWSDEPLOY_HOME}${KEYNAME}.pem
 		aws ec2 delete-key-pair --key-name $KEYNAME
 
 	else

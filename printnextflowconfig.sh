@@ -7,7 +7,10 @@
 #Without EFS
 
 if [ $# -eq 1 ]; then
-AWSCONFIGFILENAME=$1
+STACKNAME=$1
+#source ~/.profile
+
+AWSCONFIGFILENAME=${BATCHAWSDEPLOY_HOME}${STACKNAME}.sh
 source $AWSCONFIGFILENAME
 
 echo ""

@@ -8,7 +8,7 @@ function print_help(){
 	echo "This script is used to either return the users local IP address or
 	update the ingress IP address of the stack's security group"
 	echo "usage: ./ipTools.sh getip"
-	echo "usage: ./ipTools.sh updatesg AWSCONFIGFILENAME"
+	echo "usage: ./ipTools.sh updatesg STACKNAME"
 }
 
 function return_ip(){
@@ -29,7 +29,8 @@ if [ $# -eq 1 ]; then
 elif [ $# -eq 2 ]; then
 
 	if [ $ARGUMENT == "updatesg" ]; then
-		AWSCONFIGFILENAME=$2
+		STACKNAME=$2
+		AWSCONFIGFILENAME=${BATCHAWSDEPLOY_HOME}${STACKNAME}.sh
 		source $AWSCONFIGFILENAME
 
 		#MYPUBLICIPADDRESS=$(return_ip)

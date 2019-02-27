@@ -1,6 +1,8 @@
 #!/bin/bash
 
-#TODO: add progress bar
+#TODO: Test that the IP addresss is getting assigned correctly
+#TODO: test that S3 is getting created correctly in both cases
+
 #need to capture output from each step and check for success?
 
 #also check if there are currently any instances using any of these resources?
@@ -25,16 +27,18 @@ print_help() {
     echo "Usage: ./deployBatchEnv.sh help"
     echo "Usage: ./deployBatchEnv.sh create MYSTACKNAME mydockerhubreponame1 autogenerate"
     echo "Usage: ./deployBatchEnv.sh create MYSTACKNAME mydockerhubreponame1 MYS3BUCKETNAME"
-    echo "Usage: ./deployBatchEnv.sh create MYSTACKNAME \"mydockerhubreponame1|mydockerhubreponame2|mydockerhubreponame3\" MYS3BUCKETNAME"
+    echo -n "Usage: ./deployBatchEnv.sh create MYSTACKNAME "
+    echo "\"mydockerhubreponame1|mydockerhubreponame2|mydockerhubreponame3\" MYS3BUCKETNAME"
     echo "Usage: ./deployBatchEnv.sh delete MYSTACKNAME"
     echo ""
 }
 
-if [ $ARGUMENT == "help" ] || [ $ARGUMENT == "--help" ] || [ $ARGUMENT == "-h" ]; then
+echo "ARGUMENT: $ARGUMENT"
+
+if [ "$ARGUMENT" == "help" ] || [ "$ARGUMENT" == "--help" ] || [ "$ARGUMENT" == "-h" ]; then
     print_help
 else
-
-    if [ $ARGUMENT == "create" ] || [ $ARGUMENT == "delete" ]; then
+    if [ "$ARGUMENT" == "create" ] || [ "$ARGUMENT" == "delete" ]; then
         STACKNAME=$2
 
         # Job Definition
@@ -46,24 +50,44 @@ else
 
         COMPUTEENVIRONMENTNAME=${STACKNAME}ComputeEnv
         QUEUENAME=${STACKNAME}Queue
-        SPOTPERCENT=75
+        SPOTPERCENT=80
         MAXCPU=1024
         EBSVOLUMESIZEGB=0
 
-        #hardcoded AMI value. set equal to "no" to create and use custom AMI size
         REGION=us-east-1
 
         CUSTOMAMIFOREFS="no"
         EFSPERFORMANCEMODE=maxIO  #or generalPurpose
 
+        # Check for the existence of this variable.
+        # if it doesn't exist, add it to the path
+        #  -backup ~/.profile to ~/.profile_[day_month_year]
+        if [ -f ~/.bash_profile ]; then
+            BASHFILE=~/.bash_profile
+        else
+            BASHFILE=~/.bashrc
+        fi
+
+        source $BASHFILE
+        if [ -z "$BATCHAWSDEPLOY_HOME" ]; then
+            BATCHAWSDEPLOY_HOME=~/.batchawsdeploy/
+            now="$(date +'%d-%m-%Y')"
+            cp ${BASHFILE} ${BASHFILE}_backup_$now
+            echo "export BATCHAWSDEPLOY_HOME=$BATCHAWSDEPLOY_HOME" >> ${BASHFILE}
+            source $BASHFILE
+        fi
+        mkdir -p $BATCHAWSDEPLOY_HOME
+
         NEXTFLOWCONFIGOUTPUTDIRECTORY=~/.nextflow/
         mkdir -p $NEXTFLOWCONFIGOUTPUTDIRECTORY
+        #AWS_HOME
         AWSCONFIGOUTPUTDIRECTORY=~/.aws/
         mkdir -p $AWSCONFIGOUTPUTDIRECTORY
+
         KEYNAME=${STACKNAME}KeyPair
 
         #Can check if this file already exists before proceeding?
-        AWSCONFIGFILENAME=${AWSCONFIGOUTPUTDIRECTORY}${STACKNAME}.sh
+        AWSCONFIGFILENAME=${BATCHAWSDEPLOY_HOME}${STACKNAME}.sh
         echo "AWSCONFIGFILENAME=$AWSCONFIGFILENAME"
 
         #S3 buckets will NOT be deleted when running "./deployBLJBatchEnv delete"
@@ -91,33 +115,27 @@ else
 
     	   ./createRolesAndComputeEnv.sh $STACKNAME $COMPUTEENVIRONMENTNAME $QUEUENAME $SPOTPERCENT $MAXCPU \
                     $DEFAULTAMI $CUSTOMAMIFOREFS $EBSVOLUMESIZEGB $EFSPERFORMANCEMODE $AWSCONFIGOUTPUTDIRECTORY \
-                    $AWSCONFIGFILENAME $NEXTFLOWCONFIGOUTPUTDIRECTORY $REGION $KEYNAME $S3BUCKETNAME
+                    $NEXTFLOWCONFIGOUTPUTDIRECTORY $REGION $KEYNAME $S3BUCKETNAME
 
     	elif [ "$ARGUMENT" == "delete" ] && [ $# -eq 2 ]; then
-
             echo "this will take approximately three minutes"
             echo "deleting $STACKNAME  $COMPUTEENVIRONMENTNAME $QUEUENAME"
             
             source $AWSCONFIGFILENAME
             # TODO: check for running EC2 instances
             # aws ec2 describe-network-interfaces --filters Name=group-id,Values=sg-0fb51f0752d394c02,
-            # research how to use query vs filter: https://docs.aws.amazon.com/cli/latest/reference/ec2/describe-network-interfaces.html
+            # research how to use query vs filter: 
+            # https://docs.aws.amazon.com/cli/latest/reference/ec2/describe-network-interfaces.html
             # DESCRIPTION
             # Network interface for Bastion Node
             # EFS mount target for fs-56d23cb6 (fsmt-42d00fa3)
-
-            #delete queue
-            #echo "|------|"
-            #echo -n "<."
+            echo "deleting job queue $QUEUENAME"
             aws batch update-job-queue --job-queue $QUEUENAME --state DISABLED
-            #JOBQUEUES   arn:aws:batch:us-east-1:725685564787:job-queue/BLJStack71Queue  BLJStack71Queue 10  DISABLED    DELETING    JobQueue Healthy
-            #An error occurred (ClientException) when calling the UpdateJobQueue operation: arn:aws:batch:us-east-1:725685564787:job-queue/BLJStack71Queue does not exist
             ./sleepProgressBar.sh 5 5
             aws batch delete-job-queue --job-queue $QUEUENAME
             ./sleepProgressBar.sh 5 8
             #delete compute environment which is dependent on queue
-            #An error occurred (ClientException) when calling the DeleteComputeEnvironment operation: Cannot delete, found existing JobQueue relationship
-            #COMPUTEENVIRONMENTS    arn:aws:batch:us-east-1:725685564787:compute-environment/BLJStack71ComputeEnv   BLJStack71ComputeEnv    arn:aws:ecs:us-east-1:725685564787:cluster/BLJStack71ComputeEnv_Batch_3e16bbff-ca43-34b2-82d4-2042d2295664  arn:aws:iam::725685564787:role/BLJStack71-BatchServiceRole-1G661TPM7TDP0    DISABLED    VALID   ComputeEnvironment Healthy  MANAGED
+            echo "deleting compute environment $COMPUTEENVIRONMENTNAME"
             aws batch update-compute-environment --compute-environment $COMPUTEENVIRONMENTNAME --state DISABLED
             ./sleepProgressBar.sh 5 6
             aws batch delete-compute-environment --compute-environment $COMPUTEENVIRONMENTNAME
@@ -127,25 +145,19 @@ else
             #delete job definition
             # aws batch deregister-job-definition 
             # get a list of all jobdefs that start with $STACKNAME
-
+            echo "deleting cloudformation stack $STACKNAME"
             aws cloudformation delete-stack --stack-name $STACKNAME
             ./sleepProgressBar.sh 6 10
-
-            ./awskeypair.sh delete $KEYNAME ${AWSCONFIGOUTPUTDIRECTORY}
+            ./awskeypair.sh delete $KEYNAME ${BATCHAWSDEPLOY_HOME}
 
             rm $AWSCONFIGFILENAME
             rm ${NEXTFLOWCONFIGOUTPUTDIRECTORY}config
-
         else
             print_help
-
     	fi
-
     else
         print_help
-
     fi
-
 fi
 
 

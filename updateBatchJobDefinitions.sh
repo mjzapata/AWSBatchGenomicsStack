@@ -15,20 +15,15 @@
 #TODO: test on single docker image
 
 if [[ $# -eq 1 ]]; then
-	AWSCONFIGFILENAME=$1
-	#DOCKERREPOSEARCHSTRING=$1
-	#DOCKERRREPOVERSION=$2
-	#JOBROLEARN=$3
-	#JOBVCPUS=$4
-	#JOBMEMORY=$5
-	#STACKNAME=$6
-	#JOBDEFPREFIX=$6
+	STACKNAME=$1
+	AWSCONFIGFILENAME=${BATCHAWSDEPLOY_HOME}${STACKNAME}.sh
 	source $AWSCONFIGFILENAME
 	dockersearchoutput=$(docker search "$DOCKERREPOSEARCHSTRING" | grep -E "^$DOCKERREPOSEARCHSTRING") #| grep $DOCKERREPOSEARCHSTRING)
 	
-	if [ $DOCKERREPOSEARCHSTRING ?? 'biolockj' ]; then
-		dockersearchoutput=$(docker search "$DOCKERREPOSEARCHSTRING" | grep -E "^$DOCKERREPOSEARCHSTRING" | grep -v _basic | grep -v _manager) 
-	fi
+	#special case to exclude some of the biolockj images from having job definitions created
+#	if [ $DOCKERREPOSEARCHSTRING ?? 'biolockj' ]; then
+#		dockersearchoutput=$(docker search "$DOCKERREPOSEARCHSTRING" | grep -E "^$DOCKERREPOSEARCHSTRING" | grep -v _basic | grep -v _manager) 
+#	fi
 	
 	IFS=$'\t' #necessary to get tabs to parse correctly
 	repoimagelist=$(echo $dockersearchoutput | awk '//{print $1}')
