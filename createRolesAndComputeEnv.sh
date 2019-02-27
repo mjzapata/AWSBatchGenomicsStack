@@ -165,53 +165,8 @@ if [ $# -eq 14 ]; then
 		#LaunchTemplateName=$(./getcloudformationstack.sh $STACKNAME LaunchTemplateName)
 
         #######################################################################################
-		#1.c) Check for AMI
+		#1.c) Check for AMI (depricated)
 		#######################################################################################
-		
-		#Additional identifiers for AMI
-		AMIIDENTIFIER=managerv7
-		IMAGETAG=ImageRole
-		IMAGETAGVALUE=BLJManagerv7
-		EFSTAG=BLJEFSPerformanceMode
-		EFSTAGVALUE=$EFSPERFORMANCEMODE
-
-		#1.c) Check if default AMI exists
-		# if the default AMI is not found OR if the user has specified "no" as the DEFAULTAMI
-		# then a custom AMI will be created
-		if [[ $DEFAULTAMI == "no" ]]; then
-			IMAGEIDStatus="NA"
-		else
-			IMAGEIDStatus=$(./getec2images.sh $DEFAULTAMI status)
-			echo "IMAGEIDStatus=$IMAGEIDStatus"
-			imageTagStatus=$(./getec2images.sh tags $IMAGETAG $IMAGETAGVALUE)
-			echo "imageTagStatus=$imageTagStatus"
-			imageExistWordCount=$(echo -n $imageTagStatus | wc -m)
-		fi
-
-		if [[ $IMAGEIDStatus == "available" && $DEFAULTAMI != "no" ]]; then
-			echo "Found default BLJ image with ID: ${DEFAULTAMI}"
-			IMAGEID=$DEFAULTAMI
-		elif [[ $imageExistWordCount -lt 2 ]]; then
-			echo "CREATING new AMI...."
-			EC2RUNARGUMENT="createAMI"
-			INSTANCENAME="CREATEAMI"
-		#1.c)  Check if AMI with custom tags exists
-			#TODO: clean up the getec2images call. maybe rename functions
-			#If it doesn't exist ask if you want to create an AMI using the 
-			#if [ $IMAGEIDStatus == "image not found" ]; then
-			while true; do
-	    		read -p "Image with tag: ${IMAGETAG}, value: ${IMAGETAGVALUE} does not exist. Do you want to create it?: " yn
-	    		case $yn in
-	        		[Yy]* ) ./launchEC2.sh $STACKNAME $TEMPLATEIMAGEID $INSTANCETYPEFORAMICREATION $KEYNAME $EBSVOLUMESIZEGB $SUBNETS $BASTIONSECURITYGROUP \
-											$INSTANCENAME $EC2RUNARGUMENT $HEADNODELAUNCHTEMPLATEID configureEC2forAMI.sh \
-											$AMIIDENTIFIER $IMAGETAG $IMAGETAGVALUE; break;;
-	        		[Nn]* ) exit;;
-	        		* ) echo "Please answer yes or no.";;
-	    		esac
-			done
-			IMAGEID=$(echo $imageTagStatus | grep IMAGES | grep ami | awk '//{print $6}')
-
-		fi
 		echo "IMAGEID=$IMAGEID" >> $AWSCONFIGFILENAME
 
 		################################################################################################
