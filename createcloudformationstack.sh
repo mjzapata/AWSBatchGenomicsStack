@@ -10,21 +10,17 @@
 #		--stack-name $STACKNAME \
 #		--capabilities CAPABILITY_IAM \
 #		--parameters ParameterKey="NetworkAccessIP",ParameterValue="173.92.84.208/32"
-
+STACKNAME=$1
+STACKFILE=$2
+PARAMETERS=$3
 
 if [ $# -eq 2 ]; then
-
-	STACKNAME=$1
-	STACKFILE=$2
-
 	#if the second argument is delete instead of anything else, delete this stack
 	if [ $STACKFILE == "delete" ]; then
 		aws cloudformation delete-stack --stack-name $STACKNAME
 		echo "Stack $STACKNAME deleted"
 	else
-		source ~/.batchawsdeploy/config
-		STACKFILE=${BATCHAWSDEPLOY_HOME}$STACKFILE
-		echo "using file: $STACKFILE"
+
 		output=$(aws cloudformation create-stack \
 		--template-body file://${STACKFILE} \
 		--stack-name $STACKNAME \
@@ -50,9 +46,7 @@ if [ $# -eq 2 ]; then
 	fi
 
 elif [[ $# -gt 2 ]]; then
-		STACKNAME=$1
-		STACKFILE=$2
-		PARAMETERS=$3
+
 		echo "Parameters:  $PARAMETERS"
 		output=$(aws cloudformation create-stack \
 		--template-body file://${STACKFILE} \

@@ -96,7 +96,8 @@ if [ $# -eq 14 ]; then
 	#######################################################################################
 	#STACK and Cloudformation Parameters 
 	#######################################################################################
-	STACKFILE=BLJStackEFS.yml
+	#TODO: allow for custom stackfile
+	STACKFILE=${BATCHAWSDEPLOY_HOME}BLJStackEFS.yml
 	echo "STACKFILE=$STACKFILE" >> $AWSCONFIGFILENAME
 	# reduce the last number to be more leniant about ip a ddresses, for example if a university has multiple IPs
 	#Get local public IPaddress https://askubuntu.com/questions/95910/command-for-determining-my-public-ip 
