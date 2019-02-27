@@ -105,6 +105,7 @@ else
             DEFAULTAMI=$(./support/getLatestAMI.sh $REGION amzn2-ami-ecs-hvm 2019 x86_64)
             echo "DEFAULTAMI=$DEFAULTAMI"
             echo ""
+            
             #Create AWS config file and start writing values
             touch "$AWSCONFIGFILENAME"
             echo "#!/bin/bash" > $AWSCONFIGFILENAME
