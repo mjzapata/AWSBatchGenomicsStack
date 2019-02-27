@@ -30,6 +30,7 @@ elif [ $# -eq 2 ]; then
 
 	if [ $ARGUMENT == "updatesg" ]; then
 		STACKNAME=$2
+		source ~/.profile
 		AWSCONFIGFILENAME=${BATCHAWSDEPLOY_HOME}${STACKNAME}.sh
 		source $AWSCONFIGFILENAME
 
