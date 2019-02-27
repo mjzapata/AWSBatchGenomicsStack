@@ -12,7 +12,7 @@
 #PATH=$PATH:~/Documents/github/aws/AWSBatchGenomicsStack
 #PATH=$PATH:~/Documents/github/aws/AWSBatchGenomicsStack/support
 
-if [ ! -f "~/.batchawsdeploy/config" ]; then
+if [ ! -f ~/.batchawsdeploy/config ]; then
     echo "~/.batchawsdeploy/config does not exist"
     echo "did you run installBatchDeployer.sh?"
     exit 1
