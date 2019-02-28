@@ -193,7 +193,8 @@ if [ $# -eq 14 ]; then
 		echo "COMPUTEENVIRONMENTNAME=$COMPUTEENVIRONMENTNAME"
 		echo "SERVICEROLE=$SERVICEROLE"
 		echo "COMPUTERESOURCES=$COMPUTERESOURCES"
-		batchCreateOutput=$(aws batch create-compute-environment --compute-environment-name $COMPUTEENVIRONMENTNAME --type MANAGED --state ENABLED --service-role ${SERVICEROLE} --compute-resources "$COMPUTERESOURCES")
+		echo ""
+		#batchCreateOutput=$(aws batch create-compute-environment --compute-environment-name $COMPUTEENVIRONMENTNAME --type MANAGED --state ENABLED --service-role ${SERVICEROLE} --compute-resources "$COMPUTERESOURCES")
 
 		batchCreateOutput=$(aws batch create-compute-environment --compute-environment-name $COMPUTEENVIRONMENTNAME \
 		--type MANAGED --state ENABLED --service-role ${SERVICEROLE} \
