@@ -60,10 +60,10 @@ print_help() {
     echo "MYSTACKNAME must be alphanumeric.  No underscores."
     echo ""
     echo "Usage: deployBatchEnv.sh help"
-    echo "Usage: deployBatchEnv.sh create MYSTACKNAME mydockerhubreponame1 autogenerate"
-    echo "Usage: deployBatchEnv.sh create MYSTACKNAME mydockerhubreponame1 MYS3BUCKETNAME"
+    echo "Usage: deployBatchEnv.sh create MYSTACKNAME mydockerhubreponame1" #autogenerate"
+    echo "Usage: deployBatchEnv.sh create MYSTACKNAME mydockerhubreponame1" #MYS3BUCKETNAME"
     echo -n "Usage: deployBatchEnv.sh create MYSTACKNAME "
-    echo "\"mydockerhubreponame1|mydockerhubreponame2|mydockerhubreponame3\" MYS3BUCKETNAME"
+    echo "\"mydockerhubreponame1|mydockerhubreponame2|mydockerhubreponame3\"" #MYS3BUCKETNAME"
     echo "Usage: deployBatchEnv.sh delete MYSTACKNAME"
     echo ""
 }
@@ -78,7 +78,7 @@ else
 
         # Job Definition
         DOCKERREPOSEARCHSTRING=$3
-        S3BUCKETNAME=$4
+        #S3BUCKETNAME=$4
         DOCKERRREPOVERSION="latest"
         JOBVCPUS=2      #can be overridden at runtime
         JOBMEMORY=1000  #can be overriden at runtime
@@ -89,7 +89,7 @@ else
         MAXCPU=1024
         EBSVOLUMESIZEGB=0
 
-        REGION=us-east-1
+        REGION=$(aws configure get region)
 
         CUSTOMAMIFOREFS="no"
         EFSPERFORMANCEMODE=maxIO  #or generalPurpose
@@ -121,10 +121,15 @@ else
             echo ""
 
             #Create AWS config file and start writing values
-            touch "$AWSCONFIGFILENAME"
-            echo "#!/bin/bash" > $AWSCONFIGFILENAME
-            echo "" >> $AWSCONFIGFILENAME
-            echo "AWSCONFIGFILENAME=$AWSCONFIGFILENAME" >> $AWSCONFIGFILENAME
+            #this is duplicated in s3Tools.sh and deployBatchEnv.sh
+            if [ ! -f $AWSCONFIGFILENAME ]; then
+                touch "$AWSCONFIGFILENAME"
+                echo "#!/bin/bash" > $AWSCONFIGFILENAME
+                echo "" >> $AWSCONFIGFILENAME
+                echo "AWSCONFIGFILENAME=$AWSCONFIGFILENAME" >> $AWSCONFIGFILENAME
+                echo "REGION=$REGION" >> $AWSCONFIGFILENAME
+            fi
+
             #echo "AWS_PROFILE=$AWS_PROFILE" >> $AWSCONFIGFILENAME
             echo "DOCKERREPOSEARCHSTRING=\"$DOCKERREPOSEARCHSTRING\"" >> $AWSCONFIGFILENAME
             echo "DOCKERRREPOVERSION=$DOCKERRREPOVERSION" >> $AWSCONFIGFILENAME
@@ -132,12 +137,12 @@ else
             echo "JOBMEMORY=$JOBMEMORY" >> $AWSCONFIGFILENAME
             echo "NEXTFLOWCONFIGOUTPUTDIRECTORY=$NEXTFLOWCONFIGOUTPUTDIRECTORY" >> $AWSCONFIGFILENAME
 
-            echo "createRolesAndComputeEnv.sh $STACKNAME $COMPUTEENVIRONMENTNAME $QUEUENAME $SPOTPERCENT $MAXCPU \
-                    $DEFAULTAMI $CUSTOMAMIFOREFS $EBSVOLUMESIZEGB $EFSPERFORMANCEMODE $AWSCONFIGOUTPUTDIRECTORY \
-                    $NEXTFLOWCONFIGOUTPUTDIRECTORY $REGION $KEYNAME $S3BUCKETNAME"
+            # echo "createRolesAndComputeEnv.sh $STACKNAME $COMPUTEENVIRONMENTNAME $QUEUENAME $SPOTPERCENT $MAXCPU \
+            #         $DEFAULTAMI $CUSTOMAMIFOREFS $EBSVOLUMESIZEGB $EFSPERFORMANCEMODE $AWSCONFIGOUTPUTDIRECTORY \
+            #         $NEXTFLOWCONFIGOUTPUTDIRECTORY $KEYNAME"
     	   createRolesAndComputeEnv.sh $STACKNAME $COMPUTEENVIRONMENTNAME $QUEUENAME $SPOTPERCENT $MAXCPU \
                     $DEFAULTAMI $CUSTOMAMIFOREFS $EBSVOLUMESIZEGB $EFSPERFORMANCEMODE $AWSCONFIGOUTPUTDIRECTORY \
-                    $NEXTFLOWCONFIGOUTPUTDIRECTORY $REGION $KEYNAME $S3BUCKETNAME
+                    $NEXTFLOWCONFIGOUTPUTDIRECTORY $KEYNAME
 
     	elif [ "$ARGUMENT" == "delete" ] && [ $# -eq 2 ]; then
             echo "this will take approximately three minutes"

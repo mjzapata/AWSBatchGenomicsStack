@@ -1,14 +1,12 @@
 #!/bin/bash
-
-# Use this template image to create the BLJ image with more EBS memory
 # Argument 14 is an overload argument. WATCH OUT.
 
 #TODO: Massively simplify this
 MIN_NUM_ARGUMENTS_EXPECTED=10
 
 print_help() {
-	echo -n "Usage: createAMI.sh STACKNAME TEMPLATEIMAGEID INSTANCETYPEFORAMICREATION KEYNAME EBSVOLUMESIZEGB AMIIDENTIFIER" 
-	echo    "IMAGETAG IMAGETAGVALUE SUBNETS SECURITYGROUPS MYPUBLICIPADDRESS"
+	echo -n "Usage: launchEC2.sh $STACKNAME $IMAGEID $INSTANCETYPE $KEYNAME $EBSVOLUMESIZEGB"
+	echo	"$SUBNETS $SECURITYGROUPS $INSTANCENAME $EC2RUNARGUMENT $HEADNODELAUNCHTEMPLATEID"
 	"minimum number of arguments expected: $MIN_NUM_ARGUMENTS_EXPECTED"
 }
 
@@ -44,31 +42,41 @@ if [ $# -gt 9 ]; then
 	#TODO: more elegant way of choosing subnet
 	SUBNET=$(echo "$SUBNETS" | cut -f1 -d",")
 
+
+	instanceReachability=$(ipTools.sh describesgingress $STACKNAME)
+
+	if [ "$instanceReachability" == "No access to security group" ]; then
+		echo "instance not reachable with current security group rules"
+		echo "please run: "
+		echo "  ipTools.sh updatesgingress $STACKNAME"
+		exit 1
+
+	fi
 	#run EC2 instances: https://docs.aws.amazon.com/cli/latest/reference/ec2/run-instances.html
 	# https://docs.aws.amazon.com/cli/latest/userguide/cli-ec2-launch.html
 	if [[ $EBSVOLUMESIZEGB > 1 ]]; then
 		if [ $EC2RUNARGUMENT == "createAMI" ]; then
 			
-			EC2RunOutput=$(aws ec2 run-instances \
-				--tag-specifications 'ResourceType=instance,Tags={Key=Name,Value="'$INSTANCENAME'"}' \
-				--image-id $TEMPLATEIMAGEID \
-				--security-group-ids $SECURITYGROUPS \
-				--count 1 \
-				--instance-type $INSTANCETYPE \
-				--key-name $KEYNAME \
-				--subnet-id $SUBNET \
-				--block-device-mappings 'DeviceName=/dev/sdb,Ebs={VolumeSize="'$EBSVOLUMESIZEGB'",DeleteOnTermination=true,Encrypted=false,VolumeType=gp2}')
+		EC2RunOutput=$(aws ec2 run-instances \
+			--tag-specifications 'ResourceType=instance,Tags={Key=Name,Value="'$INSTANCENAME'"}' \
+			--image-id $TEMPLATEIMAGEID \
+			--security-group-ids $SECURITYGROUPS \
+			--count 1 \
+			--instance-type $INSTANCETYPE \
+			--key-name $KEYNAME \
+			--subnet-id $SUBNET \
+			--block-device-mappings 'DeviceName=/dev/sdb,Ebs={VolumeSize="'$EBSVOLUMESIZEGB'",DeleteOnTermination=true,Encrypted=false,VolumeType=gp2}')
 		else
-			EC2RunOutput=$(aws ec2 run-instances \
-				--tag-specifications 'ResourceType=instance,Tags={Key=Name,Value="'$INSTANCENAME'"}' \
-				--image-id $TEMPLATEIMAGEID \
-				--security-group-ids $SECURITYGROUPS \
-				--count 1 \
-				--instance-type $INSTANCETYPE \
-				--key-name $KEYNAME \
-				--subnet-id $SUBNET \
-				--launch-template LaunchTemplateId=$LAUNCHTEMPLATEID \
-				--block-device-mappings 'DeviceName=/dev/sdb,Ebs={VolumeSize="'$EBSVOLUMESIZEGB'",DeleteOnTermination=true,Encrypted=false,VolumeType=gp2}' )
+		EC2RunOutput=$(aws ec2 run-instances \
+			--tag-specifications 'ResourceType=instance,Tags={Key=Name,Value="'$INSTANCENAME'"}' \
+			--image-id $TEMPLATEIMAGEID \
+			--security-group-ids $SECURITYGROUPS \
+			--count 1 \
+			--instance-type $INSTANCETYPE \
+			--key-name $KEYNAME \
+			--subnet-id $SUBNET \
+			--launch-template LaunchTemplateId=$LAUNCHTEMPLATEID \
+			--block-device-mappings 'DeviceName=/dev/sdb,Ebs={VolumeSize="'$EBSVOLUMESIZEGB'",DeleteOnTermination=true,Encrypted=false,VolumeType=gp2}' )
 		fi
 
 	else
@@ -161,34 +169,40 @@ if [ $# -gt 9 ]; then
 		# https://serverfault.com/questions/36291/how-to-recover-from-too-many-authentication-failures-for-user-root
 
 		# don't check identity on first connect
-		SSH_OPTIONS="-o IdentitiesOnly=yes"
+		SSH_OPTIONS="-o IdentitiesOnly=yes" # -v
 
 		ssh ec2-user@${instanceHostNamePublic} -i ${KEYPATH} $SSH_OPTIONS -o StrictHostKeyChecking=no "mkdir -p /home/ec2-user/.aws/"
+		ssh ec2-user@${instanceHostNamePublic} -i ${KEYPATH} $SSH_OPTIONS "mkdir -p /home/ec2-user/.batchawsdeploy/"
 		ssh ec2-user@${instanceHostNamePublic} -i ${KEYPATH} $SSH_OPTIONS "mkdir -p /home/ec2-user/.nextflow/"
 
 		# AWS Configuration 
 		echo "Creating remote directories"
 		#scp -o UserKnownHostsFile=/dev/null -i ${KEYPATH} -o StrictHostKeyChecking=no 
-		#~/.batchawsdeploy/${STACKNAME}JobDefinitions.tsv ec2-user@${instanceHostNamePublic}:/home/ec2-user/.aws/
-		scp -i ${KEYPATH} $SSH_OPTIONS $AWSCONFIGFILENAME ec2-user@${instanceHostNamePublic}:/home/ec2-user/.aws/
-		scp -i ${KEYPATH} $SSH_OPTIONS $KEYPATH ec2-user@${instanceHostNamePublic}:/home/ec2-user/.aws/
+		#~/.batchawsdeploy/${STACKNAME}JobDefinitions.tsv ec2-user@${instanceHostNamePublic}:/home/ec2-user/.batchawsdeploy/
+		scp -i ${KEYPATH} $SSH_OPTIONS $AWSCONFIGFILENAME ec2-user@${instanceHostNamePublic}:/home/ec2-user/.batchawsdeploy/
+		scp -i ${KEYPATH} $SSH_OPTIONS $KEYPATH ec2-user@${instanceHostNamePublic}:/home/ec2-user/.batchawsdeploy/
 		scp -i ${KEYPATH} $SSH_OPTIONS ~/.aws/config ec2-user@${instanceHostNamePublic}:/home/ec2-user/.aws/
 		scp -i ${KEYPATH} $SSH_OPTIONS ~/.aws/credentials ec2-user@${instanceHostNamePublic}:/home/ec2-user/.aws/
 
-		# Scripts for running the head node
-		#scp -i ${KEYPATH} launchEC2HeadNode.sh ec2-user@${instanceHostNamePublic}:/home/ec2-user/
-		scp -i ${KEYPATH} $SSH_OPTIONS startHeadNode.sh ec2-user@${instanceHostNamePublic}:/home/ec2-user/
+		# change environment
+		touch dummyfile
+		scp -i ${KEYPATH} $SSH_OPTIONS dummyfile \
+		ec2-user@${instanceHostNamePublic}:/home/ec2-user/.batchawsdeploy/environment_aws
+		rm dummyfile
 
 		# Nextflow Configuration
 		scp -i ${KEYPATH} $SSH_OPTIONS ~/.nextflow/config ec2-user@${instanceHostNamePublic}:/home/ec2-user/.nextflow/
 
+		# Scripts for running the head node
+		#scp -i ${KEYPATH} launchEC2HeadNode.sh ec2-user@${instanceHostNamePublic}:/home/ec2-user/
+		scp -i ${KEYPATH} $SSH_OPTIONS startHeadNode.sh ec2-user@${instanceHostNamePublic}:/home/ec2-user/
 	fi
-
 
 	#6.) SSH into the host and run the configure script then close it and create an AMI based on this image
 		# ssh trick to not check host KEYPATH https://linuxcommando.blogspot.com/2008/10/how-to-disable-ssh-host-key-checking.html
 		#  -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no
-		# run local script on remote host with ssh: https://stackoverflow.com/questions/305035/how-to-use-ssh-to-run-a-shell-script-on-a-remote-machine 
+		# run local script on remote host with ssh: 
+		# https://stackoverflow.com/questions/305035/how-to-use-ssh-to-run-a-shell-script-on-a-remote-machine 
 	echo "-------------------------------------------------------"
 	echo "-------------------------------------------------------"
 	###########################################################
@@ -196,7 +210,7 @@ if [ $# -gt 9 ]; then
 	###########################################################
 	if [[ $EC2RUNARGUMENT == "runscript" ]]; then
 		echo "instance running..."
-		ssh -v -i ${KEYPATH} ec2-user@${instanceHostNamePublic} $SSH_OPTIONS \
+		ssh -i ${KEYPATH} ec2-user@${instanceHostNamePublic} $SSH_OPTIONS \
 			'bash -s' < ${SCRIPTNAME}
 
 		echo "disconnected from instance: $EC2RUNARGUMENT"
@@ -215,7 +229,7 @@ if [ $# -gt 9 ]; then
 		echo "-------------------------------------------------------"
 
 		echo "Connecting directly via ssh:"
-		ssh -v -i ${KEYPATH} ec2-user@${instanceHostNamePublic} $SSH_OPTIONS 
+		ssh -i ${KEYPATH} ec2-user@${instanceHostNamePublic} $SSH_OPTIONS 
 
 		echo "disconnected from instance: $EC2RUNARGUMENT"
 	###########################################################
@@ -223,14 +237,16 @@ if [ $# -gt 9 ]; then
 	###########################################################
 	elif [[ $EC2RUNARGUMENT == "createAMI" ]]; then
 		echo "EC2RUNARGUMENT=$EC2RUNARGUMENT"
-		ssh -v -i ${KEYPATH} ec2-user@${instanceHostNamePublic} $SSH_OPTIONS \
+		ssh -i ${KEYPATH} ec2-user@${instanceHostNamePublic} $SSH_OPTIONS \
 			'bash -s' < ${SCRIPTNAME}
 		echo "----------------------------------------"
 		echo "----------------------------------------"
 		echo "Check for any errors in the AMI creation:"
 
-		#run it with the script configureEC2forAMI.sh   https://stackoverflow.com/questions/305035/how-to-use-ssh-to-run-a-shell-script-on-a-remote-machine 
-		imageID=$(aws ec2 create-image --instance-id $instanceID --name BLJAMI${AMIIDENTIFIER}-${EBSVOLUMESIZEGB}GB_DOCKER)  #--description enter a description
+		#run it with the script configureEC2forAMI.sh   
+		#https://stackoverflow.com/questions/305035/how-to-use-ssh-to-run-a-shell-script-on-a-remote-machine 
+		#    --description enter a description
+		imageID=$(aws ec2 create-image --instance-id $instanceID --name BLJAMI${AMIIDENTIFIER}-${EBSVOLUMESIZEGB}GB_DOCKER)
 		imageStatus=$(getec2images.sh $imageID status)
 		echo "Creating AMI. This may take a minute"
 		echo "|--------------------|"
@@ -246,22 +262,11 @@ if [ $# -gt 9 ]; then
 		echo -n ".>"
 		echo " Instance:  $imageID  created in $imagetime seconds"
 
-
 		#TAG the image as defined by the two tag values (used for filtering if this image was already created)
 		aws ec2 create-tags --resources $imageID --tags Key=$IMAGETAG,Value=$IMAGETAGVALUE
 		echo $imageID
-
-		# CREATE volume?  Not necessary if specified in the ami
-		# aws ec2 attach-volume --volume-id vol-1234567890abcdef0 --instance-id i-01474ef662b89480 --device /dev/sdf
-
-		# 4.) shutdown
-		#TODO: Dry run,
 		aws ec2 terminate-instances --instance-ids $instanceID
 
-		#TODO: maybe don't need to do this....
-		# 6.) Cleanup, delete stack and key
-		#awskeypair.sh delete $KEYNAME
-		#createcloudformationstack.sh $STACKNAME "delete"
 	fi
 
 

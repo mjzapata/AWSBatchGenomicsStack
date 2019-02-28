@@ -21,7 +21,13 @@ Default output format []:text
 ```
 git clone https://github.com/mjzapata/AWSBatchGenomicsStack.git
 cd AWSBatchGenomicsStack
-deployBatchEnv.sh create MYSTACKNAME mydockerhubreponame1 autogenerate
+./installBatchDeployer.sh pwd
+
+STACKNAME=mystackname
+s3Tools.sh $STACKNAME create
+
+source ~/.batchawsdeploy/config
+deployBatchEnv.sh create $STACKNAME mydockerhubreponame1
 ```
 5.) Install Nextflow and create a nextflow configuration file that specifies the Batch service role that was created during the compute environment startup.
 

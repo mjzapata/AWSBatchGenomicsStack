@@ -11,22 +11,41 @@ if [ $# -gt 1 ]; then
 
 	AWSCONFIGFILENAME=~/.batchawsdeploy/${STACKNAME}.sh
 	source $AWSCONFIGFILENAME
+	           #Create AWS config file and start writing values
+            #this is duplicated in s3Tools.sh and deployBatchEnv.sh
+            if [ ! -f $AWSCONFIGFILENAME ]; then
+                touch "$AWSCONFIGFILENAME"
+                echo "#!/bin/bash" > $AWSCONFIGFILENAME
+                echo "" >> $AWSCONFIGFILENAME
+                echo "AWSCONFIGFILENAME=$AWSCONFIGFILENAME" >> $AWSCONFIGFILENAME
+            fi
+
 	########################################
 	################ CREATE ################
 	########################################
 	if [ "$ARGUMENT" == "create" ]; then
 		S3BUCKETNAME=$3
+		#$STACKNAME #REGION #S3BUCKETNAME
+		REGION=$(aws configure get region)
+		echo "REGION=$REGION"
+
+        #Create AWS config file and start writing values
+        #this is duplicated in s3Tools.sh and deployBatchEnv.sh
+		if [ ! -f $AWSCONFIGFILENAME ]; then
+	        touch "$AWSCONFIGFILENAME"
+	        echo "#!/bin/bash" > $AWSCONFIGFILENAME
+	        echo "" >> $AWSCONFIGFILENAME
+	        echo "AWSCONFIGFILENAME=$AWSCONFIGFILENAME" >> $AWSCONFIGFILENAME
+	        echo "REGION=$REGION" >> $AWSCONFIGFILENAME
+        fi
+
 		########## AUTOGENERATE BUCKET NAME ##########
 		#TODO: rand generator not yet tested on LINUX:
 		#  -https://stackoverflow.com/questions/2793812/generate-a-random-filename-in-unix-shell 
 		#TODO: set more permissions
-		#$STACKNAME
-		#REGION
-		#S3BUCKETNAME
 		# Check if S3 bucket with name beginning with $STACKNAME exists. If not, create it.
 		# Note: the S3 buckets must be GLOBALLY unique. A random string is 
 		# appended to the stackname to make duplicates less probably
-		echo "looking for bucket: $S3BUCKETNAME"
 		echo "forcing bucket names to lowercase"
 		STACKNAMELOWERCASE=$(echo "$STACKNAME" | tr '[:upper:]' '[:lower:]')
 		S3BUCKETNAME=$(echo "$S3BUCKETNAME" | tr '[:upper:]' '[:lower:]')

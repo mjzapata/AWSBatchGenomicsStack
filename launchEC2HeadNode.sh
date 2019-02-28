@@ -1,7 +1,6 @@
 #!/bin/bash
 
-#this script launches a head node for submitting batch jobs to AWS
-
+# this script launches a head node for submitting batch jobs to AWS
 # use same cloud-init
 # only launchable after compute environment is setup?
 # set e-mail notifications
@@ -59,7 +58,6 @@ elif [ $# -eq 4 ]; then
 
 		SECURITYGROUPS="$BASTIONSECURITYGROUP,$BATCHSECURITYGROUP"
 		echo "SECURITYGROUPS=$SECURITYGROUPS"
-
 
 		launchEC2.sh $STACKNAME $IMAGEID $INSTANCETYPE $KEYNAME $EBSVOLUMESIZEGB \
 		$SUBNETS $SECURITYGROUPS $INSTANCENAME $EC2RUNARGUMENT $HEADNODELAUNCHTEMPLATEID $SCRIPTNAME

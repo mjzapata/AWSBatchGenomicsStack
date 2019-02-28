@@ -22,7 +22,7 @@
 
 SECONDS=0
 
-if [ $# -eq 14 ]; then
+if [ $# -eq 13 ]; then
 
 	STACKNAME=$1
 	source ~/.batchawsdeploy/config
@@ -39,9 +39,7 @@ if [ $# -eq 14 ]; then
 	EFSPERFORMANCEMODE=$9
 	AWSCONFIGOUTPUTDIRECTORY=${10}
 	NEXTFLOWCONFIGOUTPUTDIRECTORY=${11}
-	REGION=${12}
-	KEYNAME=${13}
-	S3BUCKETNAME=${14}
+	KEYNAME=${12}
 	#VERBOSE=
 
 	echo "STACKNAME=$STACKNAME" >> $AWSCONFIGFILENAME
@@ -53,7 +51,6 @@ if [ $# -eq 14 ]; then
 	echo "EBSVOLUMESIZEGB=$EBSVOLUMESIZEGB" >> $AWSCONFIGFILENAME
 	echo "MAXCPU=$MAXCPU"  >> $AWSCONFIGFILENAME
 	echo "DEFAULTAMI=$DEFAULTAMI"  >> $AWSCONFIGFILENAME
-	echo "REGION=$REGION" >> $AWSCONFIGFILENAME
 
 	ACCOUNTID=$(getawsaccountid.sh)
 	stackstatus=$(getcloudformationstack.sh $STACKNAME)
@@ -91,7 +88,9 @@ if [ $# -eq 14 ]; then
 	#REGION
 	#S3BUCKETNAME
 	#check for BLJ bucket (TODO: turn this into a function)
-	s3Tools.sh $STACKNAME create $S3BUCKETNAME
+	if [ -z $S3BUCKETNAME ]; then
+		s3Tools.sh $STACKNAME create autogenerate
+	fi
 
 	#######################################################################################
 	#STACK and Cloudformation Parameters 
@@ -289,7 +288,7 @@ else
 	echo "Your command line contains $# arguments"
 	echo "usage: 14 arguments: "
 	echo -n " createRolesAndComputeEnv.sh STACKNAME COMPUTEENVIRONMENTNAME QUEUENAME SPOTPERCENT MAXCPU DEFAULTAMI "
-	echo "CUSTOMAMIFOREFS EBSVOLUMESIZEGB EFSPERFORMANCEMODE DOCKERREPOSEARCHSTRING S3BUCKETNAME"
+	echo "CUSTOMAMIFOREFS EBSVOLUMESIZEGB EFSPERFORMANCEMODE DOCKERREPOSEARCHSTRING"
 
 fi
 

@@ -43,7 +43,6 @@ elif [ $# -gt 1 ] && [ $# -lt 4 ]; then
 		echo "MyIPAddress=$MYPUBLICIPADDRESS"
 		echo "BASTIONSECURITYGROUP=$BASTIONSECURITYGROUP"
 
-		#echo '[{"IpProtocol": "tcp", "FromPort": 80, "ToPort": 80, "IpRanges": [{"CidrIp": "'$MYPUBLICIPADDRESS'", "'$DESCRIPTIONWEB'"}]}]'
 		now=$(date +'%m-%d-%Y')
 		DESCRIPTION="$now $DESCRIPTION" #_$now
 		echo "DESCRIPTION=$DESCRIPTION"
