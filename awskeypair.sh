@@ -6,7 +6,7 @@
 # "Usage: awskeypair create MyKeyName,  awskeypair remove MyKeyName, awskeypair list MyKeyName,  awskeypair list"
 ARGUMENT=$1
 
-if [ $# -eq 3 ]; then
+if [ $# -eq 2 ]; then
 	KEYNAME=$2
 
 	if [ "$ARGUMENT" == "create" ] && [ ! -f ~/.batchawsdeploy/${KEYNAME}.pem ]; then
