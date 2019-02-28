@@ -26,20 +26,21 @@ versions=$(aws --version 2>&1 >/dev/null) # | grep -o '[^-]*$')
 echo "versions=$versions"
 awsversion=$(echo $versions | cut -d ' ' -f1 | cut -d '/' -f2)
 echo "awsversion=$awsversion"
-awsmajor=$(echo $awsversion | cut -d. -f1)
-echo $awsmajor
-awsminor=$(echo $awsversion | cut -d. -f2)
-awsmicro=$(echo $awsversion | cut -d. -f3)
-#awsbuild=
-if [ $(expr $awsmajor) -lt 1 ] || [ $(expr $awsminor) -lt 16 ] || [ $(expr $awsmicro) -lt 84 ]; then
+awsmajor=$(echo $awsversion | cut -d. -f1); awsmajor_required=1
+awsminor=$(echo $awsversion | cut -d. -f2); awsminor_required=16
+awsmicro=$(echo $awsversion | cut -d. -f3); awsmicro_required=95
+
+if [ $(expr $awsmajor) -lt $awsmajor_required ] || \
+    [ $(expr $awsminor) -lt $awsminor_required ] || \
+    [ $(expr $awsmicro) -lt $awsmicro_required ]; then
     echo "aws outdated. please update"
-    echo "required at least: 1.16.84"
+    echo -n "required at least: "
+    echo "${awsmajor_required}.${awsminor_required}.${awsmicro_required}"
     exit 1
 fi
 
 #3.) CHECK AWS CREDENTIALS
 aws iam get-user
-
 
 
 ARGUMENT=$1
@@ -105,7 +106,8 @@ else
         echo "AWSCONFIGFILENAME=$AWSCONFIGFILENAME"
 
         #S3 buckets will NOT be deleted when running "deployBLJBatchEnv delete"
-        #autogenerate is a keyword that creates a bucket named ${STACKNAME}{randomstring}, eg Stack1_oijergoi4itf94j94
+        #autogenerate is a keyword that creates a bucket named ${STACKNAME}{randomstring}, 
+        #    eg. Stack1_oijergoi4itf94j94
 
     	if [ "$ARGUMENT" == "create" ] && [ $# -eq 4 ]; then
             

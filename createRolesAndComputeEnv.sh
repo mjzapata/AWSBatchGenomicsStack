@@ -194,7 +194,8 @@ if [ $# -eq 14 ]; then
 		echo "SERVICEROLE=$SERVICEROLE"
 		echo "COMPUTERESOURCES=$COMPUTERESOURCES"
 		echo ""
-		#batchCreateOutput=$(aws batch create-compute-environment --compute-environment-name $COMPUTEENVIRONMENTNAME --type MANAGED --state ENABLED --service-role ${SERVICEROLE} --compute-resources "$COMPUTERESOURCES")
+		#batchCreateOutput=$(aws batch create-compute-environment --compute-environment-name $COMPUTEENVIRONMENTNAME
+		# --type MANAGED --state ENABLED --service-role ${SERVICEROLE} --compute-resources "$COMPUTERESOURCES")
 
 		batchCreateOutput=$(aws batch create-compute-environment --compute-environment-name $COMPUTEENVIRONMENTNAME \
 		--type MANAGED --state ENABLED --service-role ${SERVICEROLE} \
@@ -219,7 +220,8 @@ if [ $# -eq 14 ]; then
 		echo "----------------------------------------------------------------------------------------------"
 		timeinminutes=$(awk "BEGIN {print $SECONDS/60}")
 		echo "SUCCESS!"
-		echo "STACK: $STACKNAME, S3 Bucket, EFS, compute environment, Job Queue deployed in: $timeinminutes minutes ($SECONDS seconds)"
+		echo -n "STACK: $STACKNAME, S3 Bucket, EFS, compute environment,"
+		echo " Job Queue deployed in: $timeinminutes minutes ($SECONDS seconds)"
 		echo "----------------------------------------------------------------------------------------------"
 
 		#######################################################################################
