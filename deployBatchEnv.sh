@@ -25,7 +25,7 @@ source ~/.batchawsdeploy/config
 versions=$(aws --version 2>&1 >/dev/null) # | grep -o '[^-]*$')
 echo "versions=$versions"
 awsversion=$(echo $versions | cut -d ' ' -f1 | cut -d '/' -f2)
-echo "awsversion=$awsversion"
+echo "current aws-cli version:  $awsversion"
 awsmajor=$(echo $awsversion | cut -d. -f1); awsmajor_required=1
 awsminor=$(echo $awsversion | cut -d. -f2); awsminor_required=16
 awsmicro=$(echo $awsversion | cut -d. -f3); awsmicro_required=65
@@ -33,9 +33,10 @@ awsmicro=$(echo $awsversion | cut -d. -f3); awsmicro_required=65
 if [ $(expr $awsmajor) -lt $awsmajor_required ] || \
     [ $(expr $awsminor) -lt $awsminor_required ] || \
     [ $(expr $awsmicro) -lt $awsmicro_required ]; then
-    echo "aws outdated. please update"
-    echo -n "required at least: "
+    echo -n "minimum required version: "
     echo "${awsmajor_required}.${awsminor_required}.${awsmicro_required}"
+    echo "aws command line tool outdated. please update."
+    echo "type \"aws --version\" for more information"
     exit 1
 fi
 
