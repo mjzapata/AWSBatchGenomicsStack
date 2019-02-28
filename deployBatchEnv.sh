@@ -40,8 +40,18 @@ if [ $(expr $awsmajor) -lt $awsmajor_required ] || \
     exit 1
 fi
 
+#TODO:
+#CHECK AWS CREDENTIALS
+#aws s3 ls  "Authorization"  "Credentials"
+
 #3.) CHECK AWS CREDENTIALS
-aws iam get-user
+testCredentials=$(aws iam get-user) 
+error=$?
+if [ $error != 0 ]; then
+    echo "AWS credentials error code: $error"
+    echo $testCredentials
+    exit 1
+fi
 
 
 ARGUMENT=$1
@@ -66,6 +76,7 @@ print_help() {
     echo "\"mydockerhubreponame1|mydockerhubreponame2|mydockerhubreponame3\"" #MYS3BUCKETNAME"
     echo "Usage: deployBatchEnv.sh delete MYSTACKNAME"
     echo ""
+    exit 1
 }
 
 echo "ARGUMENT: $ARGUMENT"
