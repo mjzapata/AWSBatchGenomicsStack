@@ -22,7 +22,7 @@
 
 SECONDS=0
 
-if [ $# -eq 13 ]; then
+if [ $# -eq 12 ]; then
 
 	STACKNAME=$1
 	source ~/.batchawsdeploy/config
@@ -286,7 +286,7 @@ echo -n '
 	fi
 else
 	echo "Your command line contains $# arguments"
-	echo "usage: 14 arguments: "
+	echo "usage: 12 arguments: "
 	echo -n " createRolesAndComputeEnv.sh STACKNAME COMPUTEENVIRONMENTNAME QUEUENAME SPOTPERCENT MAXCPU DEFAULTAMI "
 	echo "CUSTOMAMIFOREFS EBSVOLUMESIZEGB EFSPERFORMANCEMODE DOCKERREPOSEARCHSTRING"
 
