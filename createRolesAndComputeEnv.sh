@@ -89,7 +89,7 @@ if [ $# -eq 13 ]; then
 	#S3BUCKETNAME
 	#check for BLJ bucket (TODO: turn this into a function)
 	if [ -z $S3BUCKETNAME ]; then
-		s3Tools.sh $STACKNAME create autogenerate
+		s3Tools.sh $STACKNAME create autogenerateC
 	fi
 
 	#######################################################################################

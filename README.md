@@ -25,6 +25,7 @@ cd AWSBatchGenomicsStack
 
 STACKNAME=mystackname
 s3Tools.sh $STACKNAME create
+OR s3Tools.sh $STACKAME create globallyuniques3bucketname
 
 source ~/.batchawsdeploy/config
 deployBatchEnv.sh create $STACKNAME mydockerhubreponame1
