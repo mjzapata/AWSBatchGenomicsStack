@@ -19,7 +19,8 @@ if [ $# -eq 1 ]; then
 		#add trailing / if missing
 		[[ "${BATCHAWSDEPLOY_HOME}" != */ ]] && BATCHAWSDEPLOY_HOME="${BATCHAWSDEPLOY_HOME}/"
 
-		echo "export BATCHAWSDEPLOY_HOME=$BATCHAWSDEPLOY_HOME" > ~/.batchawsdeploy/config
+		echo "#!/bin/sh" > ~/.batchawsdeploy/config
+		echo "export BATCHAWSDEPLOY_HOME=$BATCHAWSDEPLOY_HOME" >> ~/.batchawsdeploy/config
 		echo 'export PATH=$PATH'":${BATCHAWSDEPLOY_HOME}:${BATCHAWSDEPLOY_HOME}support" >> ~/.batchawsdeploy/config
 		
 	else
