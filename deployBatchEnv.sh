@@ -22,7 +22,7 @@ source ~/.batchawsdeploy/config
 #https://stackoverflow.com/questions/2342826/how-to-pipe-stderr-and-not-stdout
 #aws-cli/1.16.25  Python/2.7.15rc1 Linux/4.9.125-linuxkit botocore/1.12.15 (OUTDATED)
 #aws-cli/1.16.114 Python/2.7.16rc1 Linux/4.9.125-linuxkit botocore/1.12.104
-versions=$(aws --version 2>&1 >/dev/null | grep -o '[^-]*$')
+versions=$(aws --version 2>&1 >/dev/null) # | grep -o '[^-]*$')
 echo "versions=$versions"
 awsversion=$(echo $versions | cut -d ' ' -f1 | cut -d '/' -f2)
 echo "awsversion=$awsversion"
