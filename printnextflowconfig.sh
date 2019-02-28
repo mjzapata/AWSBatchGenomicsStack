@@ -8,7 +8,6 @@ STACKNAME=$1
 AWSCONFIGFILENAME=~/.batchawsdeploy/${STACKNAME}.sh
 source $AWSCONFIGFILENAME
 
-
 echo ""
 echo "
 executor {

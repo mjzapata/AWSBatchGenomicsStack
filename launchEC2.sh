@@ -4,8 +4,15 @@
 # Argument 14 is an overload argument. WATCH OUT.
 
 #TODO: Massively simplify this
+MIN_NUM_ARGUMENTS_EXPECTED=10
 
-if [ $# -gt 10 ]; then
+print_help() {
+	echo -n "Usage: createAMI.sh STACKNAME TEMPLATEIMAGEID INSTANCETYPEFORAMICREATION KEYNAME EBSVOLUMESIZEGB AMIIDENTIFIER" 
+	echo    "IMAGETAG IMAGETAGVALUE SUBNETS SECURITYGROUPS MYPUBLICIPADDRESS"
+	"minimum number of arguments expected: $MIN_NUM_ARGUMENTS_EXPECTED"
+}
+
+if [ $# -gt 9 ]; then
 
 	# IMAGETAG=ImageRole
 	# IMAGETAGVALUE=BLJManager
@@ -23,13 +30,12 @@ if [ $# -gt 10 ]; then
 	SUBNETS=$6
 	SECURITYGROUPS=$7
 	INSTANCENAME=$8
-	EC2RUNARGUMENT=${9}
+	EC2RUNARGUMENT=$9
 	LAUNCHTEMPLATEID=${10}
 	SCRIPTNAME=${11}
 	AMIIDENTIFIER=${12}
 	IMAGETAG=${13}
 	IMAGETAGVALUE=${14}
-	#efsID=${14}
 
 	#replace comma of Security groups with spaces
 	SECURITYGROUPS=`echo "$SECURITYGROUPS" | tr ',' ' '`
@@ -145,10 +151,9 @@ if [ $# -gt 10 ]; then
 
 	#remove previous hosts
 	ssh-keygen -f "~/.ssh/known_hosts" -R $instanceHostNamePublic
-	KEYFILE=${BATCHAWSDEPLOY_HOME}${KEYNAME}.pem
 
 	if [ $EC2RUNARGUMENT != "createAMI" ]; then
-		# ssh ec2-user@${instanceHostNamePublic} -i ${AWSCONFIGOUTPUTDIRECTORY}${KEYNAME}.pem \
+		# ssh ec2-user@${instanceHostNamePublic} -i ${KEYPATH} \
 		# -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no "mkdir -p /home/ec2-user/.aws/" \
 		# -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -o IdentitiesOnly=yes
 		# Docs on the proper way to ssh
@@ -158,30 +163,30 @@ if [ $# -gt 10 ]; then
 		# don't check identity on first connect
 		SSH_OPTIONS="-o IdentitiesOnly=yes"
 
-		ssh ec2-user@${instanceHostNamePublic} -i ${KEYFILE} $SSH_OPTIONS -o StrictHostKeyChecking=no "mkdir -p /home/ec2-user/.aws/"
-		ssh ec2-user@${instanceHostNamePublic} -i ${KEYFILE} $SSH_OPTIONS "mkdir -p /home/ec2-user/.nextflow/"
+		ssh ec2-user@${instanceHostNamePublic} -i ${KEYPATH} $SSH_OPTIONS -o StrictHostKeyChecking=no "mkdir -p /home/ec2-user/.aws/"
+		ssh ec2-user@${instanceHostNamePublic} -i ${KEYPATH} $SSH_OPTIONS "mkdir -p /home/ec2-user/.nextflow/"
 
 		# AWS Configuration 
 		echo "Creating remote directories"
-		#scp -o UserKnownHostsFile=/dev/null -i ${AWSCONFIGOUTPUTDIRECTORY}${KEYNAME}.pem -o StrictHostKeyChecking=no 
-		#${AWSCONFIGOUTPUTDIRECTORY}${STACKNAME}JobDefinitions.tsv ec2-user@${instanceHostNamePublic}:/home/ec2-user/.aws/
-		scp -i ${KEYFILE} $SSH_OPTIONS $AWSCONFIGFILENAME ec2-user@${instanceHostNamePublic}:/home/ec2-user/.aws/
-		scp -i ${KEYFILE} $SSH_OPTIONS ${AWSCONFIGOUTPUTDIRECTORY}${KEYNAME}.pem ec2-user@${instanceHostNamePublic}:/home/ec2-user/.aws/
-		scp -i ${KEYFILE} $SSH_OPTIONS ${AWSCONFIGOUTPUTDIRECTORY}config ec2-user@${instanceHostNamePublic}:/home/ec2-user/.aws/
-		scp -i ${KEYFILE} $SSH_OPTIONS ${AWSCONFIGOUTPUTDIRECTORY}credentials ec2-user@${instanceHostNamePublic}:/home/ec2-user/.aws/
+		#scp -o UserKnownHostsFile=/dev/null -i ${KEYPATH} -o StrictHostKeyChecking=no 
+		#~/.batchawsdeploy/${STACKNAME}JobDefinitions.tsv ec2-user@${instanceHostNamePublic}:/home/ec2-user/.aws/
+		scp -i ${KEYPATH} $SSH_OPTIONS $AWSCONFIGFILENAME ec2-user@${instanceHostNamePublic}:/home/ec2-user/.aws/
+		scp -i ${KEYPATH} $SSH_OPTIONS $KEYPATH ec2-user@${instanceHostNamePublic}:/home/ec2-user/.aws/
+		scp -i ${KEYPATH} $SSH_OPTIONS ~/.aws/config ec2-user@${instanceHostNamePublic}:/home/ec2-user/.aws/
+		scp -i ${KEYPATH} $SSH_OPTIONS ~/.aws/credentials ec2-user@${instanceHostNamePublic}:/home/ec2-user/.aws/
 
 		# Scripts for running the head node
-		#scp -i ${KEYFILE} launchEC2HeadNode.sh ec2-user@${instanceHostNamePublic}:/home/ec2-user/
-		scp -i ${KEYFILE} $SSH_OPTIONS startHeadNode.sh ec2-user@${instanceHostNamePublic}:/home/ec2-user/
+		#scp -i ${KEYPATH} launchEC2HeadNode.sh ec2-user@${instanceHostNamePublic}:/home/ec2-user/
+		scp -i ${KEYPATH} $SSH_OPTIONS startHeadNode.sh ec2-user@${instanceHostNamePublic}:/home/ec2-user/
 
 		# Nextflow Configuration
-		scp -i ${KEYFILE} $SSH_OPTIONS ~/.nextflow/config ec2-user@${instanceHostNamePublic}:/home/ec2-user/.nextflow/
+		scp -i ${KEYPATH} $SSH_OPTIONS ~/.nextflow/config ec2-user@${instanceHostNamePublic}:/home/ec2-user/.nextflow/
 
 	fi
 
 
 	#6.) SSH into the host and run the configure script then close it and create an AMI based on this image
-		# ssh trick to not check host keyfile https://linuxcommando.blogspot.com/2008/10/how-to-disable-ssh-host-key-checking.html
+		# ssh trick to not check host KEYPATH https://linuxcommando.blogspot.com/2008/10/how-to-disable-ssh-host-key-checking.html
 		#  -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no
 		# run local script on remote host with ssh: https://stackoverflow.com/questions/305035/how-to-use-ssh-to-run-a-shell-script-on-a-remote-machine 
 	echo "-------------------------------------------------------"
@@ -191,7 +196,7 @@ if [ $# -gt 10 ]; then
 	###########################################################
 	if [[ $EC2RUNARGUMENT == "runscript" ]]; then
 		echo "instance running..."
-		ssh -v -i ${KEYFILE} ec2-user@${instanceHostNamePublic} $SSH_OPTIONS \
+		ssh -v -i ${KEYPATH} ec2-user@${instanceHostNamePublic} $SSH_OPTIONS \
 			'bash -s' < ${SCRIPTNAME}
 
 		echo "disconnected from instance: $EC2RUNARGUMENT"
@@ -200,17 +205,17 @@ if [ $# -gt 10 ]; then
 	###########################################################
 	elif [[ $EC2RUNARGUMENT == "directconnect" ]]; then
 		echo "To re-connect to this instance later run:"
-		echo "ssh -i ${BATCHAWSDEPLOY_HOME}${KEYNAME}.pem ec2-user@${instanceHostNamePublic}"
+		echo "ssh -i ${KEYPATH} ec2-user@${instanceHostNamePublic}"
 		echo "-------------------------------------------------------"
 		echo "To copy files to this instance run:"
-		echo "scp -i ${KEYFILE} MYFILENAME ec2-user@${instanceHostNamePublic}:/home/ec2-user/"
+		echo "scp -i ${KEYPATH} MYFILENAME ec2-user@${instanceHostNamePublic}:/home/ec2-user/"
 		echo "-------------------------------------------------------"
 		echo "To shutdown this instance, exit the instance and run:"
 		echo "aws ec2 terminate-instances --instance-id $instanceID"
 		echo "-------------------------------------------------------"
 
 		echo "Connecting directly via ssh:"
-		ssh -v -i ${KEYFILE} ec2-user@${instanceHostNamePublic} $SSH_OPTIONS 
+		ssh -v -i ${KEYPATH} ec2-user@${instanceHostNamePublic} $SSH_OPTIONS 
 
 		echo "disconnected from instance: $EC2RUNARGUMENT"
 	###########################################################
@@ -218,7 +223,7 @@ if [ $# -gt 10 ]; then
 	###########################################################
 	elif [[ $EC2RUNARGUMENT == "createAMI" ]]; then
 		echo "EC2RUNARGUMENT=$EC2RUNARGUMENT"
-		ssh -v -i ${KEYFILE} ec2-user@${instanceHostNamePublic} $SSH_OPTIONS \
+		ssh -v -i ${KEYPATH} ec2-user@${instanceHostNamePublic} $SSH_OPTIONS \
 			'bash -s' < ${SCRIPTNAME}
 		echo "----------------------------------------"
 		echo "----------------------------------------"
@@ -261,7 +266,8 @@ if [ $# -gt 10 ]; then
 
 
 else
-	echo "Usage: createAMI.sh STACKNAME TEMPLATEIMAGEID INSTANCETYPEFORAMICREATION KEYNAME EBSVOLUMESIZEGB AMIIDENTIFIER IMAGETAG IMAGETAGVALUE SUBNETS SECURITYGROUPS MYPUBLICIPADDRESS"
+	print_help
+	"number of arguments provided: $#"
 fi
 
 

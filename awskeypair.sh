@@ -8,29 +8,28 @@ ARGUMENT=$1
 
 if [ $# -eq 2 ]; then
 	KEYNAME=$2
-
-	if [ "$ARGUMENT" == "create" ] && [ ! -f ~/.batchawsdeploy/${KEYNAME}.pem ]; then
+	KEYPATH=~/.batchawsdeploy/${KEYNAME}.pem
+	if [ "$ARGUMENT" == "create" ] && [ ! -f $KEYPATH ]; then
 	#if [ "$ARGUMENT" == "create" ]; then
 		#TODO: what if the output file is empty
 		# if a key by that name does not exist in the described key-pairs, create it.  Otherwise, do nothing
 		keydescription=$(aws ec2 describe-key-pairs)
 		keystatus=$(echo "$keydescription" | grep -c "$KEYNAME")
 		if [ $keystatus -eq 0 ]; then
-			aws ec2 create-key-pair --key-name $KEYNAME --query 'KeyMaterial' --output text > ${BATCHAWSDEPLOY_HOME}${KEYNAME}.pem
+			aws ec2 create-key-pair --key-name $KEYNAME --query 'KeyMaterial' --output text > $KEYPATH
 			#this is a security requirement for keypairs to be used
-			chmod 400 ${BATCHAWSDEPLOY_HOME}${KEYNAME}.pem
+			chmod 400 $KEYPATH
 		else
 			echo "key with name: $KEYNAME  already exists!"
 		fi
-
 
 	elif [ "$ARGUMENT" == "list" ]; then
 		aws ec2 describe-key-pairs --key-name $KEYNAME
 
 	elif [ "$ARGUMENT" == "delete" ]; then
 		echo "deleting $KEYNAME"
-		chmod 777 ${BATCHAWSDEPLOY_HOME}${KEYNAME}.pem
-		rm ${BATCHAWSDEPLOY_HOME}${KEYNAME}.pem
+		chmod 777 $KEYPATH
+		rm $KEYPATH
 		aws ec2 delete-key-pair --key-name $KEYNAME
 
 	else

@@ -91,7 +91,7 @@ if [ $# -eq 14 ]; then
 	#REGION
 	#S3BUCKETNAME
 	#check for BLJ bucket (TODO: turn this into a function)
-	s3Tools.sh create $S3BUCKETNAME $STACKNAME
+	s3Tools.sh $STACKNAME create $S3BUCKETNAME
 
 	#######################################################################################
 	#STACK and Cloudformation Parameters 
@@ -172,6 +172,7 @@ if [ $# -eq 14 ]; then
         #######################################################################################
 		#1.c) Check for AMI (depricated)
 		#######################################################################################
+		IMAGEID=$DEFAULTAMI
 		echo "IMAGEID=$IMAGEID" >> $AWSCONFIGFILENAME
 
 		################################################################################################

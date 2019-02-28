@@ -101,6 +101,7 @@ else
         mkdir -p $AWSCONFIGOUTPUTDIRECTORY
 
         KEYNAME=${STACKNAME}KeyPair
+        KEYPATH=~/.batchawsdeploy/${KEYNAME}.pem
 
         #Can check if this file already exists before proceeding?
         AWSCONFIGFILENAME=~/.batchawsdeploy/${STACKNAME}.sh

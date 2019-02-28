@@ -1,5 +1,6 @@
 #!/bin/bash
-ARGUMENT=$1
+STACKNAME=$1
+ARGUMENT=$2
 
 print_error(){
 	echo "This script accepts X arguments"
@@ -8,13 +9,13 @@ print_error(){
 
 if [ $# -gt 1 ]; then
 
-	S3BUCKETNAME=$2
-
-	STACKNAME=$3
 	AWSCONFIGFILENAME=~/.batchawsdeploy/${STACKNAME}.sh
 	source $AWSCONFIGFILENAME
-
+	########################################
+	################ CREATE ################
+	########################################
 	if [ "$ARGUMENT" == "create" ]; then
+		S3BUCKETNAME=$3
 		########## AUTOGENERATE BUCKET NAME ##########
 		#TODO: rand generator not yet tested on LINUX:
 		#  -https://stackoverflow.com/questions/2793812/generate-a-random-filename-in-unix-shell 
@@ -23,7 +24,8 @@ if [ $# -gt 1 ]; then
 		#REGION
 		#S3BUCKETNAME
 		# Check if S3 bucket with name beginning with $STACKNAME exists. If not, create it.
-		# Note: the S3 buckets must be GLOBALLY unique. A random string is appended to the stackname to make duplicates less probably
+		# Note: the S3 buckets must be GLOBALLY unique. A random string is 
+		# appended to the stackname to make duplicates less probably
 		echo "looking for bucket: $S3BUCKETNAME"
 		echo "forcing bucket names to lowercase"
 		STACKNAMELOWERCASE=$(echo "$STACKNAME" | tr '[:upper:]' '[:lower:]')
@@ -66,15 +68,28 @@ if [ $# -gt 1 ]; then
 		echo "S3BUCKETNAME=$S3BUCKETNAME" >> $AWSCONFIGFILENAME
 		echo "S3BUCKETNAME=$S3BUCKETNAME"
 
-	############## LIST BUCKET NAME #########
+	########################################
+	################  LIST  ################
+	########################################
 	elif [ "$ARGUMENT" == "list" ]; then
-		echo test
-	############## GET FROM BUCKET ##########
+		echo "S3BUCKETNAME=$S3BUCKETNAME"	
+		aws s3 ls "s3://$S3BUCKETNAME"
+
+	########################################
+	#################  GET  ################
+	########################################
 	elif [ "$ARGUMENT" == "get" ]; then
 		echo test
-	############## PUT IN BUCKET ############
-	elif [ "$ARGUMENT" == "put" ]; then
-		echo test
+
+	########################################
+	#################  CP  ################
+	########################################
+	elif [ "$ARGUMENT" == "copy" ]; then
+		FILENAME=$3
+		FOLDER=$4
+		#NOTE, MUST put trailing slashes (/) on folder to signify that it is a folder, otherwise
+		# it will use the trailing characters as the filename.
+		aws s3 cp $FILENAME s3://$S3BUCKETNAME/$FOLDER
 
 	fi
 fi

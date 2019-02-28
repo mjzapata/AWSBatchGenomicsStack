@@ -1,4 +1,6 @@
 *.pem
+*.sublime-project
+*.sublime-workspace
 nextflow.config
 testscript.sh
 .nextflow*

@@ -8,7 +8,10 @@ function print_help(){
 	echo "This script is used to either return the users local IP address or
 	update the ingress IP address of the stack's security group"
 	echo "usage: ipTools.sh getip"
-	echo "usage: ipTools.sh updatesg STACKNAME"
+	echo "usage: ipTools.sh describesgingress STACKNAME"
+	echo "usage: ipTools.sh updatesgingress STACKNAME"
+	echo "usage: ipTools.sh updatesg STACKNAME 'description of location' "
+
 }
 
 function return_ip(){
@@ -26,39 +29,40 @@ if [ $# -eq 1 ]; then
 		print_help
 	fi
 
-elif [ $# -eq 2 ]; then
+elif [ $# -gt 1 ] && [ $# -lt 4 ]; then
+	STACKNAME=$2
+	AWSCONFIGFILENAME=~/.batchawsdeploy/${STACKNAME}.sh
+	source $AWSCONFIGFILENAME
 
-	if [ $ARGUMENT == "updatesg" ]; then
-		STACKNAME=$2
+	MYPUBLICIPADDRESS=$(return_ip)
 
-		AWSCONFIGFILENAME=~/.batchawsdeploy/${STACKNAME}.sh
-		source $AWSCONFIGFILENAME
-
-		#MYPUBLICIPADDRESS=$(return_ip)
-		#MYPUBLICIPADDRESS="2.2.2.8/32"
+	if [ $ARGUMENT == "updatesgingress" ]; then
+		DESCRIPTION=$3
 
 		#TODO: rewrite MYPUBLICIPADDRESS in the source
-		echo "MyIPAddress: $MYPUBLICIPADDRESS"
+		echo "MyIPAddress=$MYPUBLICIPADDRESS"
 		echo "BASTIONSECURITYGROUP=$BASTIONSECURITYGROUP"
-		DESCRIPTIONSSH="ingress from last known IP ssh"
-		DESCRIPTIONWEB="ingress from last known IP web"
-		DESCRIPTIONSSL="ingress from last known IP ssl"
 
 		#echo '[{"IpProtocol": "tcp", "FromPort": 80, "ToPort": 80, "IpRanges": [{"CidrIp": "'$MYPUBLICIPADDRESS'", "'$DESCRIPTIONWEB'"}]}]'
-		
-		#aws ec2 authorize-security-group-ingress --group-id $BASTIONSECURITYGROUP --ip-permissions IpProtocol=tcp,FromPort=22,ToPort=22,IpRanges='[{CidrIp=2.2.2.2/32,Description="RDP access from MY office"}]'
-		#update security group ingress rules
-		aws ec2 authorize-security-group-ingress \
-		--group-id $BASTIONSECURITYGROUP \
-		--ip-permissions IpProtocol=tcp,FromPort=22,ToPort=22,IpRanges='[{CidrIp='$MYPUBLICIPADDRESS',Description="'"$DESCRIPTIONSSH"'"}]'
+		now=$(date +'%m-%d-%Y')
+		DESCRIPTION="$now $DESCRIPTION" #_$now
+		echo "DESCRIPTION=$DESCRIPTION"
 
 		aws ec2 authorize-security-group-ingress \
 		--group-id $BASTIONSECURITYGROUP \
-		--ip-permissions IpProtocol=tcp,FromPort=80,ToPort=80,IpRanges='[{CidrIp='$MYPUBLICIPADDRESS',Description="'"$DESCRIPTIONWEB"'"}]'
+		--ip-permissions IpProtocol=tcp,FromPort=0,ToPort=65535,IpRanges='[{CidrIp='$MYPUBLICIPADDRESS',Description="'"$DESCRIPTION"'"}]'
 
 		aws ec2 authorize-security-group-ingress \
 		--group-id $BASTIONSECURITYGROUP \
-		--ip-permissions IpProtocol=tcp,FromPort=443,ToPort=443,IpRanges='[{CidrIp='$MYPUBLICIPADDRESS',Description="'"$DESCRIPTIONSSL"'"}]'
+		--ip-permissions IpProtocol=udp,FromPort=0,ToPort=65535,IpRanges='[{CidrIp='$MYPUBLICIPADDRESS',Description="'"$DESCRIPTION"'"}]'
+
+	elif [ $ARGUMENT == "describesgingress" ]; then
+		sgRules=$(aws ec2 describe-security-groups --group-id $BASTIONSECURITYGROUP | grep -m1 $MYPUBLICIPADDRESS)
+		if [ -z "$sgRules"  ]; then
+			echo "No access to security group"
+		else
+			echo "Access to security group"
+		fi
 
 	else
 		print_help
