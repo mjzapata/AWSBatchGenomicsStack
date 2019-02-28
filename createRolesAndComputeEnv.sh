@@ -189,9 +189,11 @@ if [ $# -eq 14 ]; then
 		
 		COMPUTERESOURCES="$(echo -e "${COMPUTERESOURCES}" | tr -d '[:space:]')"
 
+
 		echo "COMPUTEENVIRONMENTNAME=$COMPUTEENVIRONMENTNAME"
 		echo "SERVICEROLE=$SERVICEROLE"
 		echo "COMPUTERESOURCES=$COMPUTERESOURCES"
+		batchCreateOutput=$(aws batch create-compute-environment --compute-environment-name $COMPUTEENVIRONMENTNAME --type MANAGED --state ENABLED --service-role ${SERVICEROLE} --compute-resources "$COMPUTERESOURCES")
 
 		batchCreateOutput=$(aws batch create-compute-environment --compute-environment-name $COMPUTEENVIRONMENTNAME \
 		--type MANAGED --state ENABLED --service-role ${SERVICEROLE} \

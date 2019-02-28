@@ -13,12 +13,14 @@ if [ $# -eq 1 ]; then
 		mkdir -p ~/.batchawsdeploy/
 		#rm ~/.batchawsdeploy/config
 		touch ~/.batchawsdeploy/config
+		
 		BATCHAWSDEPLOY_HOME=$(pwd)
+		#add trailing / if missing
 		[[ "${BATCHAWSDEPLOY_HOME}" != */ ]] && BATCHAWSDEPLOY_HOME="${BATCHAWSDEPLOY_HOME}/"
-		echo "export BATCHAWSDEPLOY_HOME=$BATCHAWSDEPLOY_HOME" > ~/.batchawsdeploy/config
-		echo 'export PATH=$PATH'":$BATCHAWSDEPLOY_HOME:$BATCHAWSDEPLOY_HOME/support" >> ~/.batchawsdeploy/config
-		source ~/.batchawsdeploy/config
 
+		echo "export BATCHAWSDEPLOY_HOME=$BATCHAWSDEPLOY_HOME" > ~/.batchawsdeploy/config
+		echo 'export PATH=$PATH'":${BATCHAWSDEPLOY_HOME}:${BATCHAWSDEPLOY_HOME}support" >> ~/.batchawsdeploy/config
+		
 	else
 		print_help
 	fi

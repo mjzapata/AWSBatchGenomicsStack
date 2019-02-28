@@ -9,15 +9,31 @@
 #get the ID and tell them to run the shutdown
 #AWS_PROFILE=batchcompute
 
-#PATH=$PATH:~/Documents/github/aws/AWSBatchGenomicsStack
-#PATH=$PATH:~/Documents/github/aws/AWSBatchGenomicsStack/support
-
+#CHECK THAT INSTALL SCRIPT HAS BEEN RUN
 if [ ! -f ~/.batchawsdeploy/config ]; then
     echo "~/.batchawsdeploy/config does not exist"
     echo "did you run installBatchDeployer.sh?"
     exit 1
 fi
 source ~/.batchawsdeploy/config
+
+#CHECK AWS VERSION
+#https://stackoverflow.com/questions/19915452/in-shell-split-a-portion-of-a-string-with-dot-as-delimiter
+#https://stackoverflow.com/questions/2342826/how-to-pipe-stderr-and-not-stdout
+#aws-cli/1.16.25  Python/2.7.15rc1 Linux/4.9.125-linuxkit botocore/1.12.15 (OUTDATED)
+#aws-cli/1.16.114 Python/2.7.16rc1 Linux/4.9.125-linuxkit botocore/1.12.104
+versions=$(aws --version 2>&1 >/dev/null | grep -o '[^-]*$')
+awsversion=$(echo $versions | cut -d ' ' -f1 | cut -d '/' -f2)
+awsmajor=$(echo $awsversion | cut -d. -f1)
+awsminor=$(echo $awsversion | cut -d. -f2)
+awsmicro=$(echo $awsversion | cut -d. -f3)
+#awsbuild=
+if [ $awsmajor -lt 1 ] || [ $awsminor -lt 16 ] || [ $awsmicro -lt 85 ]; then
+    echo "aws outdated. please update"
+    echo "required at least: 1.16.84"
+    exit 1
+fi
+
 
 ARGUMENT=$1
 
@@ -105,6 +121,9 @@ else
             echo "JOBMEMORY=$JOBMEMORY" >> $AWSCONFIGFILENAME
             echo "NEXTFLOWCONFIGOUTPUTDIRECTORY=$NEXTFLOWCONFIGOUTPUTDIRECTORY" >> $AWSCONFIGFILENAME
 
+            echo "$STACKNAME $COMPUTEENVIRONMENTNAME $QUEUENAME $SPOTPERCENT $MAXCPU \
+                    $DEFAULTAMI $CUSTOMAMIFOREFS $EBSVOLUMESIZEGB $EFSPERFORMANCEMODE $AWSCONFIGOUTPUTDIRECTORY \
+                    $NEXTFLOWCONFIGOUTPUTDIRECTORY $REGION $KEYNAME $S3BUCKETNAME"
     	   createRolesAndComputeEnv.sh $STACKNAME $COMPUTEENVIRONMENTNAME $QUEUENAME $SPOTPERCENT $MAXCPU \
                     $DEFAULTAMI $CUSTOMAMIFOREFS $EBSVOLUMESIZEGB $EFSPERFORMANCEMODE $AWSCONFIGOUTPUTDIRECTORY \
                     $NEXTFLOWCONFIGOUTPUTDIRECTORY $REGION $KEYNAME $S3BUCKETNAME
