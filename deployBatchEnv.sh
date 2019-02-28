@@ -28,7 +28,7 @@ awsversion=$(echo $versions | cut -d ' ' -f1 | cut -d '/' -f2)
 echo "awsversion=$awsversion"
 awsmajor=$(echo $awsversion | cut -d. -f1); awsmajor_required=1
 awsminor=$(echo $awsversion | cut -d. -f2); awsminor_required=16
-awsmicro=$(echo $awsversion | cut -d. -f3); awsmicro_required=95
+awsmicro=$(echo $awsversion | cut -d. -f3); awsmicro_required=65
 
 if [ $(expr $awsmajor) -lt $awsmajor_required ] || \
     [ $(expr $awsminor) -lt $awsminor_required ] || \
