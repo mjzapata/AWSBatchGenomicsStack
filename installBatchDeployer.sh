@@ -13,6 +13,7 @@ if [ $# -eq 1 ]; then
 		mkdir -p ~/.batchawsdeploy/
 		#rm ~/.batchawsdeploy/config
 		touch ~/.batchawsdeploy/config
+		chmod a+x ~/.batchawsdeploy/config
 		
 		BATCHAWSDEPLOY_HOME=$(pwd)
 		#add trailing / if missing
