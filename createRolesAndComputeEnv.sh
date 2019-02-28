@@ -85,11 +85,10 @@ if [ $# -eq 12 ]; then
 	#  -https://stackoverflow.com/questions/2793812/generate-a-random-filename-in-unix-shell 
 	#TODO: set more permissions
 	#$STACKNAME
-	#REGION
 	#S3BUCKETNAME
 	#check for BLJ bucket (TODO: turn this into a function)
 	if [ -z $S3BUCKETNAME ]; then
-		s3Tools.sh $STACKNAME create autogenerateC
+		s3Tools.sh $STACKNAME create autogenerate
 	fi
 
 	#######################################################################################
