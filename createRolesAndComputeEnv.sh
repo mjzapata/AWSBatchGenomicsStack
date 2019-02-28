@@ -206,7 +206,7 @@ if [ $# -eq 14 ]; then
 		#2.a) Create Job Queue
 		#######################################################################################
 		echo "----------------------------------------------------------------------------------------------"
-		echo "creating compute environment: $QUEUENAME"
+		echo "creating Job Queue: $QUEUENAME"
 		queueCreateOutput=$(aws batch create-job-queue --job-queue-name $QUEUENAME \
 			--compute-environment-order order=0,computeEnvironment=$COMPUTEENVIRONMENTNAME  \
 			--priority $COMPUTEENVPRIORITY \
