@@ -246,8 +246,8 @@ if [ $# -eq 14 ]; then
 		echo "4.) Print Nextflow Config   ------------------------------------------------------------------"
 		echo "----------------------------------------------------------------------------------------------"
 		nextflowconfig=$(printnextflowconfig.sh $STACKNAME)
-		echo $nextflowconfig
-		echo $nextflowconfig > "${NEXTFLOWCONFIGOUTPUTDIRECTORY}config"
+		echo "$nextflowconfig"
+		echo "$nextflowconfig" > "${NEXTFLOWCONFIGOUTPUTDIRECTORY}config"
 		echo "--------------------------------------------------------------------------------------------------------------"
 		echo -n "--------------------------------------------------------------------------------------------------------------"
 echo -n '
