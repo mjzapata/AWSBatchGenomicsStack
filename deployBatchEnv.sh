@@ -20,6 +20,7 @@ source ~/.batchawsdeploy/config
 #2.) CHECK AWS VERSION
 #https://stackoverflow.com/questions/19915452/in-shell-split-a-portion-of-a-string-with-dot-as-delimiter
 #https://stackoverflow.com/questions/2342826/how-to-pipe-stderr-and-not-stdout
+#example:
 #aws-cli/1.16.25  Python/2.7.15rc1 Linux/4.9.125-linuxkit botocore/1.12.15 (OUTDATED)
 #aws-cli/1.16.114 Python/2.7.16rc1 Linux/4.9.125-linuxkit botocore/1.12.104
 versions=$(aws --version 2>&1 >/dev/null) # | grep -o '[^-]*$')

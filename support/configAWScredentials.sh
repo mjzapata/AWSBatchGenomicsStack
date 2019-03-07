@@ -1,5 +1,6 @@
 #!/bin/bash
 
+#ARGUMENT=write
 #PROFILE=batchcompute
 #REGION=us-east-1
 #OUTPUTFORMAT=text
@@ -38,6 +39,8 @@ elif [ $# -eq 6 ] && [ "$ARGUMENT" == "write" ]; then
 	echo "relocking the files"
 	chmod -R 600 ~/.aws/
 else
-	echo "Usage: configAWScredentials.sh PROFILE REGION OUTPUTFORMAT AWSACCESSKEYID AWSSECRETACCESSKEY "
+	echo "
+	Usage: configAWScredentials.sh validate
+	Usage: configAWScredentials.sh write PROFILE REGION OUTPUTFORMAT AWSACCESSKEYID AWSSECRETACCESSKEY"
 fi
 
