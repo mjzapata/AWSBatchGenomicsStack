@@ -19,7 +19,7 @@ if [ $# -eq 1 ] && [ "$ARGUMENT" == "validate" ]; then
     	echo "valid"
     fi
 
-elif [ $# -eq 5 ] && [ "$ARGUMENT" == "write" ]; then
+elif [ $# -eq 6 ] && [ "$ARGUMENT" == "write" ]; then
 	PROFILE=$2
 	REGION=$3
 	OUTPUTFORMAT=$4
