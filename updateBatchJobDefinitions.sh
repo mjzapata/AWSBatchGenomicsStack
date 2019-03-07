@@ -32,7 +32,7 @@ if [[ $# -eq 1 ]]; then
 	echo ""
 	while read -r line; do
 	    #echo "Image: $JOBIMAGE"
-	    JOBIMAGE=${line}:${DOCKERRREPOVERSION}
+	    JOBIMAGE=${line}:${DOCKERREPOVERSION}
 	    JOBIMAGENOSPECIAL=$(tr -s /: _ <<< "$JOBIMAGE")
 	    #JOBDEFINITIONNAME=${JOBDEFPREFIX}${STACKNAME}_${JOBIMAGENOSPECIAL}
 	   	JOBDEFINITIONNAME=${STACKNAME}_${JOBIMAGENOSPECIAL}
