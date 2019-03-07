@@ -10,8 +10,6 @@
 #TODO: create High and low priority like in the tutorial later, with linked Queues and one that is ON DEMAND
 #TODO: autocreate an IAM role with the minimal capabilities and paste it into aws config
 
-#TODO: validate IP ADDRESS
-
 #TODO: EFS
 # The PerformanceMode of the file system.   https://docs.aws.amazon.com/cli/latest/reference/efs/create-file-system.html
 # We recommend generalPurpose performance mode for most file systems. File systems using the maxIO 
@@ -88,7 +86,7 @@ if [ $# -eq 12 ]; then
 	#S3BUCKETNAME
 	#check for BLJ bucket (TODO: turn this into a function)
 	if [ -z $S3BUCKETNAME ]; then
-		s3Tools.sh $STACKNAME create autogenerate
+		s3Tools.sh $STACKNAME create autogenerate createdirstructure
 	fi
 
 	#######################################################################################

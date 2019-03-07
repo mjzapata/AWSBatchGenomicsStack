@@ -251,7 +251,6 @@ if [ $# -gt 8 ]; then
 		ssh -i ${KEYPATH} ec2-user@${instanceHostNamePublic} $SSH_OPTIONS \
 			"./home/ec2-user/${SCRIPTNAME} </dev/null >/var/log/root-backup.log 2>&1 &"
 
-
 		#cat ${SCRIPTPATH} | ssh -i ${KEYPATH} ec2-user@${instanceHostNamePublic} $SSH_OPTIONS "./home/ec2-user/${SCRIPTNAME} </dev/null >/var/log/root-backup.log 2>&1 &"
 		cat ${SCRIPTPATH} | ssh -i ${KEYPATH} ec2-user@${instanceHostNamePublic} $SSH_OPTIONS 'bash -'
 

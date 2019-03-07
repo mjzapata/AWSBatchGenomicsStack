@@ -1,19 +1,24 @@
 #!/bin/bash
 STACKNAME=$1
 ARGUMENT=$2
-
-createS3DirStructure="true"
+#S3BUCKETNAME=$3 (below)
+#createS3DirStructure=$4 (below)
 
 print_error(){
 	echo "This script accepts X arguments"
-	echo "Usage: 
-	s3Tools.sh create S3BUCKETNAME STACKNAME
+	echo "Usage:
+	s3Tools.sh listbuckets 
+	s3Tools.sh STACKNAME create S3BUCKETNAME
 	s3Tools.sh STACKNAME list
 	s3Tools.sh STACKNAME get
 	s3Tools.sh STACKNAME copyToS3 FILENAME REMOTEFOLDER
 	s3Tools.sh STACKNAME syncToS3 LOCALFOLDER REMOTEFOLDER
 	s3Tools.sh STACKNAME syncFromS3 REMOTEFOLDER LOCALFOLDER"
 }
+
+if [ $STACKNAME == "listbuckets" ]	
+	aws s3 ls
+fi
 
 if [ $# -gt 1 ]; then
 
@@ -44,7 +49,7 @@ if [ $# -gt 1 ]; then
 	########################################
 	if [ "$ARGUMENT" == "create" ]; then
 		S3BUCKETNAME=$3
-
+		createS3DirStructure=$4
 		########## AUTOGENERATE BUCKET NAME ##########
 		#TODO: rand generator not yet tested on LINUX:
 		#  -https://stackoverflow.com/questions/2793812/generate-a-random-filename-in-unix-shell 
@@ -58,7 +63,8 @@ if [ $# -gt 1 ]; then
 
 		IFS=$'\t' #necessary to get tabs to parse correctly
 		if [ $S3BUCKETNAME == 'autogenerate' ] || [ $S3BUCKETNAME == 'autocreate' ]; then
-			nametocheck=$STACKNAMELOWERCASE
+			BUCKETNAMESEPARATOR="-"
+			nametocheck=${STACKNAMELOWERCASE}${BUCKETNAMESEPARATOR}
 			s3bucketlist="$(aws s3api list-buckets)"
 			matchingbucket=$(echo $s3bucketlist | grep BUCKETS | grep $nametocheck)
 			bucketexists=$(echo -n $matchingbucket | wc -m)
@@ -69,7 +75,7 @@ if [ $# -gt 1 ]; then
 				#create a new bucket with name $STACKNAMELOWERCASE followed by a random string
 				randlength=24
 				randstring=$(cat /dev/urandom | env LC_CTYPE=C tr -cd 'a-f0-9' | head -c $randlength)
-				S3BUCKETNAME=${STACKNAMELOWERCASE}-${randstring}
+				S3BUCKETNAME=${STACKNAMELOWERCASE}${BUCKETNAMESEPARATOR}${randstring}
 				s3CreateString=$(aws s3api create-bucket --bucket $S3BUCKETNAME --region $REGION)
 				echo "Bucket CREATED with randomly generated name: $S3BUCKETNAME"
 				echo "$s3CreateString"
@@ -91,12 +97,16 @@ if [ $# -gt 1 ]; then
 			fi
 		fi
 		# https://stackoverflow.com/questions/36837975/how-to-create-folder-on-s3-from-ec2-instance
-		if [ $createS3DirStructure == "true" ]; then
-			echo "Creating S3 Directory Structure"
-			aws s3api put-object --bucket $S3BUCKETNAME --key projects/
-			aws s3api put-object --bucket $S3BUCKETNAME --key databases/
-			aws s3api put-object --bucket $S3BUCKETNAME --key /
-			aws s3api put-object --bucket $S3BUCKETNAME --key folder/
+		if [ $createS3DirStructure == "createdirstructure" ]; then
+			echo "Creating S3 Directory Structure using s3Tools.sh"
+			MAINDIR="/BioSheperd/"
+			aws s3api put-object --bucket $S3BUCKETNAME --key ${MAINDIR}
+			aws s3api put-object --bucket $S3BUCKETNAME --key ${MAINDIR}pipelines/
+			aws s3api put-object --bucket $S3BUCKETNAME --key ${MAINDIR}datasets/
+			aws s3api put-object --bucket $S3BUCKETNAME --key ${MAINDIR}databases/
+			aws s3api put-object --bucket $S3BUCKETNAME --key ${MAINDIR}/
+			aws s3api put-object --bucket $S3BUCKETNAME --key ${MAINDIR}meta/
+			aws s3api put-object --bucket $S3BUCKETNAME --key ${MAINDIR}primers/
 		fi
 
 
