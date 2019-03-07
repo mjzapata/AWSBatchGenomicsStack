@@ -16,7 +16,7 @@ print_error(){
 	s3Tools.sh STACKNAME syncFromS3 REMOTEFOLDER LOCALFOLDER"
 }
 
-if [ $STACKNAME == "listbuckets" ]	
+if [ $STACKNAME == "listbuckets" ]; then
 	aws s3 ls
 fi
 
@@ -35,14 +35,6 @@ if [ $# -gt 1 ]; then
         echo "REGION=$REGION" >> $BATCHAWSCONFIGFILE
     fi
 	source $BATCHAWSCONFIGFILE
-    #Create AWS config file and start writing values
-    #this is duplicated in s3Tools.sh and deployBatchEnv.sh
-    # if [ ! -f $BATCHAWSCONFIGFILE ]; then
-    #     touch "$BATCHAWSCONFIGFILE"
-    #     echo "#!/bin/bash" > $BATCHAWSCONFIGFILE
-    #     echo "" >> $BATCHAWSCONFIGFILE
-    #     echo "BATCHAWSCONFIGFILE=$BATCHAWSCONFIGFILE" >> $BATCHAWSCONFIGFILE
-    # fi
 
 	########################################
 	################ CREATE ################
@@ -115,8 +107,8 @@ if [ $# -gt 1 ]; then
 
 		S3BUCKETWEBADDRESS="https://s3.console.aws.amazon.com/s3/buckets/${S3BUCKETNAME}"
 		S3BUCKETFTPADDRESS="s3://${S3BUCKETNAME}"
-		echo "S3BUCKEADDRESS=$S3BUCKETADDRESS" >> $BATCHAWSCONFIGFILE
-		echo "S3BUCKEADDRESS=$S3BUCKETADDRESS"
+		echo "S3BUCKETADDRESS=$S3BUCKETADDRESS" >> $BATCHAWSCONFIGFILE
+		echo "S3BUCKETADDRESS=$S3BUCKETADDRESS"
 
 	########################################
 	################  LIST  ################

@@ -95,12 +95,7 @@ if [ $# -eq 12 ]; then
 	#TODO: allow for custom stackfile
 	STACKFILE=${BATCHAWSDEPLOY_HOME}BLJStackEFS.yml
 	echo "STACKFILE=$STACKFILE" >> $BATCHAWSCONFIGFILE
-	# reduce the last number to be more leniant about ip a ddresses, for example if a university has multiple IPs
-	#Get local public IPaddress https://askubuntu.com/questions/95910/command-for-determining-my-public-ip 
-	# curl -s checkip.dyndns.org | sed -e 's/.*Current IP Address: //' -e 's/<.*$//'  
-	#MYPUBLICIPADDRESS=$(curl -s checkip.dyndns.org | sed -e 's/.*Current IP Address: //' -e 's/<.*$//' )
-	#MASK=32
-	#MYPUBLICIPADDRESS=${MYPUBLICIPADDRESS}"/"${MASK}
+
 	MYPUBLICIPADDRESS=$(ipTools.sh getip)
 	echo "MYPUBLICIPADDRESS=$MYPUBLICIPADDRESS" >> $BATCHAWSCONFIGFILE
 

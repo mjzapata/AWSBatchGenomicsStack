@@ -1,7 +1,12 @@
 #!/bin/bash
-
-#getip
 ARGUMENT=$1
+
+# reduce the last number to be more leniant about ip a ddresses, for example if a university has multiple IPs
+#Get local public IPaddress https://askubuntu.com/questions/95910/command-for-determining-my-public-ip 
+# curl -s checkip.dyndns.org | sed -e 's/.*Current IP Address: //' -e 's/<.*$//'  
+#MYPUBLICIPADDRESS=$(curl -s checkip.dyndns.org | sed -e 's/.*Current IP Address: //' -e 's/<.*$//' )
+#MASK=32
+#MYPUBLICIPADDRESS=${MYPUBLICIPADDRESS}"/"${MASK}
 
 function print_help(){
 	echo "This script accepts one or two arguments."
