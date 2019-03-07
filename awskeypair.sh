@@ -8,7 +8,7 @@ ARGUMENT=$1
 
 if [ $# -eq 2 ]; then
 	KEYNAME=$2
-	KEYPATH=~/.batchawsdeploy/${KEYNAME}.pem
+	KEYPATH=~/.batchawsdeploy/key_${KEYNAME}.pem
 	if [ "$ARGUMENT" == "create" ] && [ ! -f $KEYPATH ]; then
 	#if [ "$ARGUMENT" == "create" ]; then
 		#TODO: what if the output file is empty

@@ -26,8 +26,8 @@ if [ $# -eq 12 ]; then
 
 	STACKNAME=$1
 	source ~/.batchawsdeploy/config
-	AWSCONFIGFILENAME=~/.batchawsdeploy/${STACKNAME}.sh
-	source $AWSCONFIGFILENAME
+	BATCHAWSCONFIGFILE=~/.batchawsdeploy/stack_${STACKNAME}.sh
+	source $BATCHAWSCONFIGFILE
 
 	COMPUTEENVIRONMENTNAME=$2
 	QUEUENAME=$3
@@ -42,20 +42,20 @@ if [ $# -eq 12 ]; then
 	KEYNAME=${12}
 	#VERBOSE=
 
-	echo "STACKNAME=$STACKNAME" >> $AWSCONFIGFILENAME
-	echo "AWSCONFIGOUTPUTDIRECTORY=$AWSCONFIGOUTPUTDIRECTORY"  >> $AWSCONFIGFILENAME
-	echo "KEYNAME=$KEYNAME" >> $AWSCONFIGFILENAME
-	echo "COMPUTEENVIRONMENTNAME=$COMPUTEENVIRONMENTNAME"  >> $AWSCONFIGFILENAME
-	echo "QUEUENAME=$QUEUENAME"  >> $AWSCONFIGFILENAME
-	echo "SPOTPERCENT=$SPOTPERCENT"  >> $AWSCONFIGFILENAME
-	echo "EBSVOLUMESIZEGB=$EBSVOLUMESIZEGB" >> $AWSCONFIGFILENAME
-	echo "MAXCPU=$MAXCPU"  >> $AWSCONFIGFILENAME
-	echo "DEFAULTAMI=$DEFAULTAMI"  >> $AWSCONFIGFILENAME
+	echo "STACKNAME=$STACKNAME" >> $BATCHAWSCONFIGFILE
+	echo "AWSCONFIGOUTPUTDIRECTORY=$AWSCONFIGOUTPUTDIRECTORY"  >> $BATCHAWSCONFIGFILE
+	echo "KEYNAME=$KEYNAME" >> $BATCHAWSCONFIGFILE
+	echo "COMPUTEENVIRONMENTNAME=$COMPUTEENVIRONMENTNAME"  >> $BATCHAWSCONFIGFILE
+	echo "QUEUENAME=$QUEUENAME"  >> $BATCHAWSCONFIGFILE
+	echo "SPOTPERCENT=$SPOTPERCENT"  >> $BATCHAWSCONFIGFILE
+	echo "EBSVOLUMESIZEGB=$EBSVOLUMESIZEGB" >> $BATCHAWSCONFIGFILE
+	echo "MAXCPU=$MAXCPU"  >> $BATCHAWSCONFIGFILE
+	echo "DEFAULTAMI=$DEFAULTAMI"  >> $BATCHAWSCONFIGFILE
 
 	ACCOUNTID=$(getawsaccountid.sh)
 	stackstatus=$(getcloudformationstack.sh $STACKNAME)
 	DESIREDCPUS=0 #this is the MINIMUM reserved CPUS
-	echo "DESIREDCPUS=$DESIREDCPUS" >> $AWSCONFIGFILENAME
+	echo "DESIREDCPUS=$DESIREDCPUS" >> $BATCHAWSCONFIGFILE
 
 	##################################################
 	# AMI Parameters for Custom AMI
@@ -96,7 +96,7 @@ if [ $# -eq 12 ]; then
 	#######################################################################################
 	#TODO: allow for custom stackfile
 	STACKFILE=${BATCHAWSDEPLOY_HOME}BLJStackEFS.yml
-	echo "STACKFILE=$STACKFILE" >> $AWSCONFIGFILENAME
+	echo "STACKFILE=$STACKFILE" >> $BATCHAWSCONFIGFILE
 	# reduce the last number to be more leniant about ip a ddresses, for example if a university has multiple IPs
 	#Get local public IPaddress https://askubuntu.com/questions/95910/command-for-determining-my-public-ip 
 	# curl -s checkip.dyndns.org | sed -e 's/.*Current IP Address: //' -e 's/<.*$//'  
@@ -104,7 +104,7 @@ if [ $# -eq 12 ]; then
 	#MASK=32
 	#MYPUBLICIPADDRESS=${MYPUBLICIPADDRESS}"/"${MASK}
 	MYPUBLICIPADDRESS=$(ipTools.sh getip)
-	echo "MYPUBLICIPADDRESS=$MYPUBLICIPADDRESS" >> $AWSCONFIGFILENAME
+	echo "MYPUBLICIPADDRESS=$MYPUBLICIPADDRESS" >> $BATCHAWSCONFIGFILE
 
 	#1.) Check for key and create if it doesn't exist.  This is a keypair for ssh into EC2.
 	awskeypair.sh create $KEYNAME
@@ -132,17 +132,17 @@ if [ $# -eq 12 ]; then
 	stackstatus=$(getcloudformationstack.sh $STACKNAME)
 	if [ "$stackstatus" == "Stack exists" ]; then
 		SERVICEROLE=$(getcloudformationstack.sh $STACKNAME BatchServiceRoleArn)
-		echo "SERVICEROLE=$SERVICEROLE" >> $AWSCONFIGFILENAME
+		echo "SERVICEROLE=$SERVICEROLE" >> $BATCHAWSCONFIGFILE
 		#TODO: check these aren't empty
 		IAMFLEETROLE=$(getcloudformationstack.sh $STACKNAME SpotIamFleetRoleArn)
 		IAMFLEETROLE=arn:aws:iam::${ACCOUNTID}:role/${IAMFLEETROLE}
-		echo "IAMFLEETROLE=$IAMFLEETROLE" >> $AWSCONFIGFILENAME
+		echo "IAMFLEETROLE=$IAMFLEETROLE" >> $BATCHAWSCONFIGFILE
 		JOBROLEARN=$(getcloudformationstack.sh $STACKNAME ECSTaskRole)
-		echo "JOBROLEARN=$JOBROLEARN" >> $AWSCONFIGFILENAME
+		echo "JOBROLEARN=$JOBROLEARN" >> $BATCHAWSCONFIGFILE
 		
 		INSTANCEROLE=$(getcloudformationstack.sh $STACKNAME IamInstanceProfileArn)
 		INSTANCEROLE=arn:aws:iam::${ACCOUNTID}:instance-profile/${INSTANCEROLE}
-		echo "INSTANCEROLE=$INSTANCEROLE" >> $AWSCONFIGFILENAME
+		echo "INSTANCEROLE=$INSTANCEROLE" >> $BATCHAWSCONFIGFILE
 
 		#Note: creating a security group with IP rules?  See  Page 6 of Creating a new AMI
 		# allows security group creation for each instance?  Public for web facing, private for batch?
@@ -153,17 +153,17 @@ if [ $# -eq 12 ]; then
 
 		SECURITYGROUPS="$BASTIONSECURITYGROUP,$BATCHSECURITYGROUP"
 
-		echo "BATCHSECURITYGROUP=$BATCHSECURITYGROUP" >> $AWSCONFIGFILENAME
-		echo "BASTIONSECURITYGROUP=$BASTIONSECURITYGROUP" >> $AWSCONFIGFILENAME
+		echo "BATCHSECURITYGROUP=$BATCHSECURITYGROUP" >> $BATCHAWSCONFIGFILE
+		echo "BASTIONSECURITYGROUP=$BASTIONSECURITYGROUP" >> $BATCHAWSCONFIGFILE
 		SUBNETS=$(getcloudformationstack.sh $STACKNAME Subnet)
-		echo "SUBNETS=$SUBNETS" >> $AWSCONFIGFILENAME
+		echo "SUBNETS=$SUBNETS" >> $BATCHAWSCONFIGFILE
 		efsID=$(getcloudformationstack.sh $STACKNAME FileSystemId)
 
 		HEADNODELAUNCHTEMPLATEID=$(getcloudformationstack.sh $STACKNAME HeadNodeLaunchTemplateId)
-		echo "HEADNODELAUNCHTEMPLATEID=$HEADNODELAUNCHTEMPLATEID" >> $AWSCONFIGFILENAME
+		echo "HEADNODELAUNCHTEMPLATEID=$HEADNODELAUNCHTEMPLATEID" >> $BATCHAWSCONFIGFILE
 
 		BATCHNODELAUNCHTEMPLATEID=$(getcloudformationstack.sh $STACKNAME BatchNodeLaunchTemplateId)
-		echo "BATCHNODELAUNCHTEMPLATEID=$BATCHNODELAUNCHTEMPLATEID" >> $AWSCONFIGFILENAME
+		echo "BATCHNODELAUNCHTEMPLATEID=$BATCHNODELAUNCHTEMPLATEID" >> $BATCHAWSCONFIGFILE
 		#Name might be better to use later, will need to label it as an output under outputs! 
 		#LaunchTemplateName=$(getcloudformationstack.sh $STACKNAME LaunchTemplateName)
 
@@ -171,7 +171,7 @@ if [ $# -eq 12 ]; then
 		#1.c) Check for AMI (depricated)
 		#######################################################################################
 		IMAGEID=$DEFAULTAMI
-		echo "IMAGEID=$IMAGEID" >> $AWSCONFIGFILENAME
+		echo "IMAGEID=$IMAGEID" >> $BATCHAWSCONFIGFILE
 
 		################################################################################################
 		#2.) Create Batch Computing environment
@@ -240,7 +240,7 @@ if [ $# -eq 12 ]; then
 		#                          $JOBROLEARN $JOBVCPUS $JOBMEMORY $STACKNAME)  #$JOBDEFPREFIX
 		BLJBatchJobsDeployOutput=$(updateBatchJobDefinitions.sh $STACKNAME)
 		echo "$BLJBatchJobsDeployOutput"
-		echo "$BLJBatchJobsDeployOutput" >> $AWSCONFIGFILENAME
+		echo "$BLJBatchJobsDeployOutput" >> $BATCHAWSCONFIGFILE
 		echo "----------------------------------------------------------------------------------------------"
 
 		echo "----------------------------------------------------------------------------------------------"
@@ -268,7 +268,7 @@ echo -n '
 		echo "--------------------------------------------------------------------------------------------------------------"
 		echo "9.) Configuration files saved to: "
 		echo "$NEXTFLOWCONFIGOUTPUTDIRECTORYconfig"
-		echo "$AWSCONFIGFILENAME"
+		echo "$BATCHAWSCONFIGFILE"
 		echo "-----------------------------------------------------------------------------------"
 		echo "10.a) Launch EC2 and run script directly:  ----------------------------------------"
 		echo "    -This option runs a script directly through ssh on the head node"

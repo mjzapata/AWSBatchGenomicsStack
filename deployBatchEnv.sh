@@ -60,7 +60,7 @@ print_help() {
     echo "-This script deploys an Amazon Web Services (AWS) cloudformation stack and 
     other resources necessary for using AWS Batch.  This script also saves the
     configuration of this stack to the local hidden directories:
-    \"~/.aws/\" and \"~/.nextflow/\""
+    \"~/.batchawsdeploy/\", \"~/.aws/\", and \"~/.nextflow/\""
     echo "-The dockerhub repository name creates the priviledged job definitions
     for nextflow.  These are necessary for EFS mounts. For multuple docker hub 
     repositories use the | pipe operator WITH QUOTES as shown below."
@@ -86,11 +86,12 @@ if [ "$ARGUMENT" == "help" ] || [ "$ARGUMENT" == "--help" ] || [ "$ARGUMENT" == 
 else
     if [ "$ARGUMENT" == "create" ] || [ "$ARGUMENT" == "delete" ]; then
         STACKNAME=$2
+        echo "STACKNAME: $STACKNAME"
 
         # Job Definition
         DOCKERREPOSEARCHSTRING=$3
         
-        #optional S3BUCKETNAME if it isn't created beforehandC
+        #optional S3BUCKETNAME if it isn't created beforehand
         S3BUCKETNAME=$4
         
         DOCKERRREPOVERSION="latest"
@@ -114,12 +115,12 @@ else
         AWSCONFIGOUTPUTDIRECTORY=~/.aws/
         mkdir -p $AWSCONFIGOUTPUTDIRECTORY
 
-        KEYNAME=${STACKNAME}KeyPair
-        KEYPATH=~/.batchawsdeploy/${KEYNAME}.pem
+        KEYNAME=${STACKNAME}
+        KEYPATH=~/.batchawsdeploy/key_${KEYNAME}.pem
 
         #Can check if this file already exists before proceeding?
-        AWSCONFIGFILENAME=~/.batchawsdeploy/${STACKNAME}.sh
-        echo "AWSCONFIGFILENAME=$AWSCONFIGFILENAME"
+        BATCHAWSCONFIGFILE=~/.batchawsdeploy/stack_${STACKNAME}.sh
+        echo "BATCHAWSCONFIGFILE=$BATCHAWSCONFIGFILE"
 
         #S3 buckets will NOT be deleted when running "deployBLJBatchEnv delete"
         #autogenerate is a keyword that creates a bucket named ${STACKNAME}{randomstring}, 
@@ -136,20 +137,20 @@ else
 
             #Create AWS config file and start writing values
             #this is duplicated in s3Tools.sh and deployBatchEnv.sh
-            if [ ! -f $AWSCONFIGFILENAME ]; then
-                touch "$AWSCONFIGFILENAME"
-                echo "#!/bin/bash" > $AWSCONFIGFILENAME
-                echo "" >> $AWSCONFIGFILENAME
-                echo "AWSCONFIGFILENAME=$AWSCONFIGFILENAME" >> $AWSCONFIGFILENAME
-                echo "REGION=$REGION" >> $AWSCONFIGFILENAME
+            if [ ! -f $BATCHAWSCONFIGFILE ]; then
+                touch "$BATCHAWSCONFIGFILE"
+                echo "#!/bin/bash" > $BATCHAWSCONFIGFILE
+                echo "" >> $BATCHAWSCONFIGFILE
+                echo "BATCHAWSCONFIGFILE=$BATCHAWSCONFIGFILE" >> $BATCHAWSCONFIGFILE
+                echo "REGION=$REGION" >> $BATCHAWSCONFIGFILE
             fi
 
-            #echo "AWS_PROFILE=$AWS_PROFILE" >> $AWSCONFIGFILENAME
-            echo "DOCKERREPOSEARCHSTRING=\"$DOCKERREPOSEARCHSTRING\"" >> $AWSCONFIGFILENAME
-            echo "DOCKERRREPOVERSION=$DOCKERRREPOVERSION" >> $AWSCONFIGFILENAME
-            echo "JOBVCPUS=$JOBVCPUS" >> $AWSCONFIGFILENAME
-            echo "JOBMEMORY=$JOBMEMORY" >> $AWSCONFIGFILENAME
-            echo "NEXTFLOWCONFIGOUTPUTDIRECTORY=$NEXTFLOWCONFIGOUTPUTDIRECTORY" >> $AWSCONFIGFILENAME
+            #echo "AWS_PROFILE=$AWS_PROFILE" >> $BATCHAWSCONFIGFILE
+            echo "DOCKERREPOSEARCHSTRING=\"$DOCKERREPOSEARCHSTRING\"" >> $BATCHAWSCONFIGFILE
+            echo "DOCKERRREPOVERSION=$DOCKERRREPOVERSION" >> $BATCHAWSCONFIGFILE
+            echo "JOBVCPUS=$JOBVCPUS" >> $BATCHAWSCONFIGFILE
+            echo "JOBMEMORY=$JOBMEMORY" >> $BATCHAWSCONFIGFILE
+            echo "NEXTFLOWCONFIGOUTPUTDIRECTORY=$NEXTFLOWCONFIGOUTPUTDIRECTORY" >> $BATCHAWSCONFIGFILE
 
           echo "COMMAND BEING RUN: createRolesAndComputeEnv.sh $STACKNAME $COMPUTEENVIRONMENTNAME $QUEUENAME $SPOTPERCENT $MAXCPU \
                     $DEFAULTAMI $CUSTOMAMIFOREFS $EBSVOLUMESIZEGB $EFSPERFORMANCEMODE $AWSCONFIGOUTPUTDIRECTORY \
@@ -158,12 +159,15 @@ else
                     $DEFAULTAMI $CUSTOMAMIFOREFS $EBSVOLUMESIZEGB $EFSPERFORMANCEMODE $AWSCONFIGOUTPUTDIRECTORY \
                     $NEXTFLOWCONFIGOUTPUTDIRECTORY $KEYNAME
 
-    	elif [ "$ARGUMENT" == "delete" ] && [ $# -eq 2 ]; then
+    	elif [ "$ARGUMENT" == "delete" ] && [ $# -gt 1 ]; then
             echo "this will take approximately three minutes"
             echo "deleting $STACKNAME  $COMPUTEENVIRONMENTNAME $QUEUENAME"
             
-            source $AWSCONFIGFILENAME
+            source $BATCHAWSCONFIGFILE
             # TODO: check for running EC2 instances
+            instanceFiles=~/.batchawsdeploy/instance_${STACKNAME}*
+            instanceFiles=(~/.batchawsdeploy/instance_${STACKNAME}*)
+
             # aws ec2 describe-network-interfaces --filters Name=group-id,Values=sg-0fb51f0752d394c02,
             # research how to use query vs filter: 
             # https://docs.aws.amazon.com/cli/latest/reference/ec2/describe-network-interfaces.html
@@ -172,15 +176,15 @@ else
             # EFS mount target for fs-56d23cb6 (fsmt-42d00fa3)
             echo "deleting job queue $QUEUENAME"
             aws batch update-job-queue --job-queue $QUEUENAME --state DISABLED
-            sleepProgressBar.sh 5 5
+            sleepProgressBar.sh 5 6
             aws batch delete-job-queue --job-queue $QUEUENAME
-            sleepProgressBar.sh 5 8
+            sleepProgressBar.sh 5 9
             #delete compute environment which is dependent on queue
             echo "deleting compute environment $COMPUTEENVIRONMENTNAME"
             aws batch update-compute-environment --compute-environment $COMPUTEENVIRONMENTNAME --state DISABLED
             sleepProgressBar.sh 5 6
             aws batch delete-compute-environment --compute-environment $COMPUTEENVIRONMENTNAME
-            sleepProgressBar.sh 5 8
+            sleepProgressBar.sh 5 9
             #delete cloudformation stack
 
             #delete job definition
@@ -191,8 +195,8 @@ else
             sleepProgressBar.sh 6 10
             awskeypair.sh delete $KEYNAME
 
-            rm $AWSCONFIGFILENAME
-            rm ${NEXTFLOWCONFIGOUTPUTDIRECTORY}config
+            rm $BATCHAWSCONFIGFILE
+            #rm ${NEXTFLOWCONFIGOUTPUTDIRECTORY}config
         else
             print_help
     	fi

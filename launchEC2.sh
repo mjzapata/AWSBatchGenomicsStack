@@ -10,15 +10,15 @@ print_help() {
 	"minimum number of arguments expected: $MIN_NUM_ARGUMENTS_EXPECTED"
 }
 
-if [ $# -gt 9 ]; then
+#if [ "$EC2RUNARGUMENT" == "delete" ]
+#fi
 
-	# IMAGETAG=ImageRole
-	# IMAGETAGVALUE=BLJManager
+if [ $# -gt 8 ]; then
 
 	STACKNAME=$1
-	AWSCONFIGFILENAME=~/.batchawsdeploy/${STACKNAME}.sh
-	source $AWSCONFIGFILENAME
-	echo "AWSCONFIGFILENAME=$AWSCONFIGFILENAME"
+	BATCHAWSCONFIGFILE=~/.batchawsdeploy/stack_${STACKNAME}.sh
+	source $BATCHAWSCONFIGFILE
+	echo "BATCHAWSCONFIGFILE=$BATCHAWSCONFIGFILE"
 	echo "BATCHAWSDEPLOY_HOME=$BATCHAWSDEPLOY_HOME"
 
 	TEMPLATEIMAGEID=$2
@@ -29,11 +29,21 @@ if [ $# -gt 9 ]; then
 	SECURITYGROUPS=$7
 	INSTANCENAME=$8
 	EC2RUNARGUMENT=$9
-	LAUNCHTEMPLATEID=${10}
-	SCRIPTNAME=${11}
-	AMIIDENTIFIER=${12}
-	IMAGETAG=${13}
-	IMAGETAGVALUE=${14}
+	#LAUNCHTEMPLATEID=${10}
+	LAUNCHTEMPLATEID=$HEADNODELAUNCHTEMPLATEID
+	SCRIPTNAME=${10}
+
+	AMIIDENTIFIER=${11}
+	IMAGETAG=${12}
+	IMAGETAGVALUE=${13}
+
+	# check if script is NOT in this directory
+	# set Scriptname to full path
+	if [ -f "${SCRIPTNAME}" ]; then
+		SCRIPTPATH=$SCRIPTNAME
+	else
+		SCRIPTPATH=${BATCHAWSDEPLOY_HOME}${SCRIPTNAME}
+	fi
 
 	#replace comma of Security groups with spaces
 	SECURITYGROUPS=`echo "$SECURITYGROUPS" | tr ',' ' '`
@@ -42,7 +52,6 @@ if [ $# -gt 9 ]; then
 	#TODO: more elegant way of choosing subnet
 	SUBNET=$(echo "$SUBNETS" | cut -f1 -d",")
 
-
 	instanceReachability=$(ipTools.sh describesgingress $STACKNAME)
 
 	if [ "$instanceReachability" == "No access to security group" ]; then
@@ -50,7 +59,6 @@ if [ $# -gt 9 ]; then
 		echo "please run: "
 		echo "  ipTools.sh updatesgingress $STACKNAME"
 		exit 1
-
 	fi
 	#run EC2 instances: https://docs.aws.amazon.com/cli/latest/reference/ec2/run-instances.html
 	# https://docs.aws.amazon.com/cli/latest/userguide/cli-ec2-launch.html
@@ -142,60 +150,80 @@ if [ $# -gt 9 ]; then
 	echo "]"
 	echo " Instance:  $instanceID  created in $systemtime seconds"
 
+	# create file to store variables related to instance
 	# get IP address, and hostname (#TODO, get public hostname)
 	instanceIPInternal=$(getinstance.sh $instanceID ipaddress)
-	echo "instanceIP=$instanceIP"
 	instanceHostNameInternal=$(getinstance.sh $instanceID hostname)
-	echo "instanceHostNameInternal=$instanceHostNameInternal"
 	instanceIPPublic=$(getinstance.sh $instanceID ipaddresspublic)
-	echo "instanceIP=$instanceIPPublic"
 	instanceHostNamePublic=$(getinstance.sh $instanceID hostnamepublic)
-	echo "instanceHostNamePublic=$instanceHostNamePublic"
+	instanceFile=~/.batchawsdeploy/instance_${STACKNAME}_$instanceHostNamePublic
+	touch $instanceFile
+	echo "#!/bin/bash" > $instanceFile
+	echo "instanceID=$instanceID" >> $instanceFile
+	echo "instanceIP=$instanceIP" >> $instanceFile
+	echo "instanceHostNameInternal=$instanceHostNameInternal" >> $instanceFile
+	echo "instanceIPPublic=$instanceIPPublic" >> $instanceFile
+	echo "instanceHostNamePublic=$instanceHostNamePublic" >> $instanceFile
 
 	#------------------------------------------------------------------------------------------------
 	#TODO: redo all input arguments and put an argument specifically for if I want to copy the configs
 	#TODO: change absolute paths
 	#------------------------------------------------------------------------------------------------
 
-	#remove previous hosts
+	#remove previous keys with this hostname
 	ssh-keygen -f "~/.ssh/known_hosts" -R $instanceHostNamePublic
 
 	if [ $EC2RUNARGUMENT != "createAMI" ]; then
-		# ssh ec2-user@${instanceHostNamePublic} -i ${KEYPATH} \
-		# -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no "mkdir -p /home/ec2-user/.aws/" \
-		# -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -o IdentitiesOnly=yes
 		# Docs on the proper way to ssh
 		# https://superuser.com/questions/187779/too-many-authentication-failures-for-username
 		# https://serverfault.com/questions/36291/how-to-recover-from-too-many-authentication-failures-for-user-root
 
 		# don't check identity on first connect
 		SSH_OPTIONS="-o IdentitiesOnly=yes" # -v
-
-		ssh ec2-user@${instanceHostNamePublic} -i ${KEYPATH} $SSH_OPTIONS -o StrictHostKeyChecking=no "mkdir -p /home/ec2-user/.aws/"
-		ssh ec2-user@${instanceHostNamePublic} -i ${KEYPATH} $SSH_OPTIONS "mkdir -p /home/ec2-user/.batchawsdeploy/"
-		ssh ec2-user@${instanceHostNamePublic} -i ${KEYPATH} $SSH_OPTIONS "mkdir -p /home/ec2-user/.nextflow/"
-
-		# AWS Configuration 
 		echo "Creating remote directories"
-		#scp -o UserKnownHostsFile=/dev/null -i ${KEYPATH} -o StrictHostKeyChecking=no 
-		#~/.batchawsdeploy/${STACKNAME}JobDefinitions.tsv ec2-user@${instanceHostNamePublic}:/home/ec2-user/.batchawsdeploy/
-		scp -i ${KEYPATH} $SSH_OPTIONS $AWSCONFIGFILENAME ec2-user@${instanceHostNamePublic}:/home/ec2-user/.batchawsdeploy/
-		scp -i ${KEYPATH} $SSH_OPTIONS $KEYPATH ec2-user@${instanceHostNamePublic}:/home/ec2-user/.batchawsdeploy/
-		scp -i ${KEYPATH} $SSH_OPTIONS ~/.aws/config ec2-user@${instanceHostNamePublic}:/home/ec2-user/.aws/
-		scp -i ${KEYPATH} $SSH_OPTIONS ~/.aws/credentials ec2-user@${instanceHostNamePublic}:/home/ec2-user/.aws/
+		ssh ec2-user@${instanceHostNamePublic} -i ${KEYPATH} $SSH_OPTIONS \
+		-o StrictHostKeyChecking=no "mkdir -p /home/ec2-user/.aws/"
+		ssh ec2-user@${instanceHostNamePublic} -i ${KEYPATH} $SSH_OPTIONS \
+		"mkdir -p /home/ec2-user/.batchawsdeploy/"
+		ssh ec2-user@${instanceHostNamePublic} -i ${KEYPATH} $SSH_OPTIONS \
+		"mkdir -p /home/ec2-user/.nextflow/"
 
-		# change environment
+		echo "Copying Necessary files for remote administration"
+		scp -i ${KEYPATH} $SSH_OPTIONS \
+		$BATCHAWSCONFIGFILE ec2-user@${instanceHostNamePublic}:/home/ec2-user/.batchawsdeploy/
+		scp -i ${KEYPATH} $SSH_OPTIONS \
+		$KEYPATH ec2-user@${instanceHostNamePublic}:/home/ec2-user/.batchawsdeploy/
+		scp -i ${KEYPATH} $SSH_OPTIONS \
+		~/.aws/config ec2-user@${instanceHostNamePublic}:/home/ec2-user/.aws/
+		scp -i ${KEYPATH} $SSH_OPTIONS \
+		~/.aws/credentials ec2-user@${instanceHostNamePublic}:/home/ec2-user/.aws/
+
+		# create an empty file named "environment_aws" to signify that this is an ec2 instance
 		touch dummyfile
 		scp -i ${KEYPATH} $SSH_OPTIONS dummyfile \
 		ec2-user@${instanceHostNamePublic}:/home/ec2-user/.batchawsdeploy/environment_aws
 		rm dummyfile
 
 		# Nextflow Configuration
-		scp -i ${KEYPATH} $SSH_OPTIONS ~/.nextflow/config ec2-user@${instanceHostNamePublic}:/home/ec2-user/.nextflow/
+		scp -i ${KEYPATH} $SSH_OPTIONS \
+		~/.nextflow/config ec2-user@${instanceHostNamePublic}:/home/ec2-user/.nextflow/
 
 		# Scripts for running the head node
 		#scp -i ${KEYPATH} launchEC2HeadNode.sh ec2-user@${instanceHostNamePublic}:/home/ec2-user/
-		scp -i ${KEYPATH} $SSH_OPTIONS startHeadNode.sh ec2-user@${instanceHostNamePublic}:/home/ec2-user/
+		scp -i ${KEYPATH} $SSH_OPTIONS \
+		startHeadNode.sh ec2-user@${instanceHostNamePublic}:/home/ec2-user/
+
+		echo "To re-connect to this instance later run:"
+		echo "ssh -i ${KEYPATH} ec2-user@${instanceHostNamePublic}"
+		echo "-------------------------------------------------------"
+		echo "To copy files to this instance run:"
+		echo "scp -i ${KEYPATH} MYFILENAME ec2-user@${instanceHostNamePublic}:/home/ec2-user/"
+		echo "-------------------------------------------------------"
+		echo "To shutdown this instance, exit the instance and run:"
+		echo "aws ec2 terminate-instances --instance-id $instanceID"
+		echo "-------------------------------------------------------"
+		echo "Connecting directly via ssh:"
+
 	fi
 
 	#6.) SSH into the host and run the configure script then close it and create an AMI based on this image
@@ -208,44 +236,41 @@ if [ $# -gt 9 ]; then
 	###########################################################
 	#########      EC2RunArgument=runscript           #########
 	###########################################################
-	if [[ $EC2RUNARGUMENT == "runscript" ]]; then
-		echo "instance running..."
+	if [[ $EC2RUNARGUMENT == "runscript_attached" ]]; then
+		echo "instance running in attached mode..."
 		ssh -i ${KEYPATH} ec2-user@${instanceHostNamePublic} $SSH_OPTIONS \
-			'bash -s' < ${SCRIPTNAME}
+			'bash -s' < ${SCRIPTPATH}
+	###########################################################
+	#######    EC2RunArgument=runscript_detached        #######
+	###########################################################
+	elif [[ $EC2RUNARGUMENT == "runscript_detached" ]]; then
+		echo "instance running in detached mode..."
+		#Copy the script for remote excution in detached mode
+		scp -i ${KEYPATH} $SSH_OPTIONS \
+                $SCRIPTPATH ec2-user@${instanceHostNamePublic}:/home/ec2-user/
+		ssh -i ${KEYPATH} ec2-user@${instanceHostNamePublic} $SSH_OPTIONS \
+			"./home/ec2-user/${SCRIPTNAME} </dev/null >/var/log/root-backup.log 2>&1 &"
 
-		echo "disconnected from instance: $EC2RUNARGUMENT"
+
+		#cat ${SCRIPTPATH} | ssh -i ${KEYPATH} ec2-user@${instanceHostNamePublic} $SSH_OPTIONS "./home/ec2-user/${SCRIPTNAME} </dev/null >/var/log/root-backup.log 2>&1 &"
+		cat ${SCRIPTPATH} | ssh -i ${KEYPATH} ec2-user@${instanceHostNamePublic} $SSH_OPTIONS 'bash -'
+
 	###########################################################
 	#######      EC2RunArgument=directconnect           #######
 	###########################################################
 	elif [[ $EC2RUNARGUMENT == "directconnect" ]]; then
-		echo "To re-connect to this instance later run:"
-		echo "ssh -i ${KEYPATH} ec2-user@${instanceHostNamePublic}"
-		echo "-------------------------------------------------------"
-		echo "To copy files to this instance run:"
-		echo "scp -i ${KEYPATH} MYFILENAME ec2-user@${instanceHostNamePublic}:/home/ec2-user/"
-		echo "-------------------------------------------------------"
-		echo "To shutdown this instance, exit the instance and run:"
-		echo "aws ec2 terminate-instances --instance-id $instanceID"
-		echo "-------------------------------------------------------"
-
-		echo "Connecting directly via ssh:"
-		ssh -i ${KEYPATH} ec2-user@${instanceHostNamePublic} $SSH_OPTIONS 
-
-		echo "disconnected from instance: $EC2RUNARGUMENT"
+		ssh -i ${KEYPATH} ec2-user@${instanceHostNamePublic} $SSH_OPTIONS
 	###########################################################
 	#########      EC2RunArgument=createAMI           #########
 	###########################################################
 	elif [[ $EC2RUNARGUMENT == "createAMI" ]]; then
 		echo "EC2RUNARGUMENT=$EC2RUNARGUMENT"
 		ssh -i ${KEYPATH} ec2-user@${instanceHostNamePublic} $SSH_OPTIONS \
-			'bash -s' < ${SCRIPTNAME}
+			'bash -s' < ${SCRIPTPATH}
 		echo "----------------------------------------"
 		echo "----------------------------------------"
 		echo "Check for any errors in the AMI creation:"
 
-		#run it with the script configureEC2forAMI.sh   
-		#https://stackoverflow.com/questions/305035/how-to-use-ssh-to-run-a-shell-script-on-a-remote-machine 
-		#    --description enter a description
 		imageID=$(aws ec2 create-image --instance-id $instanceID --name BLJAMI${AMIIDENTIFIER}-${EBSVOLUMESIZEGB}GB_DOCKER)
 		imageStatus=$(getec2images.sh $imageID status)
 		echo "Creating AMI. This may take a minute"
@@ -266,9 +291,7 @@ if [ $# -gt 9 ]; then
 		aws ec2 create-tags --resources $imageID --tags Key=$IMAGETAG,Value=$IMAGETAGVALUE
 		echo $imageID
 		aws ec2 terminate-instances --instance-ids $instanceID
-
 	fi
-
 
 else
 	print_help

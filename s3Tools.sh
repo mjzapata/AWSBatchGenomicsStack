@@ -2,42 +2,48 @@
 STACKNAME=$1
 ARGUMENT=$2
 
+createS3DirStructure="true"
+
 print_error(){
 	echo "This script accepts X arguments"
-	echo "Usage: s3Tools.sh create S3BUCKETNAME STACKNAME"
+	echo "Usage: 
+	s3Tools.sh create S3BUCKETNAME STACKNAME
+	s3Tools.sh STACKNAME list
+	s3Tools.sh STACKNAME get
+	s3Tools.sh STACKNAME copyToS3 FILENAME REMOTEFOLDER
+	s3Tools.sh STACKNAME syncToS3 LOCALFOLDER REMOTEFOLDER
+	s3Tools.sh STACKNAME syncFromS3 REMOTEFOLDER LOCALFOLDER"
 }
 
 if [ $# -gt 1 ]; then
 
-	AWSCONFIGFILENAME=~/.batchawsdeploy/${STACKNAME}.sh
-	source $AWSCONFIGFILENAME
-	           #Create AWS config file and start writing values
-            #this is duplicated in s3Tools.sh and deployBatchEnv.sh
-            if [ ! -f $AWSCONFIGFILENAME ]; then
-                touch "$AWSCONFIGFILENAME"
-                echo "#!/bin/bash" > $AWSCONFIGFILENAME
-                echo "" >> $AWSCONFIGFILENAME
-                echo "AWSCONFIGFILENAME=$AWSCONFIGFILENAME" >> $AWSCONFIGFILENAME
-            fi
+	BATCHAWSCONFIGFILE=~/.batchawsdeploy/stack_${STACKNAME}.sh
+	#Create AWS config file and start writing values
+    #this is duplicated in s3Tools.sh and deployBatchEnv.sh
+	if [ ! -f $BATCHAWSCONFIGFILE ]; then
+        touch "$BATCHAWSCONFIGFILE"
+        echo "#!/bin/bash" > $BATCHAWSCONFIGFILE
+        echo "" >> $BATCHAWSCONFIGFILE
+        echo "BATCHAWSCONFIGFILE=$BATCHAWSCONFIGFILE" >> $BATCHAWSCONFIGFILE
+        REGION=$(aws configure get region)
+        echo "REGION=$REGION"
+        echo "REGION=$REGION" >> $BATCHAWSCONFIGFILE
+    fi
+	source $BATCHAWSCONFIGFILE
+    #Create AWS config file and start writing values
+    #this is duplicated in s3Tools.sh and deployBatchEnv.sh
+    # if [ ! -f $BATCHAWSCONFIGFILE ]; then
+    #     touch "$BATCHAWSCONFIGFILE"
+    #     echo "#!/bin/bash" > $BATCHAWSCONFIGFILE
+    #     echo "" >> $BATCHAWSCONFIGFILE
+    #     echo "BATCHAWSCONFIGFILE=$BATCHAWSCONFIGFILE" >> $BATCHAWSCONFIGFILE
+    # fi
 
 	########################################
 	################ CREATE ################
 	########################################
 	if [ "$ARGUMENT" == "create" ]; then
 		S3BUCKETNAME=$3
-		#$STACKNAME #REGION #S3BUCKETNAME
-		REGION=$(aws configure get region)
-		echo "REGION=$REGION"
-
-        #Create AWS config file and start writing values
-        #this is duplicated in s3Tools.sh and deployBatchEnv.sh
-		if [ ! -f $AWSCONFIGFILENAME ]; then
-	        touch "$AWSCONFIGFILENAME"
-	        echo "#!/bin/bash" > $AWSCONFIGFILENAME
-	        echo "" >> $AWSCONFIGFILENAME
-	        echo "AWSCONFIGFILENAME=$AWSCONFIGFILENAME" >> $AWSCONFIGFILENAME
-	        echo "REGION=$REGION" >> $AWSCONFIGFILENAME
-        fi
 
 		########## AUTOGENERATE BUCKET NAME ##########
 		#TODO: rand generator not yet tested on LINUX:
@@ -84,8 +90,23 @@ if [ $# -gt 1 ]; then
 				echo "$s3CreateString"
 			fi
 		fi
-		echo "S3BUCKETNAME=$S3BUCKETNAME" >> $AWSCONFIGFILENAME
+		# https://stackoverflow.com/questions/36837975/how-to-create-folder-on-s3-from-ec2-instance
+		if [ $createS3DirStructure == "true" ]; then
+			echo "Creating S3 Directory Structure"
+			aws s3api put-object --bucket $S3BUCKETNAME --key projects/
+			aws s3api put-object --bucket $S3BUCKETNAME --key databases/
+			aws s3api put-object --bucket $S3BUCKETNAME --key /
+			aws s3api put-object --bucket $S3BUCKETNAME --key folder/
+		fi
+
+
+		echo "S3BUCKETNAME=$S3BUCKETNAME" >> $BATCHAWSCONFIGFILE
 		echo "S3BUCKETNAME=$S3BUCKETNAME"
+
+		S3BUCKETWEBADDRESS="https://s3.console.aws.amazon.com/s3/buckets/${S3BUCKETNAME}"
+		S3BUCKETFTPADDRESS="s3://${S3BUCKETNAME}"
+		echo "S3BUCKEADDRESS=$S3BUCKETADDRESS" >> $BATCHAWSCONFIGFILE
+		echo "S3BUCKEADDRESS=$S3BUCKETADDRESS"
 
 	########################################
 	################  LIST  ################
@@ -98,17 +119,33 @@ if [ $# -gt 1 ]; then
 	#################  GET  ################
 	########################################
 	elif [ "$ARGUMENT" == "get" ]; then
-		echo test
-
+		#echo test
+		echo "get"
+		s3Tools.sh $STACKNAME list
 	########################################
 	#################  CP  ################
 	########################################
-	elif [ "$ARGUMENT" == "copy" ]; then
+	elif [ "$ARGUMENT" == "copyToS3" ]; then
 		FILENAME=$3
 		FOLDER=$4
 		#NOTE, MUST put trailing slashes (/) on folder to signify that it is a folder, otherwise
 		# it will use the trailing characters as the filename.
 		aws s3 cp $FILENAME s3://$S3BUCKETNAME/$FOLDER
+
+	########################################
+	############  SYNC TO S3  ##############
+	########################################
+	elif [ "$ARGUMENT" == "syncToS3" ]; then
+		LOCALFOLDER=$3
+		REMOTEFOLDER=$4
+		aws s3 sync $LOCALFOLDER s3://${S3BUCKETNAME}/${REMOTEFOLDER}
+	########################################
+	###########  SYNC FROM S3  #############
+	########################################
+	elif [ "$ARGUMENT" == "syncFromS3" ]; then
+		REMOTEFOLDER=$3
+		LOCALFOLDER=$4
+		aws s3 sync s3://${S3BUCKETNAME}/${REMOTEFOLDER} $LOCALFOLDER
 
 	fi
 fi

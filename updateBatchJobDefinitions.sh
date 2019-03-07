@@ -16,8 +16,8 @@
 
 if [[ $# -eq 1 ]]; then
 	STACKNAME=$1
-	AWSCONFIGFILENAME=~/.batchawsdeploy/${STACKNAME}.sh
-	source $AWSCONFIGFILENAME
+	BATCHAWSCONFIGFILE=~/.batchawsdeploy/stack_${STACKNAME}.sh
+	source $BATCHAWSCONFIGFILE
 	dockersearchoutput=$(docker search "$DOCKERREPOSEARCHSTRING" | grep -E "^$DOCKERREPOSEARCHSTRING") #| grep $DOCKERREPOSEARCHSTRING)
 	
 	#special case to exclude some of the biolockj images from having job definitions created

@@ -31,8 +31,8 @@ if [ $# -eq 1 ]; then
 
 elif [ $# -gt 1 ] && [ $# -lt 4 ]; then
 	STACKNAME=$2
-	AWSCONFIGFILENAME=~/.batchawsdeploy/${STACKNAME}.sh
-	source $AWSCONFIGFILENAME
+	BATCHAWSCONFIGFILE=~/.batchawsdeploy/stack_${STACKNAME}.sh
+	source $BATCHAWSCONFIGFILE
 
 	MYPUBLICIPADDRESS=$(return_ip)
 

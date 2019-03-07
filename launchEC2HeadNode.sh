@@ -10,62 +10,60 @@
 # run the script once from a new IP
 # seperate instance for displaying data or just a seperate docker image?
 # seperate port for management console?
+print_error(){
+	echo "Usage: "
+	echo "launchEC2HeadNode.sh directconnect [STACKNAME] [INSTANCETYPE]"
+	echo "launchEC2HeadNode.sh runscript_attached [STACKNAME] [INSTANCETYPE] startHeadNodeGui.sh"
+	echo "launchEC2HeadNode.sh runscript_detached [STACKNAME] [INSTANCETYPE] startHeadNodeGui.sh"
+}
+if [ $# -gt 2 ]; then
+	EC2RUNARGUMENT=$1
+	STACKNAME=$2
 
+	BATCHAWSCONFIGFILE=~/.batchawsdeploy/stack_${STACKNAME}.sh
+	source $BATCHAWSCONFIGFILE
+	INSTANCETYPE=$3
+	SCRIPTNAME=$4
 
-EC2RUNARGUMENT=$1
-STACKNAME=$2
+else
+	print_error
+fi
 
-AWSCONFIGFILENAME=~/.batchawsdeploy/${STACKNAME}.sh
-source $AWSCONFIGFILENAME
-INSTANCETYPE=$3
-SCRIPTNAME=$4
+#directconnect
+if [ $# -eq 3 ] && [ "$EC2RUNARGUMENT" == "directconnect" ]; then
+	#TODO: might have to make more permissions to allow EFS mounting between security groups
+	#SECURITYGROUPS="$BASTIONSECURITYGROUP,$BATCHSECURITYGROUP"
+	SECURITYGROUPS="$BASTIONSECURITYGROUP"
 
-if [ $# -eq 3 ]; then
-	
-	#directconnect
-	if [ "$EC2RUNARGUMENT" == "directconnect" ]; then
+	echo "STACKNAME=$STACKNAME"
+	echo "INSTANCETYPE=$INSTANCETYPE"
+	echo "SECURITYGROUPS=$SECURITYGROUPS"
+	echo "IMAGEID=$IMAGEID"
+	INSTANCENAME="HeadNode"
+	echo "HEADNODELAUNCHTEMPLATEID=$HEADNODELAUNCHTEMPLATEID"
 
-		AWSCONFIGFILENAME=${BATCHAWSDEPLOY_HOME}${STACKNAME}.sh
-		source $AWSCONFIGFILENAME
+	launchEC2.sh $STACKNAME $IMAGEID $INSTANCETYPE $KEYNAME $EBSVOLUMESIZEGB \
+	$SUBNETS $SECURITYGROUPS $INSTANCENAME $EC2RUNARGUMENT
 
-		#TODO: might have to make more permissions to allow EFS mounting between security groups
-		#SECURITYGROUPS="$BASTIONSECURITYGROUP,$BATCHSECURITYGROUP"
-		SECURITYGROUPS="$BASTIONSECURITYGROUP"
+# runscript_attached or runscript_attached
+elif [ $# -eq 4 ];
+	if [ "$EC2RUNARGUMENT" == "runscript_detached" ] || [ "$EC2RUNARGUMENT" == "runscript_attached" ]; then
 
-		echo "STACKNAME=$STACKNAME"
-		echo "INSTANCETYPE=$INSTANCETYPE"
-		echo "SECURITYGROUPS=$SECURITYGROUPS"
-		echo "IMAGEID=$IMAGEID"
-		INSTANCENAME="HeadNode"
-		echo "HEADNODELAUNCHTEMPLATEID=$HEADNODELAUNCHTEMPLATEID"
-
-		launchEC2.sh $STACKNAME $IMAGEID $INSTANCETYPE $KEYNAME $EBSVOLUMESIZEGB \
-		$SUBNETS $SECURITYGROUPS $INSTANCENAME $EC2RUNARGUMENT $HEADNODELAUNCHTEMPLATEID
-
-	fi
-
-elif [ $# -eq 4 ]; then
-
-	if [ "$EC2RUNARGUMENT" == "runscript" ]; then
 		#LAUNCH HEAD NODE WITH SCRIPT
 		#launchEC2.sh $STACKNAME $IMAGEID $INSTANCETYPE $KEYNAME $EBSVOLUMESIZEGB \
 		# $AMIIDENTIFIER $IMAGETAG $IMAGETAGVALUE $SUBNETS $BASTIONSECURITYGROUP $MYPUBLICIPADDRESS \
 		# $EC2RUNARGUMENT startHeadNode.sh 
 		INSTANCENAME="HeadNode"
-		
-		AWSCONFIGFILENAME=${BATCHAWSDEPLOY_HOME}${STACKNAME}.sh
-		source $AWSCONFIGFILENAME
 
 		SECURITYGROUPS="$BASTIONSECURITYGROUP,$BATCHSECURITYGROUP"
 		echo "SECURITYGROUPS=$SECURITYGROUPS"
 
 		launchEC2.sh $STACKNAME $IMAGEID $INSTANCETYPE $KEYNAME $EBSVOLUMESIZEGB \
-		$SUBNETS $SECURITYGROUPS $INSTANCENAME $EC2RUNARGUMENT $HEADNODELAUNCHTEMPLATEID $SCRIPTNAME
+		$SUBNETS $SECURITYGROUPS $INSTANCENAME $EC2RUNARGUMENT $SCRIPTNAME
+	else
+		print_error
 	fi
-
 else
-	echo "Usage: "
-	echo "launchEC2HeadNode.sh directconnect [STACKNAME] [INSTANCETYPE]"
-	echo "launchEC2HeadNode.sh runscript [STACKNAME] [INSTANCETYPE] startHeadNode.sh"
+	print_error
 
 fi

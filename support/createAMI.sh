@@ -86,7 +86,7 @@ if [ $# -gt 12 ]; then
 	# run local script on remote host with ssh: https://stackoverflow.com/questions/305035/how-to-use-ssh-to-run-a-shell-script-on-a-remote-machine 
 	ssh -o UserKnownHostsFile=/dev/null \
 		-o StrictHostKeyChecking=no \
-		-i ${KEYNAME}.pem ec2-user@${instanceIP} \
+		-i key_${KEYNAME}.pem ec2-user@${instanceIP} \
 		'bash -s' < ${SCRIPTNAME} "${efsID}"
 	echo "----------------------------------------"
 	echo "----------------------------------------"
