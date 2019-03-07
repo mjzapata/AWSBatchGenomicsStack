@@ -91,27 +91,27 @@ if [ $# -gt 1 ]; then
 		# https://stackoverflow.com/questions/36837975/how-to-create-folder-on-s3-from-ec2-instance
 		if [ $createS3DirStructure == "createdirstructure" ]; then
 			echo "Creating S3 Directory Structure using s3Tools.sh"
-			MAINDIR="/BioSheperd/"
-			aws s3api put-object --bucket $S3BUCKETNAME --key ${MAINDIR}
-			aws s3api put-object --bucket $S3BUCKETNAME --key ${MAINDIR}pipelines/
-			aws s3api put-object --bucket $S3BUCKETNAME --key ${MAINDIR}datasets/
-			aws s3api put-object --bucket $S3BUCKETNAME --key ${MAINDIR}databases/
+			MAINDIR="BioSheperd"
 			aws s3api put-object --bucket $S3BUCKETNAME --key ${MAINDIR}/
-			aws s3api put-object --bucket $S3BUCKETNAME --key ${MAINDIR}meta/
-			aws s3api put-object --bucket $S3BUCKETNAME --key ${MAINDIR}primers/
+			aws s3api put-object --bucket $S3BUCKETNAME --key ${MAINDIR}/pipelines/
+			aws s3api put-object --bucket $S3BUCKETNAME --key ${MAINDIR}/datasets/
+			aws s3api put-object --bucket $S3BUCKETNAME --key ${MAINDIR}/databases/
+			aws s3api put-object --bucket $S3BUCKETNAME --key ${MAINDIR}/
+			aws s3api put-object --bucket $S3BUCKETNAME --key ${MAINDIR}/meta/
+			aws s3api put-object --bucket $S3BUCKETNAME --key ${MAINDIR}/primers/
 		fi
 
 
-		echo "S3BUCKETNAME=$S3BUCKETNAME" >> $BATCHAWSCONFIGFILE
-		echo "S3BUCKETNAME=$S3BUCKETNAME"
+	echo "S3BUCKETNAME=$S3BUCKETNAME" >> $BATCHAWSCONFIGFILE
+	echo "S3BUCKETNAME=$S3BUCKETNAME"
 
-		S3BUCKETWEBADDRESS="https://s3.console.aws.amazon.com/s3/buckets/${S3BUCKETNAME}"
-		echo "S3BUCKETWEBADDRESS=$S3BUCKETWEBADDRESS" >> $BATCHAWSCONFIGFILE
-		echo "S3BUCKETWEBADDRESS=$S3BUCKETWEBADDRESS"
+	S3BUCKETWEBADDRESS="https://s3.console.aws.amazon.com/s3/buckets/${S3BUCKETNAME}"
+	echo "S3BUCKETWEBADDRESS=$S3BUCKETWEBADDRESS" >> $BATCHAWSCONFIGFILE
+	echo "S3BUCKETWEBADDRESS=$S3BUCKETWEBADDRESS"
 
-		S3BUCKETS3ADDRESS="s3://${S3BUCKETNAME}"
-		echo "S3BUCKETS3ADDRESS=$S3BUCKETS3ADDRESS" >> $BATCHAWSCONFIGFILE
-		echo "S3BUCKETS3ADDRESS=$S3BUCKETS3ADDRESS"
+	S3BUCKETS3ADDRESS="s3://${S3BUCKETNAME}"
+	echo "S3BUCKETS3ADDRESS=$S3BUCKETS3ADDRESS" >> $BATCHAWSCONFIGFILE
+	echo "S3BUCKETS3ADDRESS=$S3BUCKETS3ADDRESS"
 
 	########################################
 	################  LIST  ################

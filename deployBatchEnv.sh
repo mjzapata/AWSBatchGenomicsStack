@@ -45,13 +45,16 @@ fi
 #aws s3 ls  "Authorization"  "Credentials"
 
 #3.) CHECK AWS CREDENTIALS
-testCredentials=$(aws iam get-user) 
-error=$?
-if [ $error != 0 ]; then
-    echo "AWS credentials error code: $error"
-    echo $testCredentials
-    exit 1
-fi
+configAWScredentials.sh validate
+#credentials=$(configAWScredentials.sh validate)
+#echo $credentials
+# testCredentials=$(aws iam get-user) 
+# error=$?
+# if [ $error != 0 ]; then
+#     echo "AWS credentials error code: $error"
+#     echo $testCredentials
+#     exit 1
+# fi
 
 
 ARGUMENT=$1
@@ -166,8 +169,9 @@ else
             source $BATCHAWSCONFIGFILE
             # TODO: check for running EC2 instances
             instanceFiles=~/.batchawsdeploy/instance_${STACKNAME}*
-            instanceFiles=(~/.batchawsdeploy/instance_${STACKNAME}*)
+            instanceFiles=$(~/.batchawsdeploy/instance_${STACKNAME}*)
 
+            # TODO: Check for network interfaces
             # aws ec2 describe-network-interfaces --filters Name=group-id,Values=sg-0fb51f0752d394c02,
             # research how to use query vs filter: 
             # https://docs.aws.amazon.com/cli/latest/reference/ec2/describe-network-interfaces.html
