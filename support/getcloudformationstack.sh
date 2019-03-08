@@ -53,21 +53,11 @@ if [ $# -gt 0 ]; then
 
 			#outputline=$(aws cloudformation describe-stacks --stack-name $STACKNAME | grep $ROLENAME
 			
-			outputvalues=$(aws cloudformation describe-stacks  \
+			outputvalues=$(aws cloudformation describe-stacks \
 			--stack-name $STACKNAME \
-			--query 'Stacks[*].[Outputs[*]]' | grep $ROLENAME | awk '{print $2}')
+			--query 'Stacks[*].[Outputs[*]]' \
+			| grep $ROLENAME | awk '{print $2}')
 			echo $outputvalues
-			# outputline=$(aws cloudformation describe-stacks --stack-name $STACKNAME | grep $ROLENAME)
-			# IFS=$'\n'
-			# for line in $outputline
-			# do
-			# 	#echo line
-			# 	IFS=$'\t'
-			# 	tmp=($line)
-			# 	outputvalues="${tmp[2]}"
-			# 	echo $outputvalues
-			# done | paste -s -d, /dev/stdin
-
 		fi
 	fi
 else
