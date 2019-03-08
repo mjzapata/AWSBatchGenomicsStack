@@ -1,12 +1,7 @@
 #!/bin/bash
 
-#1 argument, check and see if stack named (command argument) exists, if not ask if you want to create it
-# getlcloudformationstack.sh mystackname
-#2 arguments
-# getlcloudformationstack.sh mystackname 
-	# options:  ecsTaskRole    spotFleetRole    ecsInstanceRole   lambdaBatchExecutionRole   awsBatchServiceRole
 print_error(){
-echo "Your command line contains $# arguments"
+echo "Your command line contains $1 arguments"
 echo "Usage:  
 	getlcloudformationstack.sh mystackname                      
 		return values: stackexists, stackcreating, stackdoesnotexist
@@ -18,46 +13,55 @@ echo "Usage:
 		"
 }
 
-# 1.) if one argument is provided check the status of the stack
-if [ $# -eq 1 ]; then
-    STACKNAME=$1
-    #check if the stack exists
-    runoutput=$(aws cloudformation describe-stacks --stack-name $STACKNAME 2>&1 >/dev/null || true)
-    #runoutput=$(aws cloudformation describe-stacks --stack-name $STACKNAME 1>&2 || true)
-    echo $runoutput
-    echo $runoutput
-    stackexists=$(echo "$runoutput" | grep -c "does not exist")
-    if [ $stackexists -eq 0 ]; then
+check_stack_exists(){
+	STACKNAME=$1
+	runoutput=$(aws cloudformation describe-stacks --stack-name $STACKNAME 2>&1)
+	stackexists=$(echo "$runoutput" | grep -c "does not exist")
+	if [ $stackexists -eq 0 ]; then
     	stackcreatestatus=$(echo "$runoutput" | grep -c "CREATE_COMPLETE")
+    	stackcreateinprogressstatus=$(echo "$runoutput" | grep -c "CREATE_IN_PROGRESS")
     	if [ $stackcreatestatus -eq 1 ]; then
     		echo "stackexists"
-		else
+		elif [ $stackcreateinprogressstatus -eq 1 ]; then
     		echo "stackcreating"
+    	else
+    		echo "other error"
+    		view
     	fi
     else
     	echo "stackdoesnotexist"
     fi
+}
+
+# 1.) if one argument is provided check the status of the stack
+if [ $# -gt 0 ]; then
+	STACKNAME=$1
+
+	source ~/.batchawsdeploy/config
+	BATCHAWSCONFIGFILE=~/.batchawsdeploy/stack_${STACKNAME}.sh
+	source $BATCHAWSCONFIGFILE
+    #check if the stack exists
+    check_stack_exists $STACKNAME
 
 #2.) if two arguments are provided, check the identity of the the specified service role for that stack
-elif [ $# -eq 2 ]; then
-	STACKNAME=$1
-	ROLENAME=$2
-	if [ "$ROLENAME" == "output" ]; then
-		aws cloudformation describe-stacks --stack-name $STACKNAME
-	else
-		outputline=$(aws cloudformation describe-stacks --stack-name $STACKNAME | grep $ROLENAME)
-		IFS=$'\n'
-		for line in $outputline
-		do
-			#echo line
-			IFS=$'\t'
-			tmp=($line)
-			outputvalues="${tmp[2]}"
-			echo $outputvalues
-		done | paste -s -d, /dev/stdin
+	if [ $# -eq 2 ]; then
+		ROLENAME=$2
+		if [ "$ROLENAME" == "output" ]; then
+			aws cloudformation describe-stacks --stack-name $STACKNAME
+		else
+			outputline=$(aws cloudformation describe-stacks --stack-name $STACKNAME | grep $ROLENAME)
+			IFS=$'\n'
+			for line in $outputline
+			do
+				#echo line
+				IFS=$'\t'
+				tmp=($line)
+				outputvalues="${tmp[2]}"
+				echo $outputvalues
+			done | paste -s -d, /dev/stdin
 
+		fi
 	fi
 else
-	print_error
+	print_error $#
 fi
-
