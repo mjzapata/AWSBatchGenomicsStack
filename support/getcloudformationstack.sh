@@ -17,7 +17,7 @@ if [ $# -eq 1 ]; then
     	#the stack exists, now check if it's creation is complete
     	stackcreatestatus=$(echo "$runoutput" | grep -c "CREATE_COMPLETE")
     	if [ $stackcreatestatus -eq 1 ]; then
-    		echo "Stack exists"
+    		echo "stackexists"
 		else
     		echo "Stack $STACKNAME still being created"
     		#CREATE_IN_PROGRESS

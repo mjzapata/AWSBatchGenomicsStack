@@ -4,10 +4,13 @@ ARGUMENT=$2
 #S3BUCKETNAME=$3 (below)
 #createS3DirStructure=$4 (below)
 
+#TODO: clean up exists code that is replicated three times!
+
 print_error(){
 	echo "This script accepts X arguments"
 	echo "Usage:
 	s3Tools.sh listbuckets 
+	s3Tools.sh STACKNAME exist S3BUCKETNAME
 	s3Tools.sh STACKNAME create S3BUCKETNAME
 	s3Tools.sh STACKNAME list
 	s3Tools.sh STACKNAME get
@@ -15,10 +18,14 @@ print_error(){
 	s3Tools.sh STACKNAME syncToS3 LOCALFOLDER REMOTEFOLDER
 	s3Tools.sh STACKNAME syncFromS3 REMOTEFOLDER LOCALFOLDER"
 }
-
-if [ $STACKNAME == "listbuckets" ]; then
+if [ $# -gt 0 ]; then
+	if [ $STACKNAME == "listbuckets" ]; then
 	aws s3 ls
+	fi
+else
+	print_error
 fi
+BUCKETNAMESEPARATOR="-"
 
 if [ $# -gt 1 ]; then
 
@@ -55,7 +62,6 @@ if [ $# -gt 1 ]; then
 
 		IFS=$'\t' #necessary to get tabs to parse correctly
 		if [ $S3BUCKETNAME == 'autogenerate' ] || [ $S3BUCKETNAME == 'autocreate' ]; then
-			BUCKETNAMESEPARATOR="-"
 			nametocheck=${STACKNAMELOWERCASE}${BUCKETNAMESEPARATOR}
 			s3bucketlist="$(aws s3api list-buckets)"
 			matchingbucket=$(echo $s3bucketlist | grep BUCKETS | grep $nametocheck)
@@ -73,7 +79,7 @@ if [ $# -gt 1 ]; then
 				echo "$s3CreateString"
 			fi
 		else
-			nametocheck=$S3BUCKETNAME
+			nametocheck=${STACKNAMELOWERCASE}${BUCKETNAMESEPARATOR}
 			s3bucketlist=$(aws s3api list-buckets)
 			# grep -w to check for an exact match for the bucketname
 			matchingbucket=$(echo $s3bucketlist | grep -w $nametocheck)
@@ -113,6 +119,21 @@ if [ $# -gt 1 ]; then
 	echo "S3BUCKETS3ADDRESS=$S3BUCKETS3ADDRESS" >> $BATCHAWSCONFIGFILE
 	echo "S3BUCKETS3ADDRESS=$S3BUCKETS3ADDRESS"
 
+	########################################
+	##############  EXIST?  ################
+	########################################
+	elif [ "$ARGUMENT" == "exist" ]; then
+		nametocheck=$S3BUCKETNAME
+		#echo "$nametocheck"
+		s3bucketlist=$(aws s3api list-buckets)
+		# grep -w to check for an exact match for the bucketname
+		matchingbucket=$(echo $s3bucketlist | grep -w $nametocheck)
+		bucketexists=$(echo -n $matchingbucket | wc -m)
+		if [ $bucketexists -gt 1 ]; then
+			echo "bucketexists"
+		else
+			echo "no bucket found"
+		fi
 	########################################
 	################  LIST  ################
 	########################################

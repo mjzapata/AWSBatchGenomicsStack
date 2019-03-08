@@ -51,7 +51,7 @@ if [ $# -eq 12 ]; then
 	echo "DEFAULTAMI=$DEFAULTAMI"  >> $BATCHAWSCONFIGFILE
 
 	ACCOUNTID=$(getawsaccountid.sh)
-	stackstatus=$(getcloudformationstack.sh $STACKNAME)
+	#stackstatus=$(getcloudformationstack.sh $STACKNAME)
 	DESIREDCPUS=0 #this is the MINIMUM reserved CPUS
 	echo "DESIREDCPUS=$DESIREDCPUS" >> $BATCHAWSCONFIGFILE
 
@@ -113,7 +113,7 @@ if [ $# -eq 12 ]; then
 	echo "1.) Deploy Cloudformation Stack  -------------------------------------------------------------"
 	echo "----------------------------------------------------------------------------------------------"
 	stackstatus=$(getcloudformationstack.sh $STACKNAME)
-	if [ "$stackstatus" == "Stack exists" ]; then
+	if [ "$stackstatus" == "stackexists" ]; then
 		echo $stackstatus
 	else
 		createcloudformationstack.sh ${STACKNAME} $STACKFILE ParameterKey=\"NetworkAccessIP\",ParameterValue="$MYPUBLICIPADDRESS"
