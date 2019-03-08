@@ -28,7 +28,7 @@ if [ $# -eq 2 ]; then
 
 		echo "-----------------------------------------------------------------------------------------"
 		echo "Creating cloudformation stack $STACKNAME. this could take a few minutes..."
-		echo "https://console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks?filter=active"
+		echo "https://console.aws.amazon.com/cloudformation/home"
 		echo "-----------------------------------------------------------------------------------------"
 		# wait loop to check for creating.  could take a few minutes
 		# Then "Stack exists"
@@ -56,7 +56,7 @@ elif [[ $# -gt 2 ]]; then
 
 		echo "-----------------------------------------------------------------------------------------"
 		echo "Creating cloudformation stack $STACKNAME. this could take a few minutes..."
-		echo "https://console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks?filter=active"
+		echo "https://console.aws.amazon.com/cloudformation/home"
 		echo "-----------------------------------------------------------------------------------------"
 		# wait loop to check for creating.  could take a few minutes
 		# Then "Stack exists"
