@@ -16,20 +16,20 @@ echo"	getlcloudformationstack.sh mystackname outputvaluename
 
 check_stack_exists(){
 	STACKNAME=$1
-	runoutput=$(aws cloudformation describe-stacks --stack-name $STACKNAME 2>&1)
-	stackexists=$(echo "$runoutput" | grep -c "does not exist")
-	if [ $stackexists -eq 0 ]; then
-    	stackcreatestatus=$(echo "$runoutput" | grep -c "CREATE_COMPLETE")
-    	stackcreateinprogressstatus=$(echo "$runoutput" | grep -c "CREATE_IN_PROGRESS")
-    	if [ $stackcreatestatus -eq 1 ]; then
+	stackstatus=$(aws cloudformation describe-stacks \
+	--query 'Stacks[*].[StackName,StackStatus]' \
+	--output text | grep $STACKNAME | awk '{print $2}')
+	if [ ! -z $stackstatus ]; then
+    	if [ "$stackstatus" == "CREATE_COMPLETE" ]; then
     		echo "stackexists"
-		elif [ $stackcreateinprogressstatus -eq 1 ]; then
+		elif [ "$stackstatus" == "CREATE_IN_PROGRESS" ]; then
     		echo "stackcreating"
     	else
-		echo "-----------------------------------------------------------------------------------------"
-		echo "other error, view cloudformation status here:"
-		echo "https://console.aws.amazon.com/cloudformation/home"
-		echo "-----------------------------------------------------------------------------------------"
+			echo "---------------------------------------------------"
+			echo "StackStatus: $stackstatus"
+			echo "other error, view cloudformation status here:"
+			echo "https://console.aws.amazon.com/cloudformation/home"
+			echo "---------------------------------------------------"
     	fi
     else
     	echo "stackdoesnotexist"
@@ -50,16 +50,23 @@ if [ $# -gt 0 ]; then
 		if [ "$ROLENAME" == "output" ]; then
 			aws cloudformation describe-stacks --stack-name $STACKNAME
 		else
-			outputline=$(aws cloudformation describe-stacks --stack-name $STACKNAME | grep $ROLENAME)
-			IFS=$'\n'
-			for line in $outputline
-			do
-				#echo line
-				IFS=$'\t'
-				tmp=($line)
-				outputvalues="${tmp[2]}"
-				echo $outputvalues
-			done | paste -s -d, /dev/stdin
+
+			#outputline=$(aws cloudformation describe-stacks --stack-name $STACKNAME | grep $ROLENAME
+			
+			outputvalues=$(aws cloudformation describe-stacks  \
+			--stack-name $STACKNAME \
+			--query 'Stacks[*].[Outputs[*]]' | grep $ROLENAME | awk '{print $2}')
+			echo $outputvalues
+			# outputline=$(aws cloudformation describe-stacks --stack-name $STACKNAME | grep $ROLENAME)
+			# IFS=$'\n'
+			# for line in $outputline
+			# do
+			# 	#echo line
+			# 	IFS=$'\t'
+			# 	tmp=($line)
+			# 	outputvalues="${tmp[2]}"
+			# 	echo $outputvalues
+			# done | paste -s -d, /dev/stdin
 
 		fi
 	fi

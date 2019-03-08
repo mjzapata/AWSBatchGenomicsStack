@@ -41,21 +41,8 @@ if [ $(expr $awsmajor) -lt $awsmajor_required ] || \
     exit 1
 fi
 
-#TODO:
-#CHECK AWS CREDENTIALS
-#aws s3 ls  "Authorization"  "Credentials"
-
 #3.) CHECK AWS CREDENTIALS
 configAWScredentials.sh validate
-#credentials=$(configAWScredentials.sh validate)
-#echo $credentials
-# testCredentials=$(aws iam get-user) 
-# error=$?
-# if [ $error != 0 ]; then
-#     echo "AWS credentials error code: $error"
-#     echo $testCredentials
-#     exit 1
-# fi
 
 
 ARGUMENT=$1
