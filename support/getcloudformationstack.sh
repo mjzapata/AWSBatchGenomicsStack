@@ -5,6 +5,16 @@
 #2 arguments
 # getlcloudformationstack.sh mystackname 
 	# options:  ecsTaskRole    spotFleetRole    ecsInstanceRole   lambdaBatchExecutionRole   awsBatchServiceRole
+print_error(){
+echo "Your command line contains $# arguments"
+echo "Usage:  
+	getlcloudformationstack.sh mystackname                      
+		 returns: stackexists, stackcreating, stackdoesnotexist
+	getlcloudformationstack.sh mystackname output
+
+	getlcloudformationstack.sh mystackname outputvaluename
+		outputvaluename:  ecsTaskRole    spotFleetRole    ecsInstanceRole   lambdaBatchExecutionRole   awsBatchServiceRole"
+}
 
 # 1.) if one argument is provided check the status of the stack
 if [ $# -eq 1 ]; then
@@ -13,17 +23,14 @@ if [ $# -eq 1 ]; then
     runoutput=$(aws cloudformation describe-stacks --stack-name $STACKNAME 2>&1)
     stackexists=$(echo "$runoutput" | grep -c "does not exist")
     if [ $stackexists -eq 0 ]; then
-    	#TODO: Check all of the roles necessary actually exist.
-    	#the stack exists, now check if it's creation is complete
     	stackcreatestatus=$(echo "$runoutput" | grep -c "CREATE_COMPLETE")
     	if [ $stackcreatestatus -eq 1 ]; then
     		echo "stackexists"
 		else
-    		echo "Stack $STACKNAME still being created"
-    		#CREATE_IN_PROGRESS
+    		echo "stackcreating"
     	fi
     else
-    	echo "Stack does not exist"
+    	echo "stackdoesnotexist"
     fi
 
 #2.) if two arguments are provided, check the identity of the the specified service role for that stack
@@ -46,35 +53,8 @@ elif [ $# -eq 2 ]; then
 			echo $outputvalues
 		done | paste -s -d, /dev/stdin
 
-
-
-		# roleline=$(aws cloudformation describe-stacks --stack-name $STACKNAME | grep $ROLENAME)
-
-		# #when IFS (reserved variable) is a value other than default, tmp=($roleline)  gets parsed based on IFS
-		# IFS=$'\t'
-		# tmp=($roleline)
-		# roleID="${tmp[2]}"
-		# echo $roleID
-
-
 	fi
 else
-
-	echo "Your command line contains $# arguments"
-	echo "Usage:  getlcloudformationstack.sh mystackname                       #check if stack exists"
-	echo "Usage:  getlcloudformationstack.sh mystackname output                #get all outputs"
-	echo "Usage:  getlcloudformationstack.sh mystackname outputvaluename       #get value of specific output"
-	echo "outputvaluename:  ecsTaskRole    spotFleetRole    ecsInstanceRole   lambdaBatchExecutionRole   awsBatchServiceRole"
-	# if [ $# -lt 1 ]; then
-	# 	echo "Your command line contains $# arguments"
-	#     echo "Usage: \n  getlcloudformationstack.sh mystackname"
-	#     echo "Usage: \n  getlcloudformationstack.sh mystackname servicerolename"
-	
-	# elif [ $# -gt 2 ]; then
-	# 	echo "Your command line contains $# arguments"
-	#     echo "Usage: \n  getlcloudformationstack.sh mystackname servicerolename"
-	#     echo "Usage: \n  getlcloudformationstack.sh mystackname"
-	# fi
-
+	print_error
 fi
 

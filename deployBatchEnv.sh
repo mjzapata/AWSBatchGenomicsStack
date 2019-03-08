@@ -169,8 +169,8 @@ else
             
             source $BATCHAWSCONFIGFILE
             # TODO: check for running EC2 instances
-            instanceFiles=~/.batchawsdeploy/instance_${STACKNAME}*
-            instanceFiles=$(~/.batchawsdeploy/instance_${STACKNAME}*)
+            #instanceFiles=~/.batchawsdeploy/instance_${STACKNAME}*
+            #instanceFiles=$(~/.batchawsdeploy/instance_${STACKNAME}*)
 
             # TODO: Check for network interfaces
             # aws ec2 describe-network-interfaces --filters Name=group-id,Values=sg-0fb51f0752d394c02,

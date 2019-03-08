@@ -70,7 +70,7 @@ if [ $# -eq 12 ]; then
 	echo "COMPUTEENVPRIORITY=$COMPUTEENVPRIORITY"
 
 	#######################################################################################
-	#0.) S3 Bucket
+	# 0.a) S3 Bucket
 	# Check if S3 bucket with name beginning with $STACKNAME exists. If not, create it.
 	# Note: the S3 buckets must be GLOBALLY unique. 
 	# A random string is appended to the stackname to make duplicates less probably
@@ -99,8 +99,11 @@ if [ $# -eq 12 ]; then
 	MYPUBLICIPADDRESS=$(ipTools.sh getip)
 	echo "MYPUBLICIPADDRESS=$MYPUBLICIPADDRESS" >> $BATCHAWSCONFIGFILE
 
-	#1.) Check for key and create if it doesn't exist.  This is a keypair for ssh into EC2.
+	# 0.b)Check for key and create if it doesn't exist.  This is a keypair for ssh into EC2.
 	awskeypair.sh create $KEYNAME
+	KEYPATH=~/.batchawsdeploy/key_${KEYNAME}.pem
+	echo "KEYPATH=$KEYPATH"
+	echo "KEYPATH=$KEYPATH" >> $BATCHAWSCONFIGFILE
 	#TODO: 1.a) also create secret access key: aws iam create-access-key --user-name  for nextflow login instead of SSH
 	#option to create and delete one of these on every run for extra security??????
 	#TODO: https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_access-keys.html#Using_CreateAccessKey_CLIAPI
@@ -113,6 +116,8 @@ if [ $# -eq 12 ]; then
 	echo "1.) Deploy Cloudformation Stack  -------------------------------------------------------------"
 	echo "----------------------------------------------------------------------------------------------"
 	stackstatus=$(getcloudformationstack.sh $STACKNAME)
+	#"stackexists" is hardcoded in:
+	# createRolesAndComputeEnv.sh, 2x createcloudformationstack.sh, getcloudformationstack.sh
 	if [ "$stackstatus" == "stackexists" ]; then
 		echo $stackstatus
 	else
@@ -123,7 +128,7 @@ if [ $# -eq 12 ]; then
 	#1.b) check if stack exists once more
 	#######################################################################################
 	stackstatus=$(getcloudformationstack.sh $STACKNAME)
-	if [ "$stackstatus" == "Stack exists" ]; then
+	if [ "$stackstatus" == "stackexists" ]; then
 		SERVICEROLE=$(getcloudformationstack.sh $STACKNAME BatchServiceRoleArn)
 		echo "SERVICEROLE=$SERVICEROLE" >> $BATCHAWSCONFIGFILE
 		#TODO: check these aren't empty
@@ -265,12 +270,12 @@ echo -n '
 		echo "-----------------------------------------------------------------------------------"
 		echo "10.a) Launch EC2 and run script directly:  ----------------------------------------"
 		echo "    -This option runs a script directly through ssh on the head node"
-		echo "launchEC2HeadNode.sh runscript $STACKNAME t2.micro PATHTOMYSCRIPT.sh"
+		echo "launchEC2HeadNode.sh runscript $STACKNAME HeadNode t2.micro startHeadNodeGui.sh"
 		echo "-----------------------------------------------------------------------------------"		
 		echo "10.b) Launch EC2 and connect directly:  -------------------------------------------"
 		echo "     -This option runs an EC2 instance, copies associated credentials and"
 		echo "     creates an ssh connect directly to the headnode"
-		echo "launchEC2HeadNode.sh directconnect $STACKNAME t2.micro"
+		echo "launchEC2HeadNode.sh directconnect $STACKNAME HeadNode t2.micro"
 		echo "-----------------------------------------------------------------------------------"
 
 	else

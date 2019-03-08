@@ -5,8 +5,8 @@
 MIN_NUM_ARGUMENTS_EXPECTED=10
 
 print_help() {
-	echo -n "Usage: launchEC2.sh $STACKNAME $IMAGEID $INSTANCETYPE $KEYNAME $EBSVOLUMESIZEGB"
-	echo	"$SUBNETS $SECURITYGROUPS $INSTANCENAME $EC2RUNARGUMENT $HEADNODELAUNCHTEMPLATEID"
+	echo -n "Usage: launchEC2.sh STACKNAME IMAGEID INSTANCETYPE KEYNAME EBSVOLUMESIZEGB"
+	echo	"SUBNETS SECURITYGROUPS INSTANCENAME EC2RUNARGUMENT HEADNODELAUNCHTEMPLATEID"
 	"minimum number of arguments expected: $MIN_NUM_ARGUMENTS_EXPECTED"
 }
 
@@ -28,9 +28,9 @@ if [ $# -gt 8 ]; then
 	SUBNETS=$6
 	SECURITYGROUPS=$7
 	INSTANCENAME=$8
+	LAUNCHTEMPLATEID=$HEADNODELAUNCHTEMPLATEID
 	EC2RUNARGUMENT=$9
 	#LAUNCHTEMPLATEID=${10}
-	LAUNCHTEMPLATEID=$HEADNODELAUNCHTEMPLATEID
 	SCRIPTNAME=${10}
 
 	AMIIDENTIFIER=${11}
@@ -156,9 +156,10 @@ if [ $# -gt 8 ]; then
 	instanceHostNameInternal=$(getinstance.sh $instanceID hostname)
 	instanceIPPublic=$(getinstance.sh $instanceID ipaddresspublic)
 	instanceHostNamePublic=$(getinstance.sh $instanceID hostnamepublic)
-	instanceFile=~/.batchawsdeploy/instance_${STACKNAME}_$instanceHostNamePublic
+	instanceFile=~/.batchawsdeploy/instance_${STACKNAME}_${INSTANCENAME}_${instanceHostNamePublic}
 	touch $instanceFile
 	echo "#!/bin/bash" > $instanceFile
+	echo "INSTANCENAME=$INSTANCENAME" >> $instanceFile
 	echo "instanceID=$instanceID" >> $instanceFile
 	echo "instanceIP=$instanceIP" >> $instanceFile
 	echo "instanceHostNameInternal=$instanceHostNameInternal" >> $instanceFile
@@ -222,8 +223,6 @@ if [ $# -gt 8 ]; then
 		echo "To shutdown this instance, exit the instance and run:"
 		echo "aws ec2 terminate-instances --instance-id $instanceID"
 		echo "-------------------------------------------------------"
-		echo "Connecting directly via ssh:"
-
 	fi
 
 	#6.) SSH into the host and run the configure script then close it and create an AMI based on this image
@@ -237,14 +236,14 @@ if [ $# -gt 8 ]; then
 	#########      EC2RunArgument=runscript           #########
 	###########################################################
 	if [[ $EC2RUNARGUMENT == "runscript_attached" ]]; then
-		echo "instance running in attached mode..."
+		echo "SSH attached mode..."
 		ssh -i ${KEYPATH} ec2-user@${instanceHostNamePublic} $SSH_OPTIONS \
 			'bash -s' < ${SCRIPTPATH}
 	###########################################################
 	#######    EC2RunArgument=runscript_detached        #######
 	###########################################################
 	elif [[ $EC2RUNARGUMENT == "runscript_detached" ]]; then
-		echo "instance running in detached mode..."
+		echo "SSH detached mode..."
 		#Copy the script for remote excution in detached mode
 		scp -i ${KEYPATH} $SSH_OPTIONS \
                 $SCRIPTPATH ec2-user@${instanceHostNamePublic}:/home/ec2-user/
@@ -258,6 +257,7 @@ if [ $# -gt 8 ]; then
 	#######      EC2RunArgument=directconnect           #######
 	###########################################################
 	elif [[ $EC2RUNARGUMENT == "directconnect" ]]; then
+		echo "SSH direct connect"
 		ssh -i ${KEYPATH} ec2-user@${instanceHostNamePublic} $SSH_OPTIONS
 	###########################################################
 	#########      EC2RunArgument=createAMI           #########

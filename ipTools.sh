@@ -16,7 +16,6 @@ function print_help(){
 	echo "usage: ipTools.sh describesgingress STACKNAME"
 	echo "usage: ipTools.sh updatesgingress STACKNAME"
 	echo "usage: ipTools.sh updatesg STACKNAME 'description of location' "
-
 }
 
 function return_ip(){
