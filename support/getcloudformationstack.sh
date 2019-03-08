@@ -13,7 +13,6 @@ echo"	getlcloudformationstack.sh mystackname outputvaluename
 		return values: the id of the requested resource
 	"
 }
-
 check_stack_exists(){
 	STACKNAME=$1
 	stackstatus=$(aws cloudformation describe-stacks \
@@ -50,9 +49,6 @@ if [ $# -gt 0 ]; then
 		if [ "$ROLENAME" == "output" ]; then
 			aws cloudformation describe-stacks --stack-name $STACKNAME
 		else
-
-			#outputline=$(aws cloudformation describe-stacks --stack-name $STACKNAME | grep $ROLENAME
-			
 			outputvalues=$(aws cloudformation describe-stacks \
 			--stack-name $STACKNAME \
 			--query 'Stacks[*].[Outputs[*]]' \
