@@ -12,10 +12,10 @@
 # seperate port for management console?
 print_error(){
 echo "Usage: "
-echo " launchEC2HeadNode.sh exist [STACKNAME] [INSTANCENAME]"
-echo " launchEC2HeadNode.sh directconnect [STACKNAME] [INSTANCENAME] [INSTANCETYPE]"
-echo " launchEC2HeadNode.sh runscript_attached [STACKNAME] [INSTANCENAME] [INSTANCETYPE] startHeadNodeGui.sh"
-echo " launchEC2HeadNode.sh runscript_detached [STACKNAME] [INSTANCENAME] [INSTANCETYPE] startHeadNodeGui.sh"
+echo " launchEC2Node.sh exist [STACKNAME] [INSTANCENAME]"
+echo " launchEC2Node.sh directconnect [STACKNAME] [INSTANCENAME] [INSTANCETYPE]"
+echo " launchEC2Node.sh runscript_attached [STACKNAME] [INSTANCENAME] [INSTANCETYPE] startHeadNodeGui.sh"
+echo " launchEC2Node.sh runscript_detached [STACKNAME] [INSTANCENAME] [INSTANCETYPE] startHeadNodeGui.sh"
 }
 
 if [ $# -gt 2 ]; then

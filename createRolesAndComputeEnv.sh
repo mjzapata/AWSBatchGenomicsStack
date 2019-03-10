@@ -267,12 +267,12 @@ echo -n '
 		echo "-----------------------------------------------------------------------------------"
 		echo "10.a) Launch EC2 and run script directly:  ----------------------------------------"
 		echo "    -This option runs a script directly through ssh on the head node"
-		echo "launchEC2HeadNode.sh runscript $STACKNAME HeadNode t2.micro startHeadNodeGui.sh"
+		echo "launchEC2Node.sh runscript $STACKNAME HeadNode t2.micro startHeadNodeGui.sh"
 		echo "-----------------------------------------------------------------------------------"		
 		echo "10.b) Launch EC2 and connect directly:  -------------------------------------------"
 		echo "     -This option runs an EC2 instance, copies associated credentials and"
 		echo "     creates an ssh connect directly to the headnode"
-		echo "launchEC2HeadNode.sh directconnect $STACKNAME HeadNode t2.micro"
+		echo "launchEC2Node.sh directconnect $STACKNAME HeadNode t2.micro"
 		echo "-----------------------------------------------------------------------------------"
 
 	else
