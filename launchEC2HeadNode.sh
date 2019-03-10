@@ -45,21 +45,27 @@ if [ "$EC2RUNARGUMENT" == "exist" ]; then
 	    	--query "Reservations[*].Instances[*].[Placement.AvailabilityZone, State.Name, Name, InstanceId]" \
 	    	--output text | grep ${REGION} | grep running ) #| grep ${instanceID} | awk '{print $2}')
 	    	
+	    	#aws ec2 describe-instances \
+			#--query 'Reservations[].Instances[].{Name:Tags[?Key==`Name`]|[0].Value,PublicIP:PublicIpAddress}'
+
+			#query for instances
+			#instance state = running
+			#see key values on those instances
+			aws ec2 describe-instances \
+			--query 'Reservations[].Instances[].{Name:Tags[?Key==`Name`]|[0].Value}'
+
 	    	echo "instanceState=$instanceState"
 	    	
 	    	if [ "$instanceState" == "running" ]; then
-	    		echo "instance running"
-	    		echo "should connect to the instance"
+
+	    		echo "instance_up"
+	    		echo "connecting to the instance"
 	    		echo "check for ingress"
 
 
 	    	else
-	    		echo "instance is not running"
-
-
+	    		echo "instance_down"
 	    	fi
-			#ping -oc 100000 $instanceHostNamePublic > /dev/null && say "up" || say "down"
-			#ping -oc 100000 1.1.1.112 > /dev/null && say "up" || say "down"
 
 	    break
 	done

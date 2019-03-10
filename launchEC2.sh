@@ -10,9 +10,6 @@ print_help() {
 	"minimum number of arguments expected: $MIN_NUM_ARGUMENTS_EXPECTED"
 }
 
-#if [ "$EC2RUNARGUMENT" == "delete" ]
-#fi
-
 if [ $# -gt 8 ]; then
 
 	STACKNAME=$1

@@ -3,14 +3,14 @@
 print_error(){
 echo "Your command line contains $1 arguments"
 echo "Usage:  
-	getlcloudformationstack.sh mystackname                      
-		return values: stackexists, stackcreating, stackdoesnotexist
-	getlcloudformationstack.sh mystackname output
-		return values: ALL outputs explicitely specified in cloudformation yaml"
-echo"	getlcloudformationstack.sh mystackname outputvaluename
-		example outputvaluename arguments:  
-			ecsTaskRole, spotFleetRole, ecsInstanceRole, lambdaBatchExecutionRole, awsBatchServiceRole
-		return values: the id of the requested resource
+   getlcloudformationstack.sh mystackname                      
+	return values: stackexists, stackcreating, stackdoesnotexist
+  getlcloudformationstack.sh mystackname output
+	return values: ALL outputs explicitely specified in cloudformation yaml"
+echo"  getlcloudformationstack.sh mystackname outputvaluename
+	example outputvaluename arguments:  
+		ecsTaskRole, spotFleetRole, ecsInstanceRole, lambdaBatchExecutionRole, awsBatchServiceRole
+	return values: the id of the requested resource
 	"
 }
 check_stack_exists(){
@@ -49,11 +49,14 @@ if [ $# -gt 0 ]; then
 		if [ "$ROLENAME" == "output" ]; then
 			aws cloudformation describe-stacks --stack-name $STACKNAME
 		else
+			#replace newline with comma
 			outputvalues=$(aws cloudformation describe-stacks \
 			--stack-name $STACKNAME \
 			--query 'Stacks[*].[Outputs[*]]' \
-			| grep $ROLENAME | awk '{print $2}')
-			echo $outputvalues
+			| grep $ROLENAME | awk '{print $2}' | tr -s '\n' ',' )
+			#remove trailing comma
+			outputvalues=$(echo $outputvalues | sed 's/.$//')
+			echo "$outputvalues"
 		fi
 	fi
 else
