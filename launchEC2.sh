@@ -191,8 +191,11 @@ if [ $# -gt 8 ]; then
 		$BATCHAWSCONFIGFILE ec2-user@${instanceHostNamePublic}:/home/ec2-user/.batchawsdeploy/
 		scp -i ${KEYPATH} $SSH_OPTIONS \
 		$KEYPATH ec2-user@${instanceHostNamePublic}:/home/ec2-user/.batchawsdeploy/
-		scp -i ${KEYPATH} $SSH_OPTIONS \
-		~/.aws/config ec2-user@${instanceHostNamePublic}:/home/ec2-user/.aws/
+
+		#dont copy the config file
+		#scp -i ${KEYPATH} $SSH_OPTIONS \
+		#~/.aws/config ec2-user@${instanceHostNamePublic}:/home/ec2-user/.aws/
+		
 		scp -i ${KEYPATH} $SSH_OPTIONS \
 		~/.aws/credentials ec2-user@${instanceHostNamePublic}:/home/ec2-user/.aws/
 
@@ -201,6 +204,8 @@ if [ $# -gt 8 ]; then
 		scp -i ${KEYPATH} $SSH_OPTIONS dummyfile \
 		ec2-user@${instanceHostNamePublic}:/home/ec2-user/.batchawsdeploy/environment_aws
 		rm dummyfile
+
+
 
 		# Nextflow Configuration
 		scp -i ${KEYPATH} $SSH_OPTIONS \
