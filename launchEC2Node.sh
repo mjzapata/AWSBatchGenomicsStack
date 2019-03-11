@@ -12,10 +12,11 @@
 # seperate port for management console?
 print_error(){
 echo "Usage: "
-echo " launchEC2Node.sh exist [STACKNAME] [INSTANCENAME]"
-echo " launchEC2Node.sh directconnect [STACKNAME] [INSTANCENAME] [INSTANCETYPE]"
-echo " launchEC2Node.sh runscript_attached [STACKNAME] [INSTANCENAME] [INSTANCETYPE] startHeadNodeGui.sh"
-echo " launchEC2Node.sh runscript_detached [STACKNAME] [INSTANCENAME] [INSTANCETYPE] startHeadNodeGui.sh"
+echo "  launchEC2Node.sh property [STACKNAME] [INSTANCENAME] exist"
+echo "  launchEC2Node.sh property [STACKNAME] [INSTANCENAME] instanceHostNamePublic"
+echo "  launchEC2Node.sh directconnect [STACKNAME] [INSTANCENAME] [INSTANCETYPE]"
+echo "  launchEC2Node.sh runscript_attached [STACKNAME] [INSTANCENAME] [INSTANCETYPE] startHeadNodeGui.sh"
+echo "  launchEC2Node.sh runscript_detached [STACKNAME] [INSTANCENAME] [INSTANCETYPE] startHeadNodeGui.sh"
 }
 
 if [ $# -gt 2 ]; then
@@ -24,35 +25,44 @@ if [ $# -gt 2 ]; then
 	BATCHAWSCONFIGFILE=~/.batchawsdeploy/stack_${STACKNAME}.sh
 	source $BATCHAWSCONFIGFILE
 	INSTANCENAME=$3
-	INSTANCETYPE=$4
-	SCRIPTNAME=$5
-else
-	print_error
-fi
+	ARG4=$4
+	ARG5=$5
 
 #check for existence of HEAD Node
-if [ "$EC2RUNARGUMENT" == "exist" ]; then
+if [ "$EC2RUNARGUMENT" == "property" ]; then
+	PROPERTYNAME=$ARG4
 	#NOTE: Only allow one Node of type head node
-	HEADNODENAME="HeadNode"
-	ls ~/.batchawsdeploy/instance_${STACKNAME}_${HEADNODENAME}*
+	#HEADNODENAME="HeadNode"
+	#if -v
+		#ls ~/.batchawsdeploy/instance_${STACKNAME}_${HEADNODENAME}*
 	# https://stackoverflow.com/questions/6363441/check-if-a-file-exists-with-wildcard-in-shell-script
-	for f in ~/.batchawsdeploy/instance_${STACKNAME}_${HEADNODENAME}*; do
-	    [ -e "$f" ] && echo "HeadNode Instance File found" || echo "No HeadNode descriptor file found"
+
+	for f in ~/.batchawsdeploy/instance_${STACKNAME}_${INSTANCENAME}*; do
+		#[ -e "$f" ] && echo "HeadNode Instance File found" || echo "No HeadNode descriptor file found"
+	    [ -e "$f" ]
 	    	#check if the instance is still running
 	    	# https://stackoverflow.com/a/6119010
 	    	source $f
-	    	instanceState=$(aws ec2 describe-instances \
+	    	#echo $instanceID
+	    	instanceProperties=$(aws ec2 describe-instances \
 	    	--query "Reservations[*].Instances[*].[Placement.AvailabilityZone, State.Name, Name, InstanceId]" \
-	    	--output text | grep ${REGION} | grep running ) #| grep ${instanceID} | awk '{print $2}')
+	    	--output text | grep ${REGION} | grep running | grep ${instanceID}) # | awk '{print $2}')
 	    	
+
+	    	getinstance.sh $instanceID instanceID
+	    	# | awk '{print $2}')
 	    	#aws ec2 describe-instances \
 			#--query 'Reservations[].Instances[].{Name:Tags[?Key==`Name`]|[0].Value,PublicIP:PublicIpAddress}'
 
 			#query for instances
 			#instance state = running
 			#see key values on those instances
-			aws ec2 describe-instances \
-			--query 'Reservations[].Instances[].{Name:Tags[?Key==`Name`]|[0].Value}'
+			#instancename="test"
+			#instancename=$(aws ec2 describe-instances \
+			#--query 'Reservations[].Instances[].{Name:Tags[?Key==`Name`]|[0].Value}')
+			#echo $instancename
+			#echo $INSTANCENAME
+
 
 	    	echo "instanceState=$instanceState"
 	    	
@@ -61,8 +71,6 @@ if [ "$EC2RUNARGUMENT" == "exist" ]; then
 	    		echo "instance_up"
 	    		echo "connecting to the instance"
 	    		echo "check for ingress"
-
-
 	    	else
 	    		echo "instance_down"
 	    	fi
@@ -73,6 +81,9 @@ if [ "$EC2RUNARGUMENT" == "exist" ]; then
 #directconnect
 elif [ $# -eq 4 ] && [ "$EC2RUNARGUMENT" == "directconnect" ]; then
 	#SECURITYGROUPS="$BASTIONSECURITYGROUP,$BATCHSECURITYGROUP"
+	INSTANCETYPE=$ARG4
+	SCRIPTNAME=$ARG5
+
 	SECURITYGROUPS="$BASTIONSECURITYGROUP"
 
 	echo "STACKNAME=$STACKNAME"
@@ -87,6 +98,8 @@ elif [ $# -eq 4 ] && [ "$EC2RUNARGUMENT" == "directconnect" ]; then
 # runscript_attached or runscript_attached
 elif [ $# -eq 5 ]; then
 	if [ "$EC2RUNARGUMENT" == "runscript_detached" ] || [ "$EC2RUNARGUMENT" == "runscript_attached" ]; then
+		INSTANCETYPE=$ARG4
+		SCRIPTNAME=$ARG5
 
 		#LAUNCH HEAD NODE WITH SCRIPT
 		SECURITYGROUPS="$BASTIONSECURITYGROUP,$BATCHSECURITYGROUP"
@@ -97,6 +110,10 @@ elif [ $# -eq 5 ]; then
 	else
 		print_error
 	fi
+
+else
+	print_error
+fi
 
 else
 	print_error

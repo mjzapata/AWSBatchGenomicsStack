@@ -6,9 +6,9 @@
 #OUTPUTFORMAT=text
 #AWSACCESSKEYID=mysecretkeyid
 #AWSSECRETACCESSKEY=mysecretkey
-#writeAWScredentials.sh $PROFILE $REGION $OUTPUTFORMAT $AWSACCESSKEYID $AWSSECRETACCESSKEY
+#writeAWScredentials.sh write $PROFILE $REGION $OUTPUTFORMAT $AWSACCESSKEYID $AWSSECRETACCESSKEY
+source ~/.batchawsdeploy/config
 ARGUMENT=$1
-
 if [ $# -eq 1 ] && [ "$ARGUMENT" == "validate" ]; then
 	testCredentials=$(aws iam get-user) 
 	error=$?
@@ -26,7 +26,7 @@ elif [ $# -eq 6 ] && [ "$ARGUMENT" == "write" ]; then
 	OUTPUTFORMAT=$4
 	AWSACCESSKEYID=$5
 	AWSSECRETACCESSKEY=$6
-
+	
 	mkdir -p ~/.aws/
 	
 	#unlock the files
@@ -36,8 +36,11 @@ elif [ $# -eq 6 ] && [ "$ARGUMENT" == "write" ]; then
 	echo -e "[${PROFILE}]\naws_access_key_id = ${AWSACCESSKEYID}\naws_secret_access_key = ${AWSSECRETACCESSKEY}" > ~/.aws/credentials
 
 	#relock the files
-	echo "relocking the files"
+	#verbose
+		#echo "relocking the files"
 	chmod -R 600 ~/.aws/
+
+	configAWScredentials.sh validate
 else
 	echo "
 	Usage: configAWScredentials.sh validate

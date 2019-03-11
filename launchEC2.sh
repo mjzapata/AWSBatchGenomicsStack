@@ -149,7 +149,7 @@ if [ $# -gt 8 ]; then
 
 	# create file to store variables related to instance
 	# get IP address, and hostname (#TODO, get public hostname)
-	instanceIPInternal=$(getinstance.sh $instanceID ipaddress)
+	instanceIPInternal=$(getinstance.sh $instanceID "NetworkInterfaces[*].PrivateIpAddress")
 	instanceHostNameInternal=$(getinstance.sh $instanceID hostname)
 	instanceIPPublic=$(getinstance.sh $instanceID ipaddresspublic)
 	instanceHostNamePublic=$(getinstance.sh $instanceID hostnamepublic)
@@ -195,7 +195,7 @@ if [ $# -gt 8 ]; then
 		#dont copy the config file
 		#scp -i ${KEYPATH} $SSH_OPTIONS \
 		#~/.aws/config ec2-user@${instanceHostNamePublic}:/home/ec2-user/.aws/
-		
+
 		scp -i ${KEYPATH} $SSH_OPTIONS \
 		~/.aws/credentials ec2-user@${instanceHostNamePublic}:/home/ec2-user/.aws/
 
