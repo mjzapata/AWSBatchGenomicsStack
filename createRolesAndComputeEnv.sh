@@ -115,7 +115,7 @@ if [ $# -eq 11 ]; then
 	stackstatus=$(getcloudformationstack.sh $STACKNAME)
 	#"stackexists" is hardcoded in:
 	# createRolesAndComputeEnv.sh, 2x createcloudformationstack.sh, getcloudformationstack.sh
-	if [ "$stackstatus" == "stackexists" ]; then
+	if [ "$stackstatus" == "CREATE_COMPLETE" ]; then
 		echo $stackstatus
 	else
 		createcloudformationstack.sh ${STACKNAME} $STACKFILE ParameterKey=\"NetworkAccessIP\",ParameterValue="$MYPUBLICIPADDRESS"
@@ -125,7 +125,7 @@ if [ $# -eq 11 ]; then
 	#1.b) check if stack exists once more
 	#######################################################################################
 	stackstatus=$(getcloudformationstack.sh $STACKNAME)
-	if [ "$stackstatus" == "stackexists" ]; then
+	if [ "$stackstatus" == "CREATE_COMPLETE" ]; then
 		SERVICEROLE=$(getcloudformationstack.sh $STACKNAME BatchServiceRoleArn)
 		echo "SERVICEROLE=$SERVICEROLE" >> $BATCHAWSCONFIGFILE
 		#TODO: check these aren't empty
