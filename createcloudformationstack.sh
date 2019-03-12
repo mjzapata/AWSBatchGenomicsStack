@@ -73,7 +73,7 @@ if [ $# -gt 2 ]; then
 			if [ "$stackstatus" != "CREATE_IN_PROGRESS" ]; then
 				echo ""
 				echo "infrastructureScriptStatus=FAILURE"
-				#exit
+				exit
 			fi
 		done
 		echo ">"
