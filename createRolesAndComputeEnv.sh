@@ -261,6 +261,8 @@ echo -n '
 '
 		echo "--------------------------------------------------------------------------------------------------------------"
 		echo "--------------------------------------------------------------------------------------------------------------"
+		infrastructureScriptStatus=SUCCESS  #or FAILURE
+		echo "infrastructureScriptStatus=$infrastructureScriptStatus"
 		echo "9.) Configuration files saved to: "
 		echo "$NEXTFLOWCONFIGOUTPUTDIRECTORYconfig"
 		echo "$BATCHAWSCONFIGFILE"
