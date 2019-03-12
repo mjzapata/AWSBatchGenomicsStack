@@ -19,7 +19,7 @@ ARGUMENT=$2
 #none
 
 print_error(){
-	echo "Usage: getinstance.sh instanceID valuetoquery, such as ipaddress, hostname, status"
+	echo "Usage: getinstance.sh instanceID value to query, such as ipaddress, hostname, status"
 }
 
 # if [ "$ARGUMENT" == "ipaddress" ]; then
@@ -27,7 +27,25 @@ print_error(){
 # fi
 
 if [ $# -gt 1 ]; then
-aws ec2 describe-instances --instance-id $instanceID --query "Reservations[*].Instances[*].${ARGUMENT}"
+
+	if [ "$ARGUMENT" == "systemstatus" ]; then
+
+		instances=$(aws ec2 describe-instance-status --instance-ids $instanceID | grep "SYSTEMSTATUS")
+
+		IFS=$'\n'
+		for line in $instances
+		do
+			#echo $line
+			IFS=$'\t'
+			tmp=($line)
+			var="${tmp[1]}"
+			echo $var
+		done | paste -s -d, /dev/stdin
+	else
+		aws ec2 describe-instances --instance-id $instanceID --query "Reservations[*].Instances[*].${ARGUMENT}"
+	fi
+else
+	print_error
 fi
 
 
@@ -118,23 +136,7 @@ fi
 # 			var="${tmp[2]}"
 # 			echo $var
 # 		done | paste -s -d, /dev/stdin
-
-# 	#aws ec2 describe-instances --instance-id $instanceID --query "Reservations[*].Instances[*].State.Name"
-# 	elif [ "$ARGUMENT" == "systemstatus" ]; then		
-# 		instances=$(aws ec2 describe-instance-status --instance-ids $instanceID | grep "SYSTEMSTATUS")
-		
-# 		IFS=$'\n'
-# 		for line in $instances
-# 		do
-# 			#echo $line
-# 			IFS=$'\t'
-# 			tmp=($line)
-# 			var="${tmp[1]}"
-# 			echo $var
-# 		done | paste -s -d, /dev/stdin
-# 	else
-# 		#print_error
-# 	fi
+#  else
 # 	#print_error
 # fi
 

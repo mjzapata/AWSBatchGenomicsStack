@@ -11,12 +11,14 @@
 # seperate instance for displaying data or just a seperate docker image?
 # seperate port for management console?
 print_error(){
+echo "This script is for launching an EC2 node, usually a head node or bastion node."
 echo "Usage: "
-echo "  launchEC2Node.sh property [STACKNAME] [INSTANCENAME] exist"
-echo "  launchEC2Node.sh property [STACKNAME] [INSTANCENAME] instanceHostNamePublic"
-echo "  launchEC2Node.sh directconnect [STACKNAME] [INSTANCENAME] [INSTANCETYPE]"
-echo "  launchEC2Node.sh runscript_attached [STACKNAME] [INSTANCENAME] [INSTANCETYPE] startHeadNodeGui.sh"
-echo "  launchEC2Node.sh runscript_detached [STACKNAME] [INSTANCENAME] [INSTANCETYPE] startHeadNodeGui.sh"
+echo "  EC2Node.sh property [STACKNAME] [INSTANCENAME] exist"
+echo "  EC2Node.sh property [STACKNAME] [INSTANCENAME] instanceHostNamePublic"
+echo "  EC2Node.sh property [STACKNAME] [INSTANCENAME] instanceHostNamePublic"
+echo "  EC2Node.sh directconnect [STACKNAME] [INSTANCENAME] [INSTANCETYPE]"
+echo "  EC2Node.sh runscript_attached [STACKNAME] [INSTANCENAME] [INSTANCETYPE] startHeadNodeGui.sh"
+echo "  EC2Node.sh runscript_detached [STACKNAME] [INSTANCENAME] [INSTANCETYPE] startHeadNodeGui.sh"
 }
 
 if [ $# -gt 2 ]; then
@@ -47,33 +49,19 @@ if [ "$EC2RUNARGUMENT" == "property" ]; then
 	    	instanceProperties=$(aws ec2 describe-instances \
 	    	--query "Reservations[*].Instances[*].[Placement.AvailabilityZone, State.Name, Name, InstanceId]" \
 	    	--output text | grep ${REGION} | grep running | grep ${instanceID}) # | awk '{print $2}')
-	    	
 
-	    	getinstance.sh $instanceID instanceID
-	    	# | awk '{print $2}')
-	    	#aws ec2 describe-instances \
-			#--query 'Reservations[].Instances[].{Name:Tags[?Key==`Name`]|[0].Value,PublicIP:PublicIpAddress}'
-
-			#query for instances
-			#instance state = running
-			#see key values on those instances
-			#instancename="test"
-			#instancename=$(aws ec2 describe-instances \
-			#--query 'Reservations[].Instances[].{Name:Tags[?Key==`Name`]|[0].Value}')
-			#echo $instancename
-			#echo $INSTANCENAME
-
-
-	    	echo "instanceState=$instanceState"
-	    	
-	    	if [ "$instanceState" == "running" ]; then
-
-	    		echo "instance_up"
-	    		echo "connecting to the instance"
-	    		echo "check for ingress"
-	    	else
-	    		echo "instance_down"
+			if [ "$PROPERTYNAME" == "exist" ]; then
+				instanceState=$(getinstance.sh $instanceID State.Name)
+		    	if [ "$instanceState" == "running" ]; then
+		    		echo "running"
+		    		#echo "instance_up"
+		    		#echo "connecting to the instance"
+		    		#echo "check for ingress"
+		    	else
+		    		echo "instance_down"
+		    	fi
 	    	fi
+
 
 	    break
 	done

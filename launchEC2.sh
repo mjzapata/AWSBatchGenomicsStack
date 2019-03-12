@@ -150,9 +150,9 @@ if [ $# -gt 8 ]; then
 	# create file to store variables related to instance
 	# get IP address, and hostname (#TODO, get public hostname)
 	instanceIPInternal=$(getinstance.sh $instanceID "NetworkInterfaces[*].PrivateIpAddress")
-	instanceHostNameInternal=$(getinstance.sh $instanceID hostname)
-	instanceIPPublic=$(getinstance.sh $instanceID ipaddresspublic)
-	instanceHostNamePublic=$(getinstance.sh $instanceID hostnamepublic)
+	instanceHostNameInternal=$(getinstance.sh $instanceID PrivateDnsName)
+	instanceIPPublic=$(getinstance.sh $instanceID PublicIpAddress)
+	instanceHostNamePublic=$(getinstance.sh $instanceID PublicDnsName)
 	instanceFile=~/.batchawsdeploy/instance_${STACKNAME}_${INSTANCENAME}_${instanceHostNamePublic}
 	touch $instanceFile
 	echo "#!/bin/bash" > $instanceFile
