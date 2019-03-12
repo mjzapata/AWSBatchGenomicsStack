@@ -71,9 +71,11 @@ if [ $# -gt 2 ]; then
 			sleep 10s
 			totaltime=$((totaltime+5))
 			if [ "$stackstatus" != "CREATE_IN_PROGRESS" ]; then
-				echo ""
-				echo "infrastructureScriptStatus=FAILURE"
-				exit
+				if [ "$stackstatus" != "CREATE_COMPLETE" ]; then 
+					echo ""
+					echo "infrastructureScriptStatus=FAILURE"
+					exit
+				fi
 			fi
 		done
 		echo ">"
