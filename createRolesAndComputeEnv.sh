@@ -119,7 +119,6 @@ if [ $# -eq 11 ]; then
 		echo $stackstatus
 	else
 		createcloudformationstack.sh ${STACKNAME} $STACKFILE ParameterKey=\"NetworkAccessIP\",ParameterValue="$MYPUBLICIPADDRESS"
-		which createcloudformationstack.sh
 	fi
 	#######################################################################################
 	#1.b) check if stack exists once more

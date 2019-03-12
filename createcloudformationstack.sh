@@ -14,38 +14,38 @@ STACKNAME=$1
 STACKFILE=$2
 PARAMETERS=$3
 
-if [ $# -eq 2 ]; then
-	#if the second argument is delete instead of anything else, delete this stack
-	if [ $STACKFILE == "delete" ]; then
-		aws cloudformation delete-stack --stack-name $STACKNAME
-		echo "Stack $STACKNAME deleted"
-	else
+# if [ $# -eq 2 ]; then
+# 	#if the second argument is delete instead of anything else, delete this stack
+# 	if [ $STACKFILE == "delete" ]; then
+# 		aws cloudformation delete-stack --stack-name $STACKNAME
+# 		echo "Stack $STACKNAME deleted"
+# 	else
 
-		output=$(aws cloudformation create-stack \
-		--template-body file://${STACKFILE} \
-		--stack-name $STACKNAME \
-		--capabilities CAPABILITY_IAM)
+# 		output=$(aws cloudformation create-stack \
+# 		--template-body file://${STACKFILE} \
+# 		--stack-name $STACKNAME \
+# 		--capabilities CAPABILITY_IAM)
 
-		echo "-----------------------------------------------------------------------------------------"
-		echo "Creating cloudformation stack $STACKNAME. this could take a few minutes..."
-		echo "https://console.aws.amazon.com/cloudformation/home"
-		echo "-----------------------------------------------------------------------------------------"
-		# wait loop to check for creating.  could take a few minutes
-		# Then "Stack exists"
-		stackstatus=$(getcloudformationstack.sh $STACKNAME)
-		totaltime=0
-		while [ "$stackstatus" != "CREATE_COMPLETE" ]
-		do
-			stackstatus=$(getcloudformationstack.sh $STACKNAME) 
-			echo "."
-			sleep 10s
-			totaltime=$((totaltime+10))
-		done
-		echo " Stack $STACKNAME created in $totaltime seconds"
+# 		echo "-----------------------------------------------------------------------------------------"
+# 		echo "Creating cloudformation stack $STACKNAME. this could take a few minutes..."
+# 		echo "https://console.aws.amazon.com/cloudformation/home"
+# 		echo "-----------------------------------------------------------------------------------------"
+# 		# wait loop to check for creating.  could take a few minutes
+# 		# Then "Stack exists"
+# 		stackstatus=$(getcloudformationstack.sh $STACKNAME)
+# 		totaltime=0
+# 		while [ "$stackstatus" != "CREATE_COMPLETE" ]
+# 		do
+# 			stackstatus=$(getcloudformationstack.sh $STACKNAME) 
+# 			echo "."
+# 			sleep 10s
+# 			totaltime=$((totaltime+10))
+# 		done
+# 		echo " Stack $STACKNAME created in $totaltime seconds"
 
-	fi
+# 	fi
 
-elif [[ $# -gt 2 ]]; then
+if [ $# -gt 2 ]; then
 
 		echo "Parameters:  $PARAMETERS"
 		output=$(aws cloudformation create-stack \
@@ -62,14 +62,19 @@ elif [[ $# -gt 2 ]]; then
 		# Then "Stack exists"
 		stackstatus=$(getcloudformationstack.sh $STACKNAME)
 		totaltime=0
-		echo "|------------------------------------------|"
+		echo "|------------------------|"
 		echo -n "<"
 		while [ "$stackstatus" != "CREATE_COMPLETE" ]
 		do
 			stackstatus=$(getcloudformationstack.sh $STACKNAME) 
 			echo -n "."
-			sleep 5s
+			sleep 10s
 			totaltime=$((totaltime+5))
+			if [ $stackstatus != "CREATE_COMPLETE" ] || [ $stackstatus != "CREATE_IN_PROGRESS" ]; then
+				echo ""
+				echo "infrastructureScriptStatus=FAILURE"
+				exit
+			fi
 		done
 		echo ">"
 		echo "Stack $STACKNAME created in $totaltime seconds"
