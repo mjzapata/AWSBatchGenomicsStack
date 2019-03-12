@@ -18,7 +18,6 @@ check_stack_exists(){
 	stackstatus=$(aws cloudformation describe-stacks \
 	--query 'Stacks[*].[StackName,StackStatus]' \
 	--output text | grep $STACKNAME | awk '{print $2}')
-	echo $stackstatus
 
 	if [ ! -z $stackstatus ]; then
     	if [ "$stackstatus" == "CREATE_COMPLETE" ]; then
