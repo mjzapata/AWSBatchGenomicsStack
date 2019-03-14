@@ -92,6 +92,7 @@ if [ $# -eq 11 ]; then
 	#######################################################################################
 	#TODO: allow for custom stackfile
 	STACKFILE=${BATCHAWSDEPLOY_HOME}BLJStackEFS.yml
+	echo "STACKFILE=$STACKFILE"
 	echo "STACKFILE=$STACKFILE" >> $BATCHAWSCONFIGFILE
 
 	MYPUBLICIPADDRESS=$(ipTools.sh getip)
@@ -118,7 +119,9 @@ if [ $# -eq 11 ]; then
 	if [ "$stackstatus" == "CREATE_COMPLETE" ]; then
 		echo $stackstatus
 	else
-		createcloudformationstack.sh ${STACKNAME} $STACKFILE ParameterKey=\"NetworkAccessIP\",ParameterValue="$MYPUBLICIPADDRESS"
+		createcloudformationstack.sh ${STACKNAME} $STACKFILE ParameterKey=\"NetworkAccessIP\",ParameterValue="$MYPUBLICIPADDRESS" # \ 
+		#|| { echo "createcloudformationstack failed outside script"; exit 1; }
+		stackstatus=$(getcloudformationstack.sh $STACKNAME)
 	fi
 	#######################################################################################
 	#1.b) check if stack exists once more
@@ -263,7 +266,6 @@ echo -n '
 		infrastructureScriptStatus=SUCCESS  #or FAILURE
 		echo "infrastructureScriptStatus=$infrastructureScriptStatus"
 		echo "9.) Configuration files saved to: "
-		echo "$NEXTFLOWCONFIGOUTPUTDIRECTORYconfig"
 		echo "$BATCHAWSCONFIGFILE"
 		echo "-----------------------------------------------------------------------------------"
 		echo "10.a) Launch EC2 and run script directly:  ----------------------------------------"
@@ -275,16 +277,23 @@ echo -n '
 		echo "     creates an ssh connect directly to the headnode"
 		echo "launchEC2Node.sh directconnect $STACKNAME HeadNode t2.micro"
 		echo "-----------------------------------------------------------------------------------"
+		echo "CREATE_COMPLETE"
 
 	else
-		echo "stack could not be found or created"
+		#delete stack just in case
+		aws cloudformation delete-stack --stack-name $STACKNAME
+		#deleting key
+		echo "deleting keypair:"
+		awskeypair.sh delete $KEYNAME
+		echo "CREATE_FAILED stack could not be created"
+		exit 1
 	fi
 else
 	echo "Your command line contains $# arguments"
 	echo "usage: 12 arguments: "
 	echo -n " createRolesAndComputeEnv.sh STACKNAME COMPUTEENVIRONMENTNAME QUEUENAME SPOTPERCENT MAXCPU DEFAULTAMI "
 	echo "CUSTOMAMIFOREFS EBSVOLUMESIZEGB EFSPERFORMANCEMODE DOCKERREPOSEARCHSTRING"
-
+	exit 1
 fi
 
 #TODO: more error handling about creation of compute environmet and all necessary resources

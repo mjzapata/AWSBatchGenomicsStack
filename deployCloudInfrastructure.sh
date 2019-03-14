@@ -1,4 +1,5 @@
 #!/bin/bash
+#TODO: test stack create failure
 
 #TODO: Test that the IP addresss is getting assigned correctly
 #TODO: test that S3 is getting created correctly in both cases
@@ -18,28 +19,7 @@ fi
 source ~/.batchawsdeploy/config
 
 #2.) CHECK AWS VERSION
-#https://stackoverflow.com/questions/19915452/in-shell-split-a-portion-of-a-string-with-dot-as-delimiter
-#https://stackoverflow.com/questions/2342826/how-to-pipe-stderr-and-not-stdout
-#example:
-#aws-cli/1.16.25  Python/2.7.15rc1 Linux/4.9.125-linuxkit botocore/1.12.15 (OUTDATED)
-#aws-cli/1.16.114 Python/2.7.16rc1 Linux/4.9.125-linuxkit botocore/1.12.104
-versions=$(aws --version 2>&1 >/dev/null) # | grep -o '[^-]*$')
-echo "versions=$versions"
-awsversion=$(echo $versions | cut -d ' ' -f1 | cut -d '/' -f2)
-echo "current aws-cli version:  $awsversion"
-awsmajor=$(echo $awsversion | cut -d. -f1); awsmajor_required=1
-awsminor=$(echo $awsversion | cut -d. -f2); awsminor_required=16
-awsmicro=$(echo $awsversion | cut -d. -f3); awsmicro_required=65
-
-if [ $(expr $awsmajor) -lt $awsmajor_required ] || \
-    [ $(expr $awsminor) -lt $awsminor_required ] || \
-    [ $(expr $awsmicro) -lt $awsmicro_required ]; then
-    echo -n "minimum required version: "
-    echo "${awsmajor_required}.${awsminor_required}.${awsmicro_required}"
-    echo "aws command line tool outdated. please update."
-    echo "type \"aws --version\" for more information"
-    exit 1
-fi
+configAWScredentials.sh version
 
 #3.) CHECK AWS CREDENTIALS
 configAWScredentials.sh validate
@@ -59,13 +39,14 @@ print_help() {
     echo "-When the resources are no longer needed, run the delete command."
     echo "MYSTACKNAME must be alphanumeric.  No underscores."
     echo ""
-    echo "Usage: deployBatchEnv.sh help"
-    echo "Usage: deployBatchEnv.sh create MYSTACKNAME mydockerhubreponame1" #autogenerate"
-    echo "Usage: deployBatchEnv.sh create MYSTACKNAME mydockerhubreponame1" #MYS3BUCKETNAME"
-    echo -n "Usage: deployBatchEnv.sh create MYSTACKNAME "
+    echo "Usage: deployCloudinfastructure.sh help"
+    echo "Usage: deployCloudinfastructure.sh create MYSTACKNAME mydockerhubreponame1" #autogenerate"
+    echo "Usage: deployCloudinfastructure.sh create MYSTACKNAME mydockerhubreponame1" #MYS3BUCKETNAME"
+    echo -n "Usage: deployCloudinfastructure.sh create MYSTACKNAME "
     echo "\"mydockerhubreponame1|mydockerhubreponame2|mydockerhubreponame3\"" #MYS3BUCKETNAME"
-    echo "Usage: deployBatchEnv.sh delete MYSTACKNAME"
+    echo "Usage: deployCloudinfastructure.sh delete MYSTACKNAME"
     echo ""
+    echo "error: $1"
     exit 1
 }
 
@@ -119,10 +100,10 @@ else
 
     	if [ "$ARGUMENT" == "create" ] && [ $# -gt 2 ] && [ $# -lt 5 ]; then
             
-            #DEFAULTAMI=ami-06bec82fb46167b4f #IMAGES
             echo "Finding Latest Amazon Linux AMI ID..."
             #TODO: if is-empty, set a default, in case this breaks in the future. 
-            DEFAULTAMI=$(getLatestAMI.sh $REGION amzn2-ami-ecs-hvm 2019 x86_64)
+            DEFAULTAMI=ami-007571470797b8ffa
+            #DEFAULTAMI=$(getLatestAMI.sh $REGION amzn2-ami-ecs-hvm 2019 x86_64)
             echo "DEFAULTAMI=$DEFAULTAMI"
             echo ""
 
@@ -144,16 +125,16 @@ else
             echo "NEXTFLOWCONFIGOUTPUTDIRECTORY=$NEXTFLOWCONFIGOUTPUTDIRECTORY" >> $BATCHAWSCONFIGFILE
 
           echo "COMMAND BEING RUN: 
-            createRolesAndComputeEnv.sh $STACKNAME $COMPUTEENVIRONMENTNAME $QUEUENAME $SPOTPERCENT $MAXCPU \
+        createRolesAndComputeEnv.sh $STACKNAME $COMPUTEENVIRONMENTNAME $QUEUENAME $SPOTPERCENT $MAXCPU \
                     $DEFAULTAMI $CUSTOMAMIFOREFS $EBSVOLUMESIZEGB $EFSPERFORMANCEMODE \
                     $NEXTFLOWCONFIGOUTPUTDIRECTORY $KEYNAME"
     	   createRolesAndComputeEnv.sh $STACKNAME $COMPUTEENVIRONMENTNAME $QUEUENAME $SPOTPERCENT $MAXCPU \
                     $DEFAULTAMI $CUSTOMAMIFOREFS $EBSVOLUMESIZEGB $EFSPERFORMANCEMODE \
-                    $NEXTFLOWCONFIGOUTPUTDIRECTORY $KEYNAME
+                    $NEXTFLOWCONFIGOUTPUTDIRECTORY $KEYNAME || { echo "deploycloudinfastructure CREATE_FAILED"; exit 1; }
 
     	elif [ "$ARGUMENT" == "delete" ] && [ $# -gt 1 ]; then
-            echo "this will take approximately three minutes"
-            echo "deleting $STACKNAME  $COMPUTEENVIRONMENTNAME $QUEUENAME"
+            echo "this will take approximately three minutes:"
+            #echo "deleting $STACKNAME  $COMPUTEENVIRONMENTNAME $QUEUENAME"
             
             source $BATCHAWSCONFIGFILE
             # TODO: check for running EC2 instances
@@ -168,33 +149,52 @@ else
             # Network interface for Bastion Node
             # EFS mount target for fs-56d23cb6 (fsmt-42d00fa3)
             echo "deleting job queue $QUEUENAME"
-            aws batch update-job-queue --job-queue $QUEUENAME --state DISABLED
-            sleepProgressBar.sh 5 6
-            aws batch delete-job-queue --job-queue $QUEUENAME
-            sleepProgressBar.sh 5 9
+            batchTools.sh queue disableAndDelete $QUEUENAME
+
             #delete compute environment which is dependent on queue
             echo "deleting compute environment $COMPUTEENVIRONMENTNAME"
-            aws batch update-compute-environment --compute-environment $COMPUTEENVIRONMENTNAME --state DISABLED
-            sleepProgressBar.sh 5 6
-            aws batch delete-compute-environment --compute-environment $COMPUTEENVIRONMENTNAME
-            sleepProgressBar.sh 5 9
-            #delete cloudformation stack
+            batchTools.sh compute disableAndDelete $COMPUTEENVIRONMENTNAME
 
             #delete job definition
-            # aws batch deregister-job-definition 
+            # aws batch deregister-job-definition
             # get a list of all jobdefs that start with $STACKNAME
             echo "deleting cloudformation stack $STACKNAME"
             aws cloudformation delete-stack --stack-name $STACKNAME
-            sleepProgressBar.sh 6 10
+
+            stackstatus=$(getcloudformationstack.sh $STACKNAME)
+            echo "stackstatus=$stackstatus"
+            maxloop=15
+            loopnum=0
+            while [ "$stackstatus" != "NO_SUCH_STACK" ] && [ "$loopnum" -lt "$maxloop" ]
+            do
+                sleep 10
+                loopnum=$(expr $loopnum + 1)
+                #echo "loopnum=$loopnum"
+                stackstatus=$(getcloudformationstack.sh $STACKNAME)
+                #echo "stackstatus=$stackstatus"
+            done
+
             awskeypair.sh delete $KEYNAME
 
             rm $BATCHAWSCONFIGFILE
             #rm ${NEXTFLOWCONFIGOUTPUTDIRECTORY}config
+
+            #TODO: change to while loop
+            stackstatus=$(getcloudformationstack.sh $STACKNAME)
+            if [ "$stackstatus" == "NO_SUCH_STACK" ]; then 
+                echo "stackstatusFinal=$stackstatus"
+                echo "DELETE_COMPLETE"
+            else
+                echo "----------------------------------------------"
+                echo "For more information please see:"
+                echo "https://console.aws.amazon.com/cloudformation/"
+                echo "DELETE_FAILED"
+            fi
         else
             print_help
     	fi
     else
-        print_help
+        print_help "error: first argument must be: create, delete, or help"
     fi
 fi
 

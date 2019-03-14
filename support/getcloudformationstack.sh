@@ -3,17 +3,19 @@
 print_error(){
 echo "Your command line contains $1 arguments"
 echo "Usage:  
-   getlcloudformationstack.sh mystackname                      
+   getcloudformationstack.sh mystackname                      
 	return values: stackexists, stackcreating, stackdoesnotexist
-  getlcloudformationstack.sh mystackname output
+  getcloudformationstack.sh mystackname output
 	return values: ALL outputs explicitely specified in cloudformation yaml"
-echo"  getlcloudformationstack.sh mystackname outputvaluename
+echo"  getcloudformationstack.sh mystackname outputvaluename
 	example outputvaluename arguments:  
 		ecsTaskRole, spotFleetRole, ecsInstanceRole, lambdaBatchExecutionRole, awsBatchServiceRole
 	return values: the id of the requested resource
 	"
 }
+source ~/.batchawsdeploy/config
 check_stack_exists(){
+	#source ~/.batchawsdeploy/config
 	STACKNAME=$1
 	stackstatus=$(aws cloudformation describe-stacks \
 	--query 'Stacks[*].[StackName,StackStatus]' \
@@ -27,8 +29,9 @@ check_stack_exists(){
     	else
 			echo "---------------------------------------------------"
 			echo "StackStatus: $stackstatus"
-			echo "other error, view cloudformation status here:"
-			echo "https://console.aws.amazon.com/cloudformation/home"
+			getcloudformationstack.sh $STACKNAME events > ~/.batchawsdeploy/cloudformation_event_failure_log
+			echo "---------------------------------------------------"
+			getcloudformationstack.sh $STACKNAME failureevents
 			echo "---------------------------------------------------"
     	fi
     else
@@ -46,10 +49,18 @@ if [ $# -gt 0 ]; then
 	#2.) if two arguments are provided, check the identity of the the 
 	# specified service role for that stack
 	if [ $# -eq 2 ]; then
-		ROLENAME=$2
-		if [ "$ROLENAME" == "output" ]; then
+		ARGUMENT=$2
+		if [ "$ARGUMENT" == "output" ]; then
 			aws cloudformation describe-stacks --stack-name $STACKNAME
+		elif [ "$ARGUMENT" == "events" ]; then
+			aws cloudformation describe-stack-events --stack-name $STACKNAME
+		elif [ "$ARGUMENT" == "failureevents" ]; then
+			aws cloudformation describe-stack-events --stack-name $STACKNAME \
+			--query 'StackEvents[*].[ResourceStatus,ResourceStatusReason,StackName]' \
+			| grep CREATE_FAILED \
+			| grep -v "Resource creation cancelled"
 		else
+			ROLENAME=$ARGUMENT
 			#replace newline with comma
 			outputvalues=$(aws cloudformation describe-stacks \
 			--stack-name $STACKNAME \

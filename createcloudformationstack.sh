@@ -1,85 +1,60 @@
 #!/bin/bash
 
+#TODO: InternalAccessSecurityGroup
 
-#aws --region us-east-1 cloudformation create-stack --stack-name stackBLJ 
-		#--template-body file://Managed_EC2_and_Spot_Batch_Environment.json --capabilities CAPABILITY_IAM
-
-#InternalAccessSecurityGroup
-#aws cloudformation create-stack \
-#		--template-body file://${STACKFILE} \
-#		--stack-name $STACKNAME \
-#		--capabilities CAPABILITY_IAM \
-#		--parameters ParameterKey="NetworkAccessIP",ParameterValue="173.92.84.208/32"
 STACKNAME=$1
 STACKFILE=$2
 PARAMETERS=$3
 
-# if [ $# -eq 2 ]; then
-# 	#if the second argument is delete instead of anything else, delete this stack
-# 	if [ $STACKFILE == "delete" ]; then
-# 		aws cloudformation delete-stack --stack-name $STACKNAME
-# 		echo "Stack $STACKNAME deleted"
-# 	else
-
-# 		output=$(aws cloudformation create-stack \
-# 		--template-body file://${STACKFILE} \
-# 		--stack-name $STACKNAME \
-# 		--capabilities CAPABILITY_IAM)
-
-# 		echo "-----------------------------------------------------------------------------------------"
-# 		echo "Creating cloudformation stack $STACKNAME. this could take a few minutes..."
-# 		echo "https://console.aws.amazon.com/cloudformation/home"
-# 		echo "-----------------------------------------------------------------------------------------"
-# 		# wait loop to check for creating.  could take a few minutes
-# 		# Then "Stack exists"
-# 		stackstatus=$(getcloudformationstack.sh $STACKNAME)
-# 		totaltime=0
-# 		while [ "$stackstatus" != "CREATE_COMPLETE" ]
-# 		do
-# 			stackstatus=$(getcloudformationstack.sh $STACKNAME) 
-# 			echo "."
-# 			sleep 10s
-# 			totaltime=$((totaltime+10))
-# 		done
-# 		echo " Stack $STACKNAME created in $totaltime seconds"
-
-# 	fi
-
 if [ $# -gt 2 ]; then
+	echo "Parameters:  $PARAMETERS"
+	output=$(aws cloudformation create-stack \
+	--template-body file://${STACKFILE} \
+	--stack-name $STACKNAME \
+	--capabilities CAPABILITY_IAM \
+	--parameters $PARAMETERS)
+	errorcode=$?
+	if [ $errorcode != 0 ]; then
+		echo "$output"
+		echo "createcloudformation failed inside script, before submission: $errorcode"
+		echo "CREATE_FAILED"
+		exit $errorcode
+	else
+		echo "cloudformation submitted without error"
+		echo "$output"
+	fi
 
-		echo "Parameters:  $PARAMETERS"
-		output=$(aws cloudformation create-stack \
-		--template-body file://${STACKFILE} \
-		--stack-name $STACKNAME \
-		--capabilities CAPABILITY_IAM \
-		--parameters $PARAMETERS)
+	echo "-----------------------------------------------------------------------------------------"
+	echo "Creating cloudformation stack $STACKNAME. this could take a few minutes..."
+	echo "https://console.aws.amazon.com/cloudformation/home"
+	echo "-----------------------------------------------------------------------------------------"
+	
+	# wait loop to check for creating.  could take a few minutes
+	# Then "Stack exists"
+	stackstatus=$(getcloudformationstack.sh $STACKNAME)
+	totaltime=0
+	echo "|------------------------------------------------|"
+	echo -n "<"
+	while [ "$stackstatus" != "CREATE_COMPLETE" ]
+	do
+		stackstatus=$(getcloudformationstack.sh $STACKNAME) 
+		echo -n "."
+		sleep 5s
+		totaltime=$((totaltime+5))
+		#ROLLBACK_COMPLETE
+		if [ "$stackstatus" != "CREATE_IN_PROGRESS" ]; then
+			if [ "$stackstatus" != "CREATE_COMPLETE" ]; then
+				echo ""
+				echo "stackstatus=$stackstatus"
+				echo ""
 
-		echo "-----------------------------------------------------------------------------------------"
-		echo "Creating cloudformation stack $STACKNAME. this could take a few minutes..."
-		echo "https://console.aws.amazon.com/cloudformation/home"
-		echo "-----------------------------------------------------------------------------------------"
-		# wait loop to check for creating.  could take a few minutes
-		# Then "Stack exists"
-		stackstatus=$(getcloudformationstack.sh $STACKNAME)
-		totaltime=0
-		echo "|------------------------|"
-		echo -n "<"
-		while [ "$stackstatus" != "CREATE_COMPLETE" ]
-		do
-			stackstatus=$(getcloudformationstack.sh $STACKNAME) 
-			echo -n "."
-			sleep 10s
-			totaltime=$((totaltime+5))
-			if [ "$stackstatus" != "CREATE_IN_PROGRESS" ]; then
-				if [ "$stackstatus" != "CREATE_COMPLETE" ]; then 
-					echo ""
-					echo "infrastructureScriptStatus=FAILURE"
-					exit
-				fi
+				#echo "infrastructureScriptStatus=FAILURE"
+				exit 1
 			fi
-		done
-		echo ">"
-		echo "Stack $STACKNAME created in $totaltime seconds"
+		fi
+	done
+	echo ">"
+	echo "Stack $STACKNAME created in $totaltime seconds"
 
 else
 	echo "Usage: createcloudformation.sh [mystackname] delete  delete given stack (may take some time)"
