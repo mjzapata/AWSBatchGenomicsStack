@@ -7,4 +7,5 @@ testscript.sh
 nextflow/testprintnextflow/
 nextflow/testmultipledownloadgzip/
 nextflow/testnextflow/
-
+output.json
+test*

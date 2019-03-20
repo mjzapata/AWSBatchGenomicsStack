@@ -20,23 +20,23 @@
 
 SECONDS=0
 
-if [ $# -eq 11 ]; then
+if [ $# -eq 9 ]; then
 
 	STACKNAME=$1
 	source ~/.batchawsdeploy/config
 	BATCHAWSCONFIGFILE=~/.batchawsdeploy/stack_${STACKNAME}.sh
 	source $BATCHAWSCONFIGFILE
 
-	COMPUTEENVIRONMENTNAME=$2
-	QUEUENAME=$3
-	SPOTPERCENT=$4
-	MAXCPU=$5
-	DEFAULTAMI=$6
-	CUSTOMAMIFOREFS=$7
-	EBSVOLUMESIZEGB=$8
-	EFSPERFORMANCEMODE=$9
-	NEXTFLOWCONFIGOUTPUTDIRECTORY=${10}
-	KEYNAME=${11}
+	#COMPUTEENVIRONMENTNAME=$2
+	#QUEUENAME=$3
+	SPOTPERCENT=$2
+	MAXCPU=$3
+	DEFAULTAMI=$4
+	CUSTOMAMIFOREFS=$5
+	EBSVOLUMESIZEGB=$6
+	EFSPERFORMANCEMODE=$7
+	NEXTFLOWCONFIGOUTPUTDIRECTORY=$8
+	KEYNAME=$9
 	#VERBOSE=
 
 	echo "STACKNAME=$STACKNAME" >> $BATCHAWSCONFIGFILE
@@ -72,7 +72,6 @@ if [ $# -eq 11 ]; then
 	# Check if S3 bucket with name beginning with $STACKNAME exists. If not, create it.
 	# Note: the S3 buckets must be GLOBALLY unique. 
 	# A random string is appended to the stackname to make duplicates less probably
-	#
 	#######################################################################################
 	echo "----------------------------------------------------------------------"
 	echo "0.) S3 Bucket: "
@@ -80,8 +79,6 @@ if [ $# -eq 11 ]; then
 	#TODO: rand generator not yet tested on LINUX:
 	#  -https://stackoverflow.com/questions/2793812/generate-a-random-filename-in-unix-shell 
 	#TODO: set more permissions
-	#$STACKNAME
-	#S3BUCKETNAME
 	#check for BLJ bucket (TODO: turn this into a function)
 	if [ -z $S3BUCKETNAME ]; then
 		s3Tools.sh $STACKNAME create autogenerate createdirstructure
@@ -91,7 +88,7 @@ if [ $# -eq 11 ]; then
 	#STACK and Cloudformation Parameters 
 	#######################################################################################
 	#TODO: allow for custom stackfile
-	STACKFILE=${BATCHAWSDEPLOY_HOME}BLJStackEFS.yml
+	STACKFILE=${BATCHAWSDEPLOY_HOME}BLJStackEFSCompute.yml
 	echo "STACKFILE=$STACKFILE"
 	echo "STACKFILE=$STACKFILE" >> $BATCHAWSCONFIGFILE
 
@@ -173,43 +170,48 @@ if [ $# -eq 11 ]; then
 		################################################################################################
 		#2.) Create Batch Computing environment
 		####################################################################################################
-		echo "----------------------------------------------------------------------------------------------"
-		echo "2.) creating Compute Environment and Job Queue   ---------------------------------------------"
-		echo "creating compute environment: $COMPUTEENVIRONMENTNAME"
-		echo "----------------------------------------------------------------------------------------------"
-
-		COMPUTERESOURCES="type=SPOT,minvCpus=0,maxvCpus=$MAXCPU,desiredvCpus=$DESIREDCPUS,instanceTypes=optimal,
-		imageId=$IMAGEID,subnets=$SUBNETS,securityGroupIds=$BATCHSECURITYGROUP,ec2KeyPair=$KEYNAME,
-		instanceRole=$INSTANCEROLE,bidPercentage=$SPOTPERCENT,spotIamFleetRole=$IAMFLEETROLE,
-		launchTemplate={launchTemplateId=$BATCHNODELAUNCHTEMPLATEID}"
 		
-		COMPUTERESOURCES="$(echo -e "${COMPUTERESOURCES}" | tr -d '[:space:]')"
+		SPOTCOMPUTEENVIRONMENTNAME=$(getcloudformationstack.sh $STACKNAME ComputeEnvSpot)
+		JOBQUEUELOWPRIORITYNAME=$(getcloudformationstack.sh $STACKNAME JobQueueLowPriority)
+		echo "SPOTCOMPUTEENVIRONMENTNAME=$SPOTCOMPUTEENVIRONMENTNAME" >> $BATCHAWSCONFIGFILE
+		echo "JOBQUEUELOWPRIORITYNAME=$JOBQUEUELOWPRIORITYNAME" >> $BATCHAWSCONFIGFILE
+		# echo "----------------------------------------------------------------------------------------------"
+		# echo "2.) creating Compute Environment and Job Queue   ---------------------------------------------"
+		# echo "creating compute environment: $COMPUTEENVIRONMENTNAME"
+		# echo "----------------------------------------------------------------------------------------------"
+
+		# COMPUTERESOURCES="type=SPOT,minvCpus=0,maxvCpus=$MAXCPU,desiredvCpus=$DESIREDCPUS,instanceTypes=optimal,
+		# imageId=$IMAGEID,subnets=$SUBNETS,securityGroupIds=$BATCHSECURITYGROUP,ec2KeyPair=$KEYNAME,
+		# instanceRole=$INSTANCEROLE,bidPercentage=$SPOTPERCENT,spotIamFleetRole=$IAMFLEETROLE,
+		# launchTemplate={launchTemplateId=$BATCHNODELAUNCHTEMPLATEID}"
+		
+		# COMPUTERESOURCES="$(echo -e "${COMPUTERESOURCES}" | tr -d '[:space:]')"
 
 
-		echo "COMPUTEENVIRONMENTNAME=$COMPUTEENVIRONMENTNAME"
-		echo "SERVICEROLE=$SERVICEROLE"
-		echo "COMPUTERESOURCES=$COMPUTERESOURCES"
-		echo ""
-		#batchCreateOutput=$(aws batch create-compute-environment --compute-environment-name $COMPUTEENVIRONMENTNAME
-		# --type MANAGED --state ENABLED --service-role ${SERVICEROLE} --compute-resources "$COMPUTERESOURCES")
+		# echo "COMPUTEENVIRONMENTNAME=$COMPUTEENVIRONMENTNAME"
+		# echo "SERVICEROLE=$SERVICEROLE"
+		# echo "COMPUTERESOURCES=$COMPUTERESOURCES"
+		# echo ""
+		# #batchCreateOutput=$(aws batch create-compute-environment --compute-environment-name $COMPUTEENVIRONMENTNAME
+		# # --type MANAGED --state ENABLED --service-role ${SERVICEROLE} --compute-resources "$COMPUTERESOURCES")
 
-		batchCreateOutput=$(aws batch create-compute-environment --compute-environment-name $COMPUTEENVIRONMENTNAME \
-		--type MANAGED --state ENABLED --service-role ${SERVICEROLE} \
-		--compute-resources "$COMPUTERESOURCES")
-		echo "$batchCreateOutput"
-		sleepProgressBar.sh 3 4
+		# batchCreateOutput=$(aws batch create-compute-environment --compute-environment-name $COMPUTEENVIRONMENTNAME \
+		# --type MANAGED --state ENABLED --service-role ${SERVICEROLE} \
+		# --compute-resources "$COMPUTERESOURCES")
+		# echo "$batchCreateOutput"
+		# sleepProgressBar.sh 3 4
 
-		#######################################################################################
-		#2.a) Create Job Queue
-		#######################################################################################
-		echo "----------------------------------------------------------------------------------------------"
-		echo "creating Job Queue: $QUEUENAME"
-		queueCreateOutput=$(aws batch create-job-queue --job-queue-name $QUEUENAME \
-			--compute-environment-order order=0,computeEnvironment=$COMPUTEENVIRONMENTNAME  \
-			--priority $COMPUTEENVPRIORITY \
-			--state ENABLED)
-		echo $queueCreateOutput
-		echo "----------------------------------------------------------------------------------------------"
+		# #######################################################################################
+		# #2.a) Create Job Queue
+		# #######################################################################################
+		# echo "----------------------------------------------------------------------------------------------"
+		# echo "creating Job Queue: $QUEUENAME"
+		# queueCreateOutput=$(aws batch create-job-queue --job-queue-name $QUEUENAME \
+		# 	--compute-environment-order order=0,computeEnvironment=$COMPUTEENVIRONMENTNAME  \
+		# 	--priority $COMPUTEENVPRIORITY \
+		# 	--state ENABLED)
+		# echo $queueCreateOutput
+		# echo "----------------------------------------------------------------------------------------------"
 		#######################################################################################
 		#6.) Print success message
 		#######################################################################################
@@ -291,7 +293,7 @@ echo -n '
 else
 	echo "Your command line contains $# arguments"
 	echo "usage: 12 arguments: "
-	echo -n " createRolesAndComputeEnv.sh STACKNAME COMPUTEENVIRONMENTNAME QUEUENAME SPOTPERCENT MAXCPU DEFAULTAMI "
+	echo -n " createRolesAndComputeEnv.sh STACKNAME SPOTPERCENT MAXCPU DEFAULTAMI "
 	echo "CUSTOMAMIFOREFS EBSVOLUMESIZEGB EFSPERFORMANCEMODE DOCKERREPOSEARCHSTRING"
 	exit 1
 fi

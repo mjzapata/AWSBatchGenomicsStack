@@ -43,7 +43,7 @@ print_help() {
     echo "Usage: deployCloudinfastructure.sh create MYSTACKNAME mydockerhubreponame1" #autogenerate"
     echo "Usage: deployCloudinfastructure.sh create MYSTACKNAME mydockerhubreponame1" #MYS3BUCKETNAME"
     echo -n "Usage: deployCloudinfastructure.sh create MYSTACKNAME "
-    echo "\"mydockerhubreponame1|mydockerhubreponame2|mydockerhubreponame3\"" #MYS3BUCKETNAME"
+    echo "\"mydockerhubreponame1,mydockerhubreponame2,mydockerhubreponame3\"" #MYS3BUCKETNAME"
     echo "Usage: deployCloudinfastructure.sh delete MYSTACKNAME"
     echo ""
     echo "error: $1"
@@ -69,8 +69,8 @@ else
         JOBVCPUS=2      #can be overridden at runtime
         JOBMEMORY=1000  #can be overriden at runtime
 
-        COMPUTEENVIRONMENTNAME=${STACKNAME}ComputeEnv
-        QUEUENAME=${STACKNAME}Queue
+        #COMPUTEENVIRONMENTNAME=${STACKNAME}-ComputeEnvSpot
+        #QUEUENAME=${STACKNAME}-LowPriorityQueue
         SPOTPERCENT=80
         MAXCPU=1024
         EBSVOLUMESIZEGB=0
@@ -125,12 +125,13 @@ else
             echo "NEXTFLOWCONFIGOUTPUTDIRECTORY=$NEXTFLOWCONFIGOUTPUTDIRECTORY" >> $BATCHAWSCONFIGFILE
 
           echo "COMMAND BEING RUN: 
-        createRolesAndComputeEnv.sh $STACKNAME $COMPUTEENVIRONMENTNAME $QUEUENAME $SPOTPERCENT $MAXCPU \
+        createRolesAndComputeEnv.sh $STACKNAME $SPOTPERCENT $MAXCPU \
                     $DEFAULTAMI $CUSTOMAMIFOREFS $EBSVOLUMESIZEGB $EFSPERFORMANCEMODE \
                     $NEXTFLOWCONFIGOUTPUTDIRECTORY $KEYNAME"
-    	   createRolesAndComputeEnv.sh $STACKNAME $COMPUTEENVIRONMENTNAME $QUEUENAME $SPOTPERCENT $MAXCPU \
+    	   createRolesAndComputeEnv.sh $STACKNAME $SPOTPERCENT $MAXCPU \
                     $DEFAULTAMI $CUSTOMAMIFOREFS $EBSVOLUMESIZEGB $EFSPERFORMANCEMODE \
-                    $NEXTFLOWCONFIGOUTPUTDIRECTORY $KEYNAME || { echo "deploycloudinfastructure CREATE_FAILED"; exit 1; }
+                    $NEXTFLOWCONFIGOUTPUTDIRECTORY $KEYNAME \
+                    || { echo "deploycloudinfastructure CREATE_FAILED"; exit 1; }
 
     	elif [ "$ARGUMENT" == "delete" ] && [ $# -gt 1 ]; then
             echo "this will take approximately three minutes:"
@@ -148,12 +149,14 @@ else
             # DESCRIPTION
             # Network interface for Bastion Node
             # EFS mount target for fs-56d23cb6 (fsmt-42d00fa3)
-            echo "deleting job queue $QUEUENAME"
-            batchTools.sh queue disableAndDelete $QUEUENAME
+            
+            #echo "deleting job queue $QUEUENAME"
+            #batchTools.sh queue disableAndDelete $QUEUENAME
 
             #delete compute environment which is dependent on queue
-            echo "deleting compute environment $COMPUTEENVIRONMENTNAME"
-            batchTools.sh compute disableAndDelete $COMPUTEENVIRONMENTNAME
+            
+            #echo "deleting compute environment $COMPUTEENVIRONMENTNAME"
+            #batchTools.sh compute disableAndDelete $COMPUTEENVIRONMENTNAME
 
             #delete job definition
             # aws batch deregister-job-definition
@@ -162,7 +165,6 @@ else
             aws cloudformation delete-stack --stack-name $STACKNAME
 
             stackstatus=$(getcloudformationstack.sh $STACKNAME)
-            echo "stackstatus=$stackstatus"
             maxloop=15
             loopnum=0
             while [ "$stackstatus" != "NO_SUCH_STACK" ] && [ "$loopnum" -lt "$maxloop" ]
@@ -197,5 +199,3 @@ else
         print_help "error: first argument must be: create, delete, or help"
     fi
 fi
-
-

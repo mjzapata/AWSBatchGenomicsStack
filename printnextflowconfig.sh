@@ -3,6 +3,8 @@
 #printnextflowconfig BATCHAWSCONFIGFILE
 #https://stackoverflow.com/questions/918886/how-do-i-split-a-string-on-a-delimiter-in-bash
 
+#TODO: low priority queue is hardcoded.  add more labels to discern between queues
+
 if [ $# -eq 1 ]; then
 STACKNAME=$1
 BATCHAWSCONFIGFILE=~/.batchawsdeploy/stack_${STACKNAME}.sh
@@ -16,7 +18,7 @@ executor {
 }
 process {"
 images=$(grep "image_" $BATCHAWSCONFIGFILE)
-	echo "    queue = '$QUEUENAME'"
+	echo "    queue = '$JOBQUEUELOWPRIORITYNAME'"
 while read -r line; do
 	IFS='=' read -d '' -ra array < <(printf '%s\0' "$line")
 	echo "    withLabel: ${array[0]} {"

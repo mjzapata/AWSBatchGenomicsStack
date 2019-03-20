@@ -172,7 +172,11 @@ if [ $# -gt 1 ]; then
 		REMOTEFOLDER=$3
 		LOCALFOLDER=$4
 		aws s3 sync s3://${S3BUCKETNAME}/${REMOTEFOLDER} $LOCALFOLDER
-
 	fi
+
+	#processname
+	#rsync from S3 to EFS
+	# put a file to identify that directory is in use
+	#copy from EFS back to S3
 fi
 

@@ -186,11 +186,18 @@ if [ $# -gt 8 ]; then
 		ssh ec2-user@${instanceHostNamePublic} -i ${KEYPATH} $SSH_OPTIONS \
 		"mkdir -p /home/ec2-user/.nextflow/"
 
+		#https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-instance-metadata.html
+		echo "Setting instance public hostname"
+		ssh ec2-user@${instanceHostNamePublic} -i ${KEYPATH} $SSH_OPTIONS \
+		'PUBLICHOSTNAME=$(curl http://169.254.169.254/latest/meta-data/public-hostname)'
+
+
 		echo "Copying Necessary files for remote administration"
 		scp -i ${KEYPATH} $SSH_OPTIONS \
 		$BATCHAWSCONFIGFILE ec2-user@${instanceHostNamePublic}:/home/ec2-user/.batchawsdeploy/
 		scp -i ${KEYPATH} $SSH_OPTIONS \
 		$KEYPATH ec2-user@${instanceHostNamePublic}:/home/ec2-user/.batchawsdeploy/
+
 
 		#dont copy the config file
 		#scp -i ${KEYPATH} $SSH_OPTIONS \

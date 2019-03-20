@@ -18,6 +18,9 @@ if [[ $# -eq 1 ]]; then
 	STACKNAME=$1
 	BATCHAWSCONFIGFILE=~/.batchawsdeploy/stack_${STACKNAME}.sh
 	source $BATCHAWSCONFIGFILE
+	#replace commas with pipe
+	DOCKERREPOSEARCHSTRING=$(echo "$DOCKERREPOSEARCHSTRING" | echo "$DOCKERREPOSEARCHSTRING" | sed 's/,/\|/')
+	#find all associated batch jobs and register them
 	dockersearchoutput=$(docker search "$DOCKERREPOSEARCHSTRING" | grep -E "^$DOCKERREPOSEARCHSTRING") #| grep $DOCKERREPOSEARCHSTRING)
 	
 	#special case to exclude some of the biolockj images from having job definitions created
