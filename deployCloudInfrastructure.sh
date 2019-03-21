@@ -1,13 +1,4 @@
 #!/bin/bash
-#TODO: test stack create failure
-
-#TODO: Test that the IP addresss is getting assigned correctly
-#TODO: test that S3 is getting created correctly in both cases
-
-#need to capture output from each step and check for success?
-
-#also check if there are currently any instances using any of these resources?
-#get the ID and tell them to run the shutdown
 #AWS_PROFILE=batchcompute
 
 #1.) CHECK THAT INSTALL SCRIPT HAS BEEN RUN
@@ -61,7 +52,6 @@ else
 
         # Job Definition
         DOCKERREPOSEARCHSTRING=$3
-        
         #optional S3BUCKETNAME if it isn't created beforehand
         S3BUCKETNAME=$4
         
@@ -69,8 +59,6 @@ else
         JOBVCPUS=2      #can be overridden at runtime
         JOBMEMORY=1000  #can be overriden at runtime
 
-        #COMPUTEENVIRONMENTNAME=${STACKNAME}-ComputeEnvSpot
-        #QUEUENAME=${STACKNAME}-LowPriorityQueue
         SPOTPERCENT=80
         MAXCPU=1024
         EBSVOLUMESIZEGB=0
@@ -83,9 +71,6 @@ else
         #NEXTFLOWHOME
         NEXTFLOWCONFIGOUTPUTDIRECTORY=~/.nextflow/
         mkdir -p $NEXTFLOWCONFIGOUTPUTDIRECTORY
-        
-        #AWS_HOME
-        mkdir -p ~/.aws/
 
         KEYNAME=${STACKNAME}
         KEYPATH=~/.batchawsdeploy/key_${KEYNAME}.pem
@@ -94,19 +79,13 @@ else
         BATCHAWSCONFIGFILE=~/.batchawsdeploy/stack_${STACKNAME}.sh
         echo "BATCHAWSCONFIGFILE=$BATCHAWSCONFIGFILE"
 
-        #S3 buckets will NOT be deleted when running "deployBLJBatchEnv delete"
-        #autogenerate is a keyword that creates a bucket named ${STACKNAME}{randomstring}, 
-        #    eg. Stack1_oijergoi4itf94j94
-
     	if [ "$ARGUMENT" == "create" ] && [ $# -gt 2 ] && [ $# -lt 5 ]; then
-            
             echo "Finding Latest Amazon Linux AMI ID..."
             #TODO: if is-empty, set a default, in case this breaks in the future. 
             DEFAULTAMI=ami-007571470797b8ffa
             #DEFAULTAMI=$(getLatestAMI.sh $REGION amzn2-ami-ecs-hvm 2019 x86_64)
             echo "DEFAULTAMI=$DEFAULTAMI"
             echo ""
-
             #Create AWS config file and start writing values
             #this is duplicated in s3Tools.sh and deployBatchEnv.sh
             if [ ! -f $BATCHAWSCONFIGFILE ]; then
@@ -116,8 +95,6 @@ else
                 echo "BATCHAWSCONFIGFILE=$BATCHAWSCONFIGFILE" >> $BATCHAWSCONFIGFILE
                 echo "REGION=$REGION" >> $BATCHAWSCONFIGFILE
             fi
-
-            #echo "AWS_PROFILE=$AWS_PROFILE" >> $BATCHAWSCONFIGFILE
             echo "DOCKERREPOSEARCHSTRING=\"$DOCKERREPOSEARCHSTRING\"" >> $BATCHAWSCONFIGFILE
             echo "DOCKERREPOVERSION=$DOCKERREPOVERSION" >> $BATCHAWSCONFIGFILE
             echo "JOBVCPUS=$JOBVCPUS" >> $BATCHAWSCONFIGFILE
@@ -125,10 +102,10 @@ else
             echo "NEXTFLOWCONFIGOUTPUTDIRECTORY=$NEXTFLOWCONFIGOUTPUTDIRECTORY" >> $BATCHAWSCONFIGFILE
 
           echo "COMMAND BEING RUN: 
-        createRolesAndComputeEnv.sh $STACKNAME $SPOTPERCENT $MAXCPU \
+        deployCloudFormation.sh $STACKNAME $SPOTPERCENT $MAXCPU \
                     $DEFAULTAMI $CUSTOMAMIFOREFS $EBSVOLUMESIZEGB $EFSPERFORMANCEMODE \
                     $NEXTFLOWCONFIGOUTPUTDIRECTORY $KEYNAME"
-    	   createRolesAndComputeEnv.sh $STACKNAME $SPOTPERCENT $MAXCPU \
+    	   deployCloudFormation.sh $STACKNAME $SPOTPERCENT $MAXCPU \
                     $DEFAULTAMI $CUSTOMAMIFOREFS $EBSVOLUMESIZEGB $EFSPERFORMANCEMODE \
                     $NEXTFLOWCONFIGOUTPUTDIRECTORY $KEYNAME \
                     || { echo "deploycloudinfastructure CREATE_FAILED"; exit 1; }
@@ -150,20 +127,13 @@ else
             # Network interface for Bastion Node
             # EFS mount target for fs-56d23cb6 (fsmt-42d00fa3)
             
-            #echo "deleting job queue $QUEUENAME"
-            #batchTools.sh queue disableAndDelete $QUEUENAME
-
-            #delete compute environment which is dependent on queue
-            
-            #echo "deleting compute environment $COMPUTEENVIRONMENTNAME"
-            #batchTools.sh compute disableAndDelete $COMPUTEENVIRONMENTNAME
 
             #delete job definition
             # aws batch deregister-job-definition
             # get a list of all jobdefs that start with $STACKNAME
+
             echo "deleting cloudformation stack $STACKNAME"
             aws cloudformation delete-stack --stack-name $STACKNAME
-
             stackstatus=$(getcloudformationstack.sh $STACKNAME)
             maxloop=20
             loopnum=0
@@ -171,9 +141,7 @@ else
             do
                 sleep 10
                 loopnum=$(expr $loopnum + 1)
-                #echo "loopnum=$loopnum"
                 stackstatus=$(getcloudformationstack.sh $STACKNAME)
-                #echo "stackstatus=$stackstatus"
             done
 
             awskeypair.sh delete $KEYNAME

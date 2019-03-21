@@ -17,6 +17,8 @@
 # slightly higher latencies for most file operations. This can't be changed after the file system has been created.
 
 #TODO: error handling for compute environment and job queue that already exist
+#TO READ: https://docs.aws.amazon.com/cli/latest/userguide/cli-ec2-sg.html#configuring-a-security-group
+
 
 SECONDS=0
 
@@ -27,8 +29,6 @@ if [ $# -eq 9 ]; then
 	BATCHAWSCONFIGFILE=~/.batchawsdeploy/stack_${STACKNAME}.sh
 	source $BATCHAWSCONFIGFILE
 
-	#COMPUTEENVIRONMENTNAME=$2
-	#QUEUENAME=$3
 	SPOTPERCENT=$2
 	MAXCPU=$3
 	DEFAULTAMI=$4
@@ -112,7 +112,7 @@ if [ $# -eq 9 ]; then
 	echo "----------------------------------------------------------------------------------------------"
 	stackstatus=$(getcloudformationstack.sh $STACKNAME)
 	#"stackexists" is hardcoded in:
-	# createRolesAndComputeEnv.sh, 2x createcloudformationstack.sh, getcloudformationstack.sh
+	# deployCloudFormation.sh, 2x createcloudformationstack.sh, getcloudformationstack.sh
 	if [ "$stackstatus" == "CREATE_COMPLETE" ]; then
 		echo $stackstatus
 	else
@@ -235,11 +235,9 @@ if [ $# -eq 9 ]; then
 		echo "----------------------------------------------------------------------------------------------"
 		echo "3.) Create Job Definition  -------------------------------------------------------------------"
 		echo "----------------------------------------------------------------------------------------------"
-		#BLJBatchJobsDeployOutput=$(updateBatchJobDefinitions.sh $DOCKERREPOSEARCHSTRING $DOCKERRREPOVERSION 
-		#                          $JOBROLEARN $JOBVCPUS $JOBMEMORY $STACKNAME)  #$JOBDEFPREFIX
-		BLJBatchJobsDeployOutput=$(updateBatchJobDefinitions.sh $STACKNAME)
-		echo "$BLJBatchJobsDeployOutput"
-		echo "$BLJBatchJobsDeployOutput" >> $BATCHAWSCONFIGFILE
+		BatchJobsDeployOutput=$(updateBatchJobDefinitions.sh $STACKNAME)
+		echo "$BatchJobsDeployOutput"
+		echo "$BatchJobsDeployOutput" >> $BATCHAWSCONFIGFILE
 		echo "----------------------------------------------------------------------------------------------"
 
 		echo "----------------------------------------------------------------------------------------------"
@@ -293,23 +291,9 @@ echo -n '
 else
 	echo "Your command line contains $# arguments"
 	echo "usage: 12 arguments: "
-	echo -n " createRolesAndComputeEnv.sh STACKNAME SPOTPERCENT MAXCPU DEFAULTAMI "
+	echo -n " deployCloudFormation.sh STACKNAME SPOTPERCENT MAXCPU DEFAULTAMI "
 	echo "CUSTOMAMIFOREFS EBSVOLUMESIZEGB EFSPERFORMANCEMODE DOCKERREPOSEARCHSTRING"
 	exit 1
 fi
 
-#TODO: more error handling about creation of compute environmet and all necessary resources
-#TODO: See error screenshot created 2018-10-24- Around 12:58pm  Wrong ECSInstance role???!
-#TODO: Check for errors occassionally in malformed Environment or Queue (see screenshot and compute environment 10?  "Status")
-
-#TODO: fix arn gets from cloudformation output
-#TODO: check that all instance profiles and roles exist in advance.
-
-#TODO: try putting the key parameter back into the batch
-
-# important note: not having S3 access in the original template was causing S3 puts to fail from nextflow running on the instance:
-# https://groups.google.com/forum/#!msg/nextflow/87hI5C831Ok/2pgdP5FOBwAJ
-
-#createRolesAndComputeEnv.sh BLJStack1 BLJComputeEnvironment1 BLJQueue1 60 1024
-#TO READ: https://docs.aws.amazon.com/cli/latest/userguide/cli-ec2-sg.html#configuring-a-security-group
 

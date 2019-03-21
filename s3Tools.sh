@@ -4,7 +4,9 @@ ARGUMENT=$2
 #S3BUCKETNAME=$3 (below)
 #createS3DirStructure=$4 (below)
 
-#TODO: clean up exists code that is replicated three times!
+#TODO: clean up existing code that is replicated three times!
+#autogenerate is a keyword that creates a bucket named ${STACKNAME}{randomstring}, 
+#    eg. Stack1_oijergoi4itf94j94
 
 print_error(){
 	echo "This script accepts X arguments"
