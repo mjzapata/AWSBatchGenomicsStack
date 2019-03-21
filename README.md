@@ -5,7 +5,8 @@ To run:
 
 1.) Make sure docker, awscli, and git are installed on your computer or virtual environment (macOS or Linux only for now).
 
-2.) Create an Amazon Web Services Account and create a root key pair.  Write them down, as you will not be able to retrieve them later.
+2.) Create an Amazon Web Services Account and create a root key pair.  Write them down or store them somewhere secure, as you will not be able to retrieve them later.
+  -Go to this page and select "Access Keys": https://console.aws.amazon.com/iam/home?#/security_credentials 
 
 3.) Run the following command from a command prompt to login to your AWS account from the console
 

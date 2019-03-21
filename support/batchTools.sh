@@ -1,4 +1,5 @@
 #!/bin/bash
+#TODO: depricated with BLJStackEFSCompute.yml
 
 ARGUMENT1=$1
 ARGUMENT2=$2

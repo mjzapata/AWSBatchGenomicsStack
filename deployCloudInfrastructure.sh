@@ -165,7 +165,7 @@ else
             aws cloudformation delete-stack --stack-name $STACKNAME
 
             stackstatus=$(getcloudformationstack.sh $STACKNAME)
-            maxloop=15
+            maxloop=20
             loopnum=0
             while [ "$stackstatus" != "NO_SUCH_STACK" ] && [ "$loopnum" -lt "$maxloop" ]
             do
