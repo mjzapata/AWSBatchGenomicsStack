@@ -19,10 +19,9 @@
 #TODO: error handling for compute environment and job queue that already exist
 #TO READ: https://docs.aws.amazon.com/cli/latest/userguide/cli-ec2-sg.html#configuring-a-security-group
 
-
 SECONDS=0
 
-if [ $# -eq 9 ]; then
+if [ $# -eq 10 ]; then
 
 	STACKNAME=$1
 	source ~/.batchawsdeploy/config
@@ -30,13 +29,14 @@ if [ $# -eq 9 ]; then
 	source $BATCHAWSCONFIGFILE
 
 	SPOTPERCENT=$2
-	MAXCPU=$3
-	DEFAULTAMI=$4
-	CUSTOMAMIFOREFS=$5
-	EBSVOLUMESIZEGB=$6
-	EFSPERFORMANCEMODE=$7
-	NEXTFLOWCONFIGOUTPUTDIRECTORY=$8
-	KEYNAME=$9
+	SPOTMAXVCPUS=$3
+	ONDEMANDMAXVCPUS=$4
+	DEFAULTAMI=$5
+	CUSTOMAMIFOREFS=$6
+	EBSVOLUMESIZEGB=$7
+	EFSPERFORMANCEMODE=$8
+	NEXTFLOWCONFIGOUTPUTDIRECTORY=$9
+	KEYNAME=${10}
 	#VERBOSE=
 
 	echo "STACKNAME=$STACKNAME" >> $BATCHAWSCONFIGFILE
@@ -45,7 +45,7 @@ if [ $# -eq 9 ]; then
 	echo "QUEUENAME=$QUEUENAME"  >> $BATCHAWSCONFIGFILE
 	echo "SPOTPERCENT=$SPOTPERCENT"  >> $BATCHAWSCONFIGFILE
 	echo "EBSVOLUMESIZEGB=$EBSVOLUMESIZEGB" >> $BATCHAWSCONFIGFILE
-	echo "MAXCPU=$MAXCPU"  >> $BATCHAWSCONFIGFILE
+	echo "SPOTMAXVCPU=$SPOTMAXVCPU"  >> $BATCHAWSCONFIGFILE
 	echo "DEFAULTAMI=$DEFAULTAMI"  >> $BATCHAWSCONFIGFILE
 
 	ACCOUNTID=$(getawsaccountid.sh)
@@ -116,11 +116,15 @@ if [ $# -eq 9 ]; then
 	if [ "$stackstatus" == "CREATE_COMPLETE" ]; then
 		echo $stackstatus
 	else
-		createcloudformationstack.sh ${STACKNAME} $STACKFILE ParameterKey=\"NetworkAccessIP\",ParameterValue="$MYPUBLICIPADDRESS" # \ 
+		createcloudformationstack.sh ${STACKNAME} $STACKFILE \
+		"ParameterKey=\"NetworkAccessIP\",ParameterValue="$MYPUBLICIPADDRESS" \
+		ParameterKey=\"SpotBidPercentage\",ParameterValue="$SPOTPERCENT" \
+		ParameterKey=\"SpotBatchMaxvCPUs\",ParameterValue="$SPOTMAXVCPUS" \
+		ParameterKey=\"OnDemandBatchMaxvCPUs\",ParameterValue="$ONDEMANDMAXVCPUS" " # \ 
 		#|| { echo "createcloudformationstack failed outside script"; exit 1; }
 		stackstatus=$(getcloudformationstack.sh $STACKNAME)
 	fi
-	#######################################################################################
+	#######################################################################################SpotBidPercentage
 	#1.b) check if stack exists once more
 	#######################################################################################
 	stackstatus=$(getcloudformationstack.sh $STACKNAME)
@@ -171,47 +175,13 @@ if [ $# -eq 9 ]; then
 		#2.) Create Batch Computing environment
 		####################################################################################################
 		
-		SPOTCOMPUTEENVIRONMENTNAME=$(getcloudformationstack.sh $STACKNAME ComputeEnvSpot)
-		JOBQUEUELOWPRIORITYNAME=$(getcloudformationstack.sh $STACKNAME JobQueueLowPriority)
+		SPOTCOMPUTEENVIRONMENTNAME=$(getcloudformationstack.sh $STACKNAME SpotComputeEnv)
+		JOBQUEUELOWPRIORITYNAME=$(getcloudformationstack.sh $STACKNAME LowPriorityJobQueue)
+		SPOTCOMPUTEENVIRONMENTNAME=$(getcloudformationstack.sh $STACKNAME OnDemandComputeEnv)
+		JOBQUEUEHIGHPRIORITYNAME=$(getcloudformationstack.sh $STACKNAME HighPriorityJobQueue)
 		echo "SPOTCOMPUTEENVIRONMENTNAME=$SPOTCOMPUTEENVIRONMENTNAME" >> $BATCHAWSCONFIGFILE
 		echo "JOBQUEUELOWPRIORITYNAME=$JOBQUEUELOWPRIORITYNAME" >> $BATCHAWSCONFIGFILE
-		# echo "----------------------------------------------------------------------------------------------"
-		# echo "2.) creating Compute Environment and Job Queue   ---------------------------------------------"
-		# echo "creating compute environment: $COMPUTEENVIRONMENTNAME"
-		# echo "----------------------------------------------------------------------------------------------"
 
-		# COMPUTERESOURCES="type=SPOT,minvCpus=0,maxvCpus=$MAXCPU,desiredvCpus=$DESIREDCPUS,instanceTypes=optimal,
-		# imageId=$IMAGEID,subnets=$SUBNETS,securityGroupIds=$BATCHSECURITYGROUP,ec2KeyPair=$KEYNAME,
-		# instanceRole=$INSTANCEROLE,bidPercentage=$SPOTPERCENT,spotIamFleetRole=$IAMFLEETROLE,
-		# launchTemplate={launchTemplateId=$BATCHNODELAUNCHTEMPLATEID}"
-		
-		# COMPUTERESOURCES="$(echo -e "${COMPUTERESOURCES}" | tr -d '[:space:]')"
-
-
-		# echo "COMPUTEENVIRONMENTNAME=$COMPUTEENVIRONMENTNAME"
-		# echo "SERVICEROLE=$SERVICEROLE"
-		# echo "COMPUTERESOURCES=$COMPUTERESOURCES"
-		# echo ""
-		# #batchCreateOutput=$(aws batch create-compute-environment --compute-environment-name $COMPUTEENVIRONMENTNAME
-		# # --type MANAGED --state ENABLED --service-role ${SERVICEROLE} --compute-resources "$COMPUTERESOURCES")
-
-		# batchCreateOutput=$(aws batch create-compute-environment --compute-environment-name $COMPUTEENVIRONMENTNAME \
-		# --type MANAGED --state ENABLED --service-role ${SERVICEROLE} \
-		# --compute-resources "$COMPUTERESOURCES")
-		# echo "$batchCreateOutput"
-		# sleepProgressBar.sh 3 4
-
-		# #######################################################################################
-		# #2.a) Create Job Queue
-		# #######################################################################################
-		# echo "----------------------------------------------------------------------------------------------"
-		# echo "creating Job Queue: $QUEUENAME"
-		# queueCreateOutput=$(aws batch create-job-queue --job-queue-name $QUEUENAME \
-		# 	--compute-environment-order order=0,computeEnvironment=$COMPUTEENVIRONMENTNAME  \
-		# 	--priority $COMPUTEENVPRIORITY \
-		# 	--state ENABLED)
-		# echo $queueCreateOutput
-		# echo "----------------------------------------------------------------------------------------------"
 		#######################################################################################
 		#6.) Print success message
 		#######################################################################################
@@ -270,12 +240,12 @@ echo -n '
 		echo "-----------------------------------------------------------------------------------"
 		echo "10.a) Launch EC2 and run script directly:  ----------------------------------------"
 		echo "    -This option runs a script directly through ssh on the head node"
-		echo "launchEC2Node.sh runscript $STACKNAME HeadNode t2.micro startHeadNodeGui.sh"
+		echo "EC2Node.sh runscript_detached $STACKNAME HeadNode t2.micro startHeadNodeGui.sh"
 		echo "-----------------------------------------------------------------------------------"		
 		echo "10.b) Launch EC2 and connect directly:  -------------------------------------------"
 		echo "     -This option runs an EC2 instance, copies associated credentials and"
 		echo "     creates an ssh connect directly to the headnode"
-		echo "launchEC2Node.sh directconnect $STACKNAME HeadNode t2.micro"
+		echo "EC2Node.sh directconnect $STACKNAME HeadNode t2.micro"
 		echo "-----------------------------------------------------------------------------------"
 		echo "CREATE_COMPLETE"
 
@@ -291,7 +261,7 @@ echo -n '
 else
 	echo "Your command line contains $# arguments"
 	echo "usage: 12 arguments: "
-	echo -n " deployCloudFormation.sh STACKNAME SPOTPERCENT MAXCPU DEFAULTAMI "
+	echo -n " deployCloudFormation.sh STACKNAME SPOTPERCENT SPOTMAXVCPUS ONDEMANDMAXVCPUS DEFAULTAMI "
 	echo "CUSTOMAMIFOREFS EBSVOLUMESIZEGB EFSPERFORMANCEMODE DOCKERREPOSEARCHSTRING"
 	exit 1
 fi

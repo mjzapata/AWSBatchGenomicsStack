@@ -17,9 +17,6 @@ aws ssm put-parameter --name bioshepherd.stack.${STACKNAME}._myinstancename2 \
 
  aws ssm describe-parameters --output table
 
-
-
-
 #get parameter
 
 #get stack

@@ -59,8 +59,12 @@ else
         JOBVCPUS=2      #can be overridden at runtime
         JOBMEMORY=1000  #can be overriden at runtime
 
+        
         SPOTPERCENT=80
-        MAXCPU=1024
+        SPOTMAXVCPUS=1024
+        ONDEMANDMAXVCPUS=256
+
+
         EBSVOLUMESIZEGB=0
 
         REGION=$(aws configure get region)
@@ -102,16 +106,16 @@ else
             echo "NEXTFLOWCONFIGOUTPUTDIRECTORY=$NEXTFLOWCONFIGOUTPUTDIRECTORY" >> $BATCHAWSCONFIGFILE
 
           echo "COMMAND BEING RUN: 
-        deployCloudFormation.sh $STACKNAME $SPOTPERCENT $MAXCPU \
+        deployCloudFormation.sh $STACKNAME $SPOTPERCENT $SPOTMAXVCPUS $ONDEMANDMAXVCPUS \
                     $DEFAULTAMI $CUSTOMAMIFOREFS $EBSVOLUMESIZEGB $EFSPERFORMANCEMODE \
                     $NEXTFLOWCONFIGOUTPUTDIRECTORY $KEYNAME"
-    	   deployCloudFormation.sh $STACKNAME $SPOTPERCENT $MAXCPU \
+    	   deployCloudFormation.sh $STACKNAME $SPOTPERCENT $SPOTMAXVCPUS $ONDEMANDMAXVCPUS \
                     $DEFAULTAMI $CUSTOMAMIFOREFS $EBSVOLUMESIZEGB $EFSPERFORMANCEMODE \
                     $NEXTFLOWCONFIGOUTPUTDIRECTORY $KEYNAME \
                     || { echo "deploycloudinfastructure CREATE_FAILED"; exit 1; }
 
     	elif [ "$ARGUMENT" == "delete" ] && [ $# -gt 1 ]; then
-            echo "this will take approximately three minutes:"
+            echo "this will take approximately three to five minutes:"
             #echo "deleting $STACKNAME  $COMPUTEENVIRONMENTNAME $QUEUENAME"
             
             source $BATCHAWSCONFIGFILE
@@ -127,11 +131,20 @@ else
             # Network interface for Bastion Node
             # EFS mount target for fs-56d23cb6 (fsmt-42d00fa3)
             
+            runningInstances=$(EC2Node.sh property $STACKNAME listallinstancesinstack)
+            #stopping, stopped, terminated, shutting-down, 
+            while [ -n "$runningInstances" ]
+            do
+                echo "need to delete instances"
+                EC2Node.sh terminate $STACKNAME allinstances
+                sleep 30
+                runningInstances=$(EC2Node.sh property $STACKNAME listallrunninginstancesinstack)
+                echo $runningInstances
+            done
 
             #delete job definition
             # aws batch deregister-job-definition
             # get a list of all jobdefs that start with $STACKNAME
-
             echo "deleting cloudformation stack $STACKNAME"
             aws cloudformation delete-stack --stack-name $STACKNAME
             stackstatus=$(getcloudformationstack.sh $STACKNAME)
@@ -139,7 +152,7 @@ else
             loopnum=0
             while [ "$stackstatus" != "NO_SUCH_STACK" ] && [ "$loopnum" -lt "$maxloop" ]
             do
-                sleep 10
+                sleep 15
                 loopnum=$(expr $loopnum + 1)
                 stackstatus=$(getcloudformationstack.sh $STACKNAME)
             done

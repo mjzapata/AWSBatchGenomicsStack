@@ -52,18 +52,19 @@ if [ $# -gt 8 ]; then
 	instanceReachability=$(ipTools.sh describesgingress $STACKNAME)
 
 	if [ "$instanceReachability" == "No access to security group" ]; then
-		echo "instance not reachable with current security group rules"
+		echo ""
+		echo "error: instance would not be reachable with current security group rules"
 		echo "please run: "
 		echo "  ipTools.sh updatesgingress $STACKNAME"
 		exit 1
 	fi
-	#run EC2 instances: https://docs.aws.amazon.com/cli/latest/reference/ec2/run-instances.html
+	# run EC2 instances: https://docs.aws.amazon.com/cli/latest/reference/ec2/run-instances.html
 	# https://docs.aws.amazon.com/cli/latest/userguide/cli-ec2-launch.html
 	if [[ $EBSVOLUMESIZEGB > 1 ]]; then
 		if [ $EC2RUNARGUMENT == "createAMI" ]; then
 			
 		EC2RunOutput=$(aws ec2 run-instances \
-			--tag-specifications 'ResourceType=instance,Tags={Key=Name,Value="'$INSTANCENAME'"}' \
+			--tag-specifications 'ResourceType=instance,Tags=[{Key=Name,Value="'$INSTANCENAME'"},{Key=StackName,Value="'$STACKNAME'"}]' \
 			--image-id $TEMPLATEIMAGEID \
 			--security-group-ids $SECURITYGROUPS \
 			--count 1 \
@@ -73,7 +74,7 @@ if [ $# -gt 8 ]; then
 			--block-device-mappings 'DeviceName=/dev/sdb,Ebs={VolumeSize="'$EBSVOLUMESIZEGB'",DeleteOnTermination=true,Encrypted=false,VolumeType=gp2}')
 		else
 		EC2RunOutput=$(aws ec2 run-instances \
-			--tag-specifications 'ResourceType=instance,Tags={Key=Name,Value="'$INSTANCENAME'"}' \
+			--tag-specifications 'ResourceType=instance,Tags=[{Key=Name,Value="'$INSTANCENAME'"},{Key=StackName,Value="'$STACKNAME'"}]' \
 			--image-id $TEMPLATEIMAGEID \
 			--security-group-ids $SECURITYGROUPS \
 			--count 1 \
@@ -89,7 +90,7 @@ if [ $# -gt 8 ]; then
 		if [ $EC2RUNARGUMENT == "createAMI" ]; then
 			
 			EC2RunOutput=$(aws ec2 run-instances \
-				--tag-specifications 'ResourceType=instance,Tags={Key=Name,Value="'$INSTANCENAME'"}' \
+				--tag-specifications 'ResourceType=instance,Tags=[{Key=Name,Value="'$INSTANCENAME'"},{Key=StackName,Value="'$STACKNAME'"}]' \
 				--image-id $TEMPLATEIMAGEID \
 				--security-group-ids $SECURITYGROUPS \
 				--count 1 \
@@ -98,7 +99,7 @@ if [ $# -gt 8 ]; then
 				--subnet-id $SUBNET)
 		else
 			EC2RunOutput=$(aws ec2 run-instances \
-				--tag-specifications 'ResourceType=instance,Tags={Key=Name,Value="'$INSTANCENAME'"}' \
+				--tag-specifications 'ResourceType=instance,Tags=[{Key=Name,Value="'$INSTANCENAME'"},{Key=StackName,Value="'$STACKNAME'"}]' \
 				--image-id $TEMPLATEIMAGEID \
 				--security-group-ids $SECURITYGROUPS \
 				--count 1 \
@@ -131,7 +132,6 @@ if [ $# -gt 8 ]; then
 	#get instance status and wait for it to run
 	# RUNNING or ???  TERMINATED  (actually returns nothing) second row third column
 
-
 	systemstatus=$(getinstance.sh $instanceID systemstatus)
 	systemtime=0
 	echo "Starting EC2 instance. This will take a few minutes: "
@@ -153,15 +153,15 @@ if [ $# -gt 8 ]; then
 	instanceHostNameInternal=$(getinstance.sh $instanceID PrivateDnsName)
 	instanceIPPublic=$(getinstance.sh $instanceID PublicIpAddress)
 	instanceHostNamePublic=$(getinstance.sh $instanceID PublicDnsName)
-	instanceFile=~/.batchawsdeploy/instance_${STACKNAME}_${INSTANCENAME}_${instanceHostNamePublic}
-	touch $instanceFile
-	echo "#!/bin/bash" > $instanceFile
-	echo "INSTANCENAME=$INSTANCENAME" >> $instanceFile
-	echo "instanceID=$instanceID" >> $instanceFile
-	echo "instanceIP=$instanceIP" >> $instanceFile
-	echo "instanceHostNameInternal=$instanceHostNameInternal" >> $instanceFile
-	echo "instanceIPPublic=$instanceIPPublic" >> $instanceFile
-	echo "instanceHostNamePublic=$instanceHostNamePublic" >> $instanceFile
+	# instanceFile=~/.batchawsdeploy/instance_${STACKNAME}_${INSTANCENAME}_${instanceHostNamePublic}
+	# touch $instanceFile
+	# echo "#!/bin/bash" > $instanceFile
+	# echo "INSTANCENAME=$INSTANCENAME" >> $instanceFile
+	# echo "instanceID=$instanceID" >> $instanceFile
+	# echo "instanceIP=$instanceIP" >> $instanceFile
+	# echo "instanceHostNameInternal=$instanceHostNameInternal" >> $instanceFile
+	# echo "instanceIPPublic=$instanceIPPublic" >> $instanceFile
+	# echo "instanceHostNamePublic=$instanceHostNamePublic" >> $instanceFile
 
 	#------------------------------------------------------------------------------------------------
 	#TODO: redo all input arguments and put an argument specifically for if I want to copy the configs
@@ -178,6 +178,8 @@ if [ $# -gt 8 ]; then
 
 		# don't check identity on first connect
 		SSH_OPTIONS="-o IdentitiesOnly=yes" # -v
+
+
 		echo "Creating remote directories"
 		ssh ec2-user@${instanceHostNamePublic} -i ${KEYPATH} $SSH_OPTIONS \
 		-o StrictHostKeyChecking=no "mkdir -p /home/ec2-user/.aws/"
@@ -256,8 +258,8 @@ if [ $# -gt 8 ]; then
 		#Copy the script for remote excution in detached mode
 		scp -i ${KEYPATH} $SSH_OPTIONS \
                 $SCRIPTPATH ec2-user@${instanceHostNamePublic}:/home/ec2-user/
-		ssh -i ${KEYPATH} ec2-user@${instanceHostNamePublic} $SSH_OPTIONS \
-			"./home/ec2-user/${SCRIPTNAME} </dev/null >/var/log/root-backup.log 2>&1 &"
+		#ssh -i ${KEYPATH} ec2-user@${instanceHostNamePublic} $SSH_OPTIONS \
+		#	"./home/ec2-user/${SCRIPTNAME} </dev/null >/var/log/root-backup.log 2>&1 &"
 
 		#cat ${SCRIPTPATH} | ssh -i ${KEYPATH} ec2-user@${instanceHostNamePublic} $SSH_OPTIONS "./home/ec2-user/${SCRIPTNAME} </dev/null >/var/log/root-backup.log 2>&1 &"
 		cat ${SCRIPTPATH} | ssh -i ${KEYPATH} ec2-user@${instanceHostNamePublic} $SSH_OPTIONS 'bash -'
