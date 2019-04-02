@@ -7,7 +7,7 @@
 EXTERNALPORT=8080
 publichostname=$(curl http://169.254.169.254/latest/meta-data/public-hostname)
 HOSTADDRESS="http://${publichostname}:${EXTERNALPORT}"
-
+DOCKERIMAGE=amyerke/webapp
 
 #instead do:
 #https://medium.freecodecamp.org/dockers-detached-mode-for-beginners-c53095193ee9
@@ -16,7 +16,7 @@ HOSTADDRESS="http://${publichostname}:${EXTERNALPORT}"
  #this should override existing running commands in the same container?  if name the container properly
 
 #detached
-docker run -d -p $EXTERNALPORT:3000 -v ~/.batchawsdeploy/:/root/.batchawsdeploy -v /var/run/docker.sock:/var/run/docker.sock amyerke/webapp
+docker run -d -p $EXTERNALPORT:3000 -v ~/.batchawsdeploy/:/root/.batchawsdeploy -v /var/run/docker.sock:/var/run/docker.sock $DOCKERIMAGE
 
 echo ""
 echo "****************************************************************"
