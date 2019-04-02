@@ -15,3 +15,6 @@ echo "-------------------------------------------------------------"
 EC2Node.sh runscript_detached $STACKNAME HeadNode t2.micro startHeadNodeGui.sh
 
 
+echo "to shut this stack and instance down run: 
+deployCloudInfrastructure.sh delete $STACKNAME "
+echo "-------------------------------------------------------------"
