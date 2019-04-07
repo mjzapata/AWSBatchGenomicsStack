@@ -7,14 +7,7 @@
 #Things only created once: IAM stack, security group, network (one public, one private/or use the default?  What about one in between???)
 
 #TODO: There are currently several hardcoded values for us-east-1
-#TODO: create High and low priority like in the tutorial later, with linked Queues and one that is ON DEMAND
 #TODO: autocreate an IAM role with the minimal capabilities and paste it into aws config
-
-#TODO: EFS
-# The PerformanceMode of the file system.   https://docs.aws.amazon.com/cli/latest/reference/efs/create-file-system.html
-# We recommend generalPurpose performance mode for most file systems. File systems using the maxIO 
-# performance mode can scale to higher levels of aggregate throughput and operations per second with a tradeoff of 
-# slightly higher latencies for most file operations. This can't be changed after the file system has been created.
 
 #TODO: error handling for compute environment and job queue that already exist
 #TO READ: https://docs.aws.amazon.com/cli/latest/userguide/cli-ec2-sg.html#configuring-a-security-group

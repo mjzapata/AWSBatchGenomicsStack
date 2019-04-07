@@ -179,7 +179,6 @@ if [ $# -gt 8 ]; then
 		# don't check identity on first connect
 		SSH_OPTIONS="-o IdentitiesOnly=yes" # -v
 
-
 		echo "Creating remote directories"
 		ssh ec2-user@${instanceHostNamePublic} -i ${KEYPATH} $SSH_OPTIONS \
 		-o StrictHostKeyChecking=no "mkdir -p /home/ec2-user/.aws/"
@@ -209,10 +208,10 @@ if [ $# -gt 8 ]; then
 		~/.aws/credentials ec2-user@${instanceHostNamePublic}:/home/ec2-user/.aws/
 
 		# create an empty file named "environment_aws" to signify that this is an ec2 instance
-		touch dummyfile
-		scp -i ${KEYPATH} $SSH_OPTIONS dummyfile \
-		ec2-user@${instanceHostNamePublic}:/home/ec2-user/.batchawsdeploy/environment_aws
-		rm dummyfile
+		#touch dummyfile
+		#scp -i ${KEYPATH} $SSH_OPTIONS dummyfile \
+		#ec2-user@${instanceHostNamePublic}:/home/ec2-user/environment_aws
+		#rm dummyfile
 
 
 

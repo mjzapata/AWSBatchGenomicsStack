@@ -16,7 +16,13 @@ DOCKERIMAGE=amyerke/webapp
  #this should override existing running commands in the same container?  if name the container properly
 
 #detached
-docker run -d -p $EXTERNALPORT:3000 -v ~/.batchawsdeploy/:/root/.batchawsdeploy -v /var/run/docker.sock:/var/run/docker.sock $DOCKERIMAGE
+#docker run -p $HOSTADDRESS:3000 -e HOST_ENVIRONMENT='AWS' -v ~/.batchawsdeploy/:/root/.batchawsdeploy -v /var/run/docker.sock:/var/run/docker.sock --entrypoint=/bin/bash $DOCKERIMAGE
+
+docker run -d -p ${HOSTADDRESS}:3000 \
+	-e HOST_ENVIRONMENT='AWS' \
+	-v ~/.batchawsdeploy/:/root/.batchawsdeploy \
+	-v /var/run/docker.sock:/var/run/docker.sock  \
+	$DOCKERIMAGE
 
 echo ""
 echo "****************************************************************"

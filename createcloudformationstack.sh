@@ -66,3 +66,4 @@ else
 	echo "the cloudformation stack included here allows for ssh only from the specified IP address ranges following CIDR notation"
 fi
 
+

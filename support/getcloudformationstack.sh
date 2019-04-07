@@ -2,7 +2,9 @@
 
 print_error(){
 echo "Your command line contains $1 arguments"
-echo "Usage:  
+echo "Usage:
+   getcloudformationstack.sh ALLAWSBATCHGENOMICSSTACKS
+   	return values: names of all existing AWSBatchGenomicsStacks cloudformation stacks 
    getcloudformationstack.sh mystackname                      
 	return values: stackexists, stackcreating, stackdoesnotexist
   getcloudformationstack.sh mystackname output
@@ -41,34 +43,44 @@ check_stack_exists(){
 
 # 1.) if one argument is provided check the status of the stack
 if [ $# -gt 0 ]; then
+
 	STACKNAME=$1
-    #1.) if one argument, check if the stack exists
-    if [ $# -eq 1 ]; then
-    	check_stack_exists $STACKNAME
-    fi
-	#2.) if two arguments are provided, check the identity of the the 
-	# specified service role for that stack
-	if [ $# -eq 2 ]; then
-		ARGUMENT=$2
-		if [ "$ARGUMENT" == "output" ]; then
-			aws cloudformation describe-stacks --stack-name $STACKNAME
-		elif [ "$ARGUMENT" == "events" ]; then
-			aws cloudformation describe-stack-events --stack-name $STACKNAME
-		elif [ "$ARGUMENT" == "failureevents" ]; then
-			aws cloudformation describe-stack-events --stack-name $STACKNAME \
-			--query 'StackEvents[*].[ResourceStatus,ResourceStatusReason,StackName]' \
-			| grep CREATE_FAILED \
-			| grep -v "Resource creation cancelled"
-		else
-			ROLENAME=$ARGUMENT
-			#replace newline with comma
-			outputvalues=$(aws cloudformation describe-stacks \
-			--stack-name $STACKNAME \
-			--query 'Stacks[*].[Outputs[*]]' \
-			| grep $ROLENAME | awk '{print $2}' | tr -s '\n' ',' )
-			#remove trailing comma
-			outputvalues=$(echo $outputvalues | sed 's/.$//')
-			echo "$outputvalues"
+	if [ "$STACKNAME" == "ALLAWSBATCHGENOMICSSTACKS" ]; then
+		aws cloudformation describe-stacks \
+		--query "Stacks[].[StackName, Parameters[?ParameterKey=='CloudformationTemplateName'].ParameterValue | [0]]" \
+		--output text \
+		| grep AWSBatchGenomicsStack \
+		| awk '{print $1}'
+	else
+
+		#1.) if one argument, check if the stack exists
+	    if [ $# -eq 1 ]; then
+	    	check_stack_exists $STACKNAME
+	    fi
+		#2.) if two arguments are provided, check the identity of the the 
+		# specified service role for that stack
+		if [ $# -eq 2 ]; then
+			ARGUMENT=$2
+			if [ "$ARGUMENT" == "output" ]; then
+				aws cloudformation describe-stacks --stack-name $STACKNAME
+			elif [ "$ARGUMENT" == "events" ]; then
+				aws cloudformation describe-stack-events --stack-name $STACKNAME
+			elif [ "$ARGUMENT" == "failureevents" ]; then
+				aws cloudformation describe-stack-events --stack-name $STACKNAME \
+				--query 'StackEvents[*].[ResourceStatus,ResourceStatusReason,StackName]' \
+				| grep CREATE_FAILED \
+				| grep -v "Resource creation cancelled"
+			else
+				ROLENAME=$ARGUMENT
+				#replace newline with comma
+				outputvalues=$(aws cloudformation describe-stacks \
+				--stack-name $STACKNAME \
+				--query 'Stacks[*].[Outputs[*]]' \
+				| grep $ROLENAME | awk '{print $2}' | tr -s '\n' ',' )
+				#remove trailing comma
+				outputvalues=$(echo $outputvalues | sed 's/.$//')
+				echo "$outputvalues"
+			fi
 		fi
 	fi
 else

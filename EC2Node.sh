@@ -73,7 +73,8 @@ if [ "$EC2RUNARGUMENT" == "property" ]; then
 
     		#aws ec2 describe-instances --filters Name=tag:StackName,Values="$STACKNAME" --query "Reservations[].Instances[].InstanceId"
 			#instanceProps=$(aws ec2 describe-instances --filters Name=tag:StackName,Values="$STACKNAME")
-			instanceID=$(aws ec2 describe-instances --filters Name=tag:Name,Values="$INSTANCENAME" --query "Reservations[].Instances[].InstanceId")
+			#instanceID=$(aws ec2 describe-instances --filters Name=tag:Name,Values="${INSTANCENAME}", --query "Reservations[].Instances[].InstanceId")
+			instanceID=$(aws ec2 describe-instances --filters Name=tag:Name,Values="${INSTANCENAME}",Name=instance-state-name,Values=running --query "Reservations[].Instances[].InstanceId")
 			echo "$instanceID"
 
     	else
@@ -121,6 +122,7 @@ elif [ $# -eq 4 ] && [ "$EC2RUNARGUMENT" == "directconnect" ]; then
 		launchEC2.sh $STACKNAME $IMAGEID $INSTANCETYPE $KEYNAME $EBSVOLUMESIZEGB \
 		$SUBNETS $SECURITYGROUPS $INSTANCENAME $EC2RUNARGUMENT
 	else
+		#TODO: consolidate with code below
 		echo ""
 		echo "instance with Name: $INSTANCENAME already running"
 		echo "instanceID=$instanceID"
@@ -145,6 +147,19 @@ elif [ $# -eq 5 ]; then
 
 		launchEC2.sh $STACKNAME $IMAGEID $INSTANCETYPE $KEYNAME $EBSVOLUMESIZEGB \
 		$SUBNETS $SECURITYGROUPS $INSTANCENAME $EC2RUNARGUMENT $SCRIPTNAME
+
+
+		instanceID=$(EC2Node.sh property $STACKNAME $INSTANCENAME exist)
+		echo ""
+		echo "instance with Name: $INSTANCENAME already running"
+		echo "instanceID=$instanceID"
+
+		SSH_OPTIONS="-o IdentitiesOnly=yes"
+		instanceHostNamePublic=$(getinstance.sh $instanceID PublicDnsName)
+		echo "to reconnect to this instance, run: "
+		echo "   ssh -i ${KEYPATH} ec2-user@${instanceHostNamePublic} $SSH_OPTIONS"
+		echo ""
+
 	else
 		print_error
 	fi
