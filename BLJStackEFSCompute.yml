@@ -443,6 +443,11 @@ Resources:
         - - !Ref 'AWS::StackName'
           - HeadNodeTemplateWithEFS
       LaunchTemplateData:
+        TagSpecifications:
+          - ResourceType: 'instance'
+            Tags:
+              - Key: 'StackName'
+                Value: !Ref 'AWS::StackName'
         UserData:
           'Fn::Base64': !Sub >
             MIME-Version: 1.0
