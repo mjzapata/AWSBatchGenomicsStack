@@ -18,7 +18,7 @@ DOCKERIMAGE=amyerke/webapp
 #detached
 #docker run -p $HOSTADDRESS:3000 -e HOST_ENVIRONMENT='AWS' -v ~/.batchawsdeploy/:/root/.batchawsdeploy -v /var/run/docker.sock:/var/run/docker.sock --entrypoint=/bin/bash $DOCKERIMAGE
 
-docker run -d -p ${HOSTADDRESS}:3000 \
+docker run -d -p ${EXTERNALPORT}:3000 \
 	-e HOST_ENVIRONMENT='AWS' \
 	-v ~/.batchawsdeploy/:/root/.batchawsdeploy \
 	-v /var/run/docker.sock:/var/run/docker.sock  \

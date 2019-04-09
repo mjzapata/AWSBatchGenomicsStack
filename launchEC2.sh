@@ -64,7 +64,7 @@ if [ $# -gt 8 ]; then
 		if [ $EC2RUNARGUMENT == "createAMI" ]; then
 			
 		EC2RunOutput=$(aws ec2 run-instances \
-			--tag-specifications 'ResourceType=instance,Tags=[{Key=Name,Value="'$INSTANCENAME'"},{Key=StackName,Value="'$STACKNAME'"}]' \
+			--tag-specifications 'ResourceType=instance,Tags=[{Key=Name,Value="'$INSTANCENAME'"}]' \
 			--image-id $TEMPLATEIMAGEID \
 			--security-group-ids $SECURITYGROUPS \
 			--count 1 \
@@ -74,7 +74,7 @@ if [ $# -gt 8 ]; then
 			--block-device-mappings 'DeviceName=/dev/sdb,Ebs={VolumeSize="'$EBSVOLUMESIZEGB'",DeleteOnTermination=true,Encrypted=false,VolumeType=gp2}')
 		else
 		EC2RunOutput=$(aws ec2 run-instances \
-			--tag-specifications 'ResourceType=instance,Tags=[{Key=Name,Value="'$INSTANCENAME'"},{Key=StackName,Value="'$STACKNAME'"}]' \
+			--tag-specifications 'ResourceType=instance,Tags=[{Key=Name,Value="'$INSTANCENAME'"}]' \
 			--image-id $TEMPLATEIMAGEID \
 			--security-group-ids $SECURITYGROUPS \
 			--count 1 \
@@ -90,7 +90,7 @@ if [ $# -gt 8 ]; then
 		if [ $EC2RUNARGUMENT == "createAMI" ]; then
 			
 			EC2RunOutput=$(aws ec2 run-instances \
-				--tag-specifications 'ResourceType=instance,Tags=[{Key=Name,Value="'$INSTANCENAME'"},{Key=StackName,Value="'$STACKNAME'"}]' \
+				--tag-specifications 'ResourceType=instance,Tags=[{Key=Name,Value="'$INSTANCENAME'"}]' \
 				--image-id $TEMPLATEIMAGEID \
 				--security-group-ids $SECURITYGROUPS \
 				--count 1 \
@@ -99,7 +99,7 @@ if [ $# -gt 8 ]; then
 				--subnet-id $SUBNET)
 		else
 			EC2RunOutput=$(aws ec2 run-instances \
-				--tag-specifications 'ResourceType=instance,Tags=[{Key=Name,Value="'$INSTANCENAME'"},{Key=StackName,Value="'$STACKNAME'"}]' \
+				--tag-specifications 'ResourceType=instance,Tags=[{Key=Name,Value="'$INSTANCENAME'"}]' \
 				--image-id $TEMPLATEIMAGEID \
 				--security-group-ids $SECURITYGROUPS \
 				--count 1 \
