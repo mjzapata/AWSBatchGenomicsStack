@@ -15,7 +15,7 @@ Parameters:
     Type: String
     MinLength: '9'
     MaxLength: '18'
-    Default: 0.0.0.0/0
+    Default: 0.0.0.0/32
     AllowedPattern: '(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})/(\d{1,2})'
     ConstraintDescription: must be a valid CIDR range of the form x.x.x.x/x.
   SpotBidPercentage:
@@ -485,6 +485,10 @@ Resources:
 
             - chown -R ec2-user:ec2-user ${!efs_directory}
 
+            - chmod g+x ${!efs_directory}
+
+            - yum remove -y ecs-init
+
 
             --==MYBOUNDARY==--
     Metadata:
@@ -529,6 +533,8 @@ Resources:
             - mount -a -t efs defaults
 
             - chown -R ec2-user:ec2-user ${!efs_directory}
+
+            - chmod g+x ${!efs_directory}
 
 
             --==MYBOUNDARY==--

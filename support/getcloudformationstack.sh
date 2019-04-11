@@ -1,6 +1,14 @@
 #!/bin/bash
 
 print_error(){
+
+# cloudformationTools
+# create
+# delete
+# get
+	# getstack
+	# getparameter
+
 echo "Your command line contains $1 arguments"
 echo "Usage:
    getcloudformationstack.sh ALLAWSBATCHGENOMICSSTACKS
