@@ -13,6 +13,7 @@ if [ $# -gt 2 ]; then
 	--stack-name $STACKNAME \
 	--capabilities CAPABILITY_IAM \
 	--parameters $PARAMETERS)
+
 	errorcode=$?
 	if [ $errorcode != 0 ]; then
 		echo "$output"
@@ -65,5 +66,4 @@ else
 	echo "(possible parameters must be specified in cloudformation template ahead of time in the parameters section)"
 	echo "the cloudformation stack included here allows for ssh only from the specified IP address ranges following CIDR notation"
 fi
-
 
