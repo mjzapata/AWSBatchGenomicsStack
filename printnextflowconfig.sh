@@ -26,7 +26,7 @@ executor {
 process {"
 images=$(grep "image_" $BATCHAWSCONFIGFILE)
 	echo "    queue = '$JOBQUEUELOWPRIORITYNAME'"
-	echo "    withLabel: 'HIGHPRIORITY' {"
+	echo "    withLabel: 'DEMAND' {"
 	echo "        queue = '$JOBQUEUEHIGHPRIORITYNAME'"
 	echo "    }"
 while read -r line; do
