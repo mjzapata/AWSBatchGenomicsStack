@@ -160,6 +160,15 @@ elif [ $# -eq 5 ]; then
 		echo "   ssh -i ${KEYPATH} ec2-user@${instanceHostNamePublic} $SSH_OPTIONS"
 		echo ""
 
+	elif [ "$EC2RUNARGUMENT" == "createAMI" ]; then
+
+		SECURITYGROUPS="$BASTIONSECURITYGROUP,$BATCHSECURITYGROUP"
+		echo "SECURITYGROUPS=$SECURITYGROUPS"
+
+		launchEC2.sh $STACKNAME $IMAGEID $INSTANCETYPE $KEYNAME $EBSVOLUMESIZEGB \
+		$SUBNETS $SECURITYGROUPS $INSTANCENAME $EC2RUNARGUMENT $SCRIPTNAME
+		
+		
 	else
 		print_error
 	fi

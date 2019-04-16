@@ -489,6 +489,12 @@ Resources:
 
             - yum remove -y ecs-init
 
+            - runuser -l  ec2-user -c 'curl -O https://bootstrap.pypa.io/get-pip.py'
+
+            - runuser -l  ec2-user -c 'python get-pip.py --user'
+
+            - runuser -l  ec2-user -c 'pip install awscli --upgrade --user'
+
 
             --==MYBOUNDARY==--
     Metadata:
@@ -540,6 +546,12 @@ Resources:
             - chown -R ec2-user:ec2-user ${!efs_directory}
 
             - chmod g+s ${!efs_directory}
+
+            - runuser -l  ec2-user -c 'curl -O https://bootstrap.pypa.io/get-pip.py'
+
+            - runuser -l  ec2-user -c 'python get-pip.py --user'
+
+            - runuser -l  ec2-user -c 'pip install awscli --upgrade --user'
 
 
             --==MYBOUNDARY==--
