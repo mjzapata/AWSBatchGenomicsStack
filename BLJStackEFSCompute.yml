@@ -489,11 +489,15 @@ Resources:
 
             - yum remove -y ecs-init
 
-            - runuser -l  ec2-user -c 'curl -O https://bootstrap.pypa.io/get-pip.py'
+            - yum install -y bzip2 wget
 
-            - runuser -l  ec2-user -c 'python get-pip.py --user'
+            - runuser -l  ec2-user -c 'wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh'
 
-            - runuser -l  ec2-user -c 'pip install awscli --upgrade --user'
+            - runuser -l  ec2-user -c 'bash Miniconda3-latest-Linux-x86_64.sh -b -f -p /home/ec2-user/miniconda'
+
+            - runuser -l  ec2-user -c '$HOME/miniconda/bin/conda install -c conda-forge -y awscli'
+
+            - runuser -l  ec2-user -c 'rm Miniconda3-latest-Linux-x86_64.sh'
 
 
             --==MYBOUNDARY==--
@@ -547,11 +551,15 @@ Resources:
 
             - chmod g+s ${!efs_directory}
 
-            - runuser -l  ec2-user -c 'curl -O https://bootstrap.pypa.io/get-pip.py'
+            - yum install -y bzip2 wget
 
-            - runuser -l  ec2-user -c 'python get-pip.py --user'
+            - runuser -l  ec2-user -c 'wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh'
 
-            - runuser -l  ec2-user -c 'pip install awscli --upgrade --user'
+            - runuser -l  ec2-user -c 'bash Miniconda3-latest-Linux-x86_64.sh -b -f -p /home/ec2-user/miniconda'
+
+            - runuser -l  ec2-user -c '$HOME/miniconda/bin/conda install -c conda-forge -y awscli'
+
+            - runuser -l  ec2-user -c 'rm Miniconda3-latest-Linux-x86_64.sh'
 
 
             --==MYBOUNDARY==--
