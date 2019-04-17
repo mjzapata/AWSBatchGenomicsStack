@@ -63,7 +63,7 @@ docker run --rm -it --name nextflow \
 -v ${HOSTREPORTPATH}:${CONTAINERREPORTPATH} \
 -v ${NEXTFLOWHOSTCONFIGDIRECTORY}:${NEXTFLOWCONTAINERCONFIGDIRECTORY} \
 -v ${AWSHOSTCONFIGDIRECTORY}:${AWSCONTAINERCONFIGDIRECTORY} \
---entrypoint "/bin/bash" $IMAGENAME -c "nextflow run . -w s3://mytestbucketmz123/2018_02_03_testNextflowNode"
+--entrypoint "/bin/bash" $IMAGENAME -c "nextflow run . -w s3://mytestbucketmz123/2019_04_17_testNextflowNode"
 
 
 #COMMAND='run /flows/main.nf -c /flows/nextflow.config -with-trace
