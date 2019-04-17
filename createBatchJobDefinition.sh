@@ -31,6 +31,11 @@ if [[ $# -gt 4 && $# -lt 7 ]]; then
 	VOLUMESOURCEPATH=/mnt/efs
 	VOLUMENAME=efs
 
+  AWSCLICONTAINERPATH=/home/ec2-user/miniconda/
+  AWSCLISOURCEPATH=/home/ec2-user/miniconda/
+  AWSCLIVOLUMENAME=miniconda
+
+
 
 containerProperties="{
   \"image\": \"$JOBIMAGE\",
@@ -44,6 +49,12 @@ containerProperties="{
         \"sourcePath\": \"${VOLUMESOURCEPATH}\"
       },
       \"name\": \"${VOLUMENAME}\"
+    },
+    {
+      \"host\": {
+        \"sourcePath\": \"${AWSCLISOURCEPATH}\"
+      },
+      \"name\": \"${AWSCLIVOLUMENAME}\"
     }
   ],
   \"mountPoints\": [
@@ -51,7 +62,13 @@ containerProperties="{
       \"containerPath\": \"${CONTAINERPATH}\",
       \"readOnly\": false,
       \"sourceVolume\": \"${VOLUMENAME}\"
+    },
+    {
+      \"containerPath\": \"${AWSCLICONTAINERPATH}\",
+      \"readOnly\": true,
+      \"sourceVolume\": \"${AWSCLIVOLUMENAME}\"
     }
+
   ],
   \"readonlyRootFilesystem\": false,
   \"privileged\": true
