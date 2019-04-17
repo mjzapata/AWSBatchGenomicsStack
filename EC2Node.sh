@@ -63,8 +63,8 @@ if [ "$EC2RUNARGUMENT" == "property" ]; then
 
 
 	if [ "$PROPERTYNAME" == "exist" ]; then
-		instanceID=$(aws ec2 describe-instances --filters Name=tag:Name,Values="$INSTANCENAME" --query "Reservations[].Instances[].InstanceId")
-		instanceState=$(aws ec2 describe-instances --filters Name=tag:Name,Values="$INSTANCENAME" --query "Reservations[].Instances[].State.Name")
+		instanceID=$(aws ec2 describe-instances --filters Name=tag:Name,Values="$INSTANCENAME",Name=tag:StackName,Values="$STACKNAME" --query "Reservations[].Instances[].InstanceId")
+		instanceState=$(aws ec2 describe-instances --filters Name=tag:Name,Values="$INSTANCENAME",Name=tag:StackName,Values="$STACKNAME" --query "Reservations[].Instances[].State.Name")
     	if [[ $instanceState == *"running"* ]]; then
     		#echo "running"
     		#echo "instance_up"
@@ -74,7 +74,7 @@ if [ "$EC2RUNARGUMENT" == "property" ]; then
     		#aws ec2 describe-instances --filters Name=tag:StackName,Values="$STACKNAME" --query "Reservations[].Instances[].InstanceId"
 			#instanceProps=$(aws ec2 describe-instances --filters Name=tag:StackName,Values="$STACKNAME")
 			#instanceID=$(aws ec2 describe-instances --filters Name=tag:Name,Values="${INSTANCENAME}", --query "Reservations[].Instances[].InstanceId")
-			instanceID=$(aws ec2 describe-instances --filters Name=tag:Name,Values="${INSTANCENAME}",Name=instance-state-name,Values=running --query "Reservations[].Instances[].InstanceId")
+			instanceID=$(aws ec2 describe-instances --filters Name=tag:Name,Values="${INSTANCENAME}",Name=tag:StackName,Values="$STACKNAME",Name=instance-state-name,Values=running --query "Reservations[].Instances[].InstanceId")
 			echo "$instanceID"
 
     	else
@@ -167,8 +167,8 @@ elif [ $# -eq 5 ]; then
 
 		launchEC2.sh $STACKNAME $IMAGEID $INSTANCETYPE $KEYNAME $EBSVOLUMESIZEGB \
 		$SUBNETS $SECURITYGROUPS $INSTANCENAME $EC2RUNARGUMENT $SCRIPTNAME
-		
-		
+
+
 	else
 		print_error
 	fi

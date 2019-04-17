@@ -220,12 +220,14 @@ if [ $# -gt 8 ]; then
 		scp -i ${KEYPATH} $SSH_OPTIONS \
 		${BATCHAWSDEPLOY_HOME}startHeadNode.sh ec2-user@${instanceHostNamePublic}:/mnt/efs/flows/nextflow.config
 
+		scp -i ${KEYPATH} $SSH_OPTIONS \
+		${BATCHAWSDEPLOY_HOME}startHeadNode.sh ec2-user@${instanceHostNamePublic}:/mnt/efs/flows/nextflow.config
 
 		# Nextflow Configuration
 		scp -i ${KEYPATH} $SSH_OPTIONS \
 		~/.nextflow/config ec2-user@${instanceHostNamePublic}:/home/ec2-user/.nextflow/
 		scp -i ${KEYPATH} $SSH_OPTIONS \
-		~/.nextflow/config ec2-user@${instanceHostNamePublic}:/mnt/efs/flows/nextflow.config
+		${BATCHAWSDEPLOY_HOME}nextflow/testmultipledownloadgzip/main.nf ec2-user@${instanceHostNamePublic}:/mnt/efs/flows/
 
 
 		# Scripts for running the head node
