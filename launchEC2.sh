@@ -214,10 +214,19 @@ if [ $# -gt 8 ]; then
 		#rm dummyfile
 
 
+		#NEXTFLOW pipeline prep
+		ssh ec2-user@${instanceHostNamePublic} -i ${KEYPATH} $SSH_OPTIONS \
+		"mkdir -p /mnt/efs/flows"
+		scp -i ${KEYPATH} $SSH_OPTIONS \
+		${BATCHAWSDEPLOY_HOME}startHeadNode.sh ec2-user@${instanceHostNamePublic}:/mnt/efs/flows/nextflow.config
+
 
 		# Nextflow Configuration
 		scp -i ${KEYPATH} $SSH_OPTIONS \
 		~/.nextflow/config ec2-user@${instanceHostNamePublic}:/home/ec2-user/.nextflow/
+		scp -i ${KEYPATH} $SSH_OPTIONS \
+		~/.nextflow/config ec2-user@${instanceHostNamePublic}:/mnt/efs/flows/nextflow.config
+
 
 		# Scripts for running the head node
 		#scp -i ${KEYPATH} launchEC2HeadNode.sh ec2-user@${instanceHostNamePublic}:/home/ec2-user/

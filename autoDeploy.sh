@@ -2,7 +2,7 @@
 
 source ~/.batchawsdeploy/config
 
-#1.) create S3 
+#1.) TODO: create S3 here instead
 
 STACKNAME=BLJStack
 
@@ -18,3 +18,7 @@ EC2Node.sh runscript_detached $STACKNAME HeadNode t2.micro startHeadNodeGui.sh
 echo "to shut this stack and instance down run: 
 deployCloudInfrastructure.sh delete $STACKNAME "
 echo "-------------------------------------------------------------"
+
+
+
+
