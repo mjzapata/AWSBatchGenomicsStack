@@ -5,9 +5,13 @@ nextflow.config
 testscript.sh
 .nextflow*
 nextflow/testprintnextflow/
-nextflow/testmultipledownloadgzip/
+nextflow/old/
+nextflow/multipledownloadgzip/*
+nextflow/multipledownloadgzip/reports/
+!nextflow/multipledownloadgzip/main.nf
 nextflow/testnextflow/
 output.json
+testscript.sh
 test*
 untitled
 samplelaunchtemplatecommands.sh
