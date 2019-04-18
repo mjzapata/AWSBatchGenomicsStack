@@ -62,9 +62,10 @@ process Gunzip {
   echo "testing write speed for EFS volume using dd:"
   #time sh -c "dd if=/dev/zero of=${params.projectdir}testfile bs=1000k count=1k && sync"
   sync ; time sh -c "dd if=/dev/zero of=${params.projectdir}testfile_${x}.zip bs=1000k count=1k 2>&1 && sync"
-  echo "sleep 100 to keep node busy so batch jobs cant request the same node.  Just for testing"
-  sleep 100
-  echo "done sleeping!"
+  echo "wrote file: ${params.projectdir}testfile_${x}.zip"
+  #echo "sleep 10 to keep node busy so batch jobs cant request the same node.  Just for testing"
+  #sleep 10
+  #echo "done sleeping!"
 	"""
 }
 
@@ -76,7 +77,6 @@ process echoGunzip {
   memory '4 GB'
 
   input:
-  val flag from gunzip_complete_ch.collect()
   file worker from Channel.watchPath( "${params.projectdir}*.zip" )
 
   output:
@@ -98,7 +98,7 @@ process listFilesAndDeleteProjectdir {
   memory '6 GB'
 
   input:
-  val flag from echogunzip_complete_ch.collect()
+  val flag from gunzip_complete_ch.collect()
 
   """
   #!/bin/bash

@@ -21,7 +21,7 @@ echo ""
 echo "
 executor {
     name = 'awsbatch'
-    //awscli = '/home/ec2-user/miniconda/bin/aws'
+    awscli = '/home/ec2-user/miniconda/bin/aws'
 }
 process {"
 images=$(grep "image_" $BATCHAWSCONFIGFILE)

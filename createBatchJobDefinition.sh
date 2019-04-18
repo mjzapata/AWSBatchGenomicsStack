@@ -26,7 +26,7 @@ if [[ $# -gt 4 && $# -lt 7 ]]; then
 
 	#1.) Check for existence of JOBDEFINITIONNAME
 	#instead of checking, just register a new definitino and it will export the revision number
-	CONTAINERPATH=/efs
+	CONTAINERPATH=/mnt/efs
 
 	VOLUMESOURCEPATH=/mnt/efs
 	VOLUMENAME=efs

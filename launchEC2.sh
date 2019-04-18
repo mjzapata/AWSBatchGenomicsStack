@@ -218,10 +218,7 @@ if [ $# -gt 8 ]; then
 		ssh ec2-user@${instanceHostNamePublic} -i ${KEYPATH} $SSH_OPTIONS \
 		"mkdir -p /mnt/efs/flows"
 		scp -i ${KEYPATH} $SSH_OPTIONS \
-		${BATCHAWSDEPLOY_HOME}startHeadNode.sh ec2-user@${instanceHostNamePublic}:/mnt/efs/flows/nextflow.config
-
-		scp -i ${KEYPATH} $SSH_OPTIONS \
-		${BATCHAWSDEPLOY_HOME}startHeadNode.sh ec2-user@${instanceHostNamePublic}:/mnt/efs/flows/nextflow.config
+		${BATCHAWSDEPLOY_HOME}startHeadNode.sh ec2-user@${instanceHostNamePublic}:/home/ec2-user/
 
 		# Nextflow Configuration
 		scp -i ${KEYPATH} $SSH_OPTIONS \
