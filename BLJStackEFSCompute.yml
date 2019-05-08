@@ -489,7 +489,7 @@ Resources:
 
             - yum remove -y ecs-init
 
-            - yum install -y bzip2 wget
+            - yum install -y bzip2 wget rsync
 
             - runuser -l  ec2-user -c 'wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh'
 
@@ -553,7 +553,7 @@ Resources:
 
             - chmod g+s ${!efs_directory}
 
-            - yum install -y bzip2 wget
+            - yum install -y bzip2 wget rsync
 
             - runuser -l  ec2-user -c 'wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh'
 

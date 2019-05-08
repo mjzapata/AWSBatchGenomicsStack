@@ -6,7 +6,7 @@ print_error() {
 	echo "usage: startHeadNode.sh MYBUCKETNAME"
 
 }
-
+ 
 #This is a script that gets pushed to the head node
 if [ $# == 1 ]; then
 
@@ -68,7 +68,7 @@ if [ $# == 1 ]; then
 
 	docker run --rm -it --name nextflow \
 	-v ${HOSTFLOWPATH}:${CONTAINERFLOWPATH} \
-	-v /mnt/efs/${PROJECTNAME}:/efs/${PROJECTNAME} \
+	-v ${PROJECTDIR}:${PROJECTDIR} \
 	-w ${CONTAINERFLOWPATH} \
 	-v ${HOSTREPORTPATH}:${CONTAINERREPORTPATH} \
 	-v ${NEXTFLOWHOSTCONFIGDIRECTORY}:${NEXTFLOWCONTAINERCONFIGDIRECTORY} \

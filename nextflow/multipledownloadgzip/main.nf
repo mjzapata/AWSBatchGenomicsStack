@@ -2,7 +2,7 @@
 //params.in = "$baseDir/data/multiplexed/combinedFastq/combined.fastq.gz"
 //sequences = file(params.in)
 // 1.b) What if data is already in S3?
-params.efsdir = "/efs/"
+params.efsdir = "/mnt/efs/"
 params.projectname = "testproj1"
 params.projectdir = "${params.efsdir}${params.projectname}/"
 

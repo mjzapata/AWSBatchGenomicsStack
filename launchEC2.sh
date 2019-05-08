@@ -3,7 +3,7 @@
 
 #TODO: Massively simplify this
 MIN_NUM_ARGUMENTS_EXPECTED=10
-
+ 
 print_help() {
 	echo -n "Usage: launchEC2.sh STACKNAME IMAGEID INSTANCETYPE KEYNAME EBSVOLUMESIZEGB"
 	echo	"SUBNETS SECURITYGROUPS INSTANCENAME EC2RUNARGUMENT HEADNODELAUNCHTEMPLATEID"
@@ -11,7 +11,6 @@ print_help() {
 }
 
 if [ $# -gt 8 ]; then
-
 	STACKNAME=$1
 	BATCHAWSCONFIGFILE=~/.batchawsdeploy/stack_${STACKNAME}.sh
 	source $BATCHAWSCONFIGFILE

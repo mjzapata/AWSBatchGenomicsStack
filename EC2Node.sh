@@ -82,13 +82,14 @@ if [ "$EC2RUNARGUMENT" == "property" ]; then
     	fi
 	fi
 
+# Terminate instances
 elif [ $# -eq 3 ] && [ "$EC2RUNARGUMENT" == "terminate" ]; then
 	
 	# instanceProperties=$(aws ec2 describe-instances \
 	#     	--query "Reservations[*].Instances[*].[Placement.AvailabilityZone, State.Name, Name, InstanceId]" \
 	#     	--output text | grep ${REGION} | grep running | grep ${instanceID}) # | awk '{print $2}')
 
-
+	# Terminate all instances
 	if [ "$INSTANCENAME" == "allinstances" ]; then
 		instanceIDs=$(aws ec2 describe-instances \
 		--filters Name=tag:StackName,Values="$STACKNAME" \
@@ -104,7 +105,7 @@ elif [ $# -eq 3 ] && [ "$EC2RUNARGUMENT" == "terminate" ]; then
 		aws ec2 terminate-instances --instance-ids $instanceID
 	fi
 
-#directconnect
+#Connect directly to instance
 elif [ $# -eq 4 ] && [ "$EC2RUNARGUMENT" == "directconnect" ]; then
 	#SECURITYGROUPS="$BASTIONSECURITYGROUP,$BATCHSECURITYGROUP"
 	INSTANCETYPE=$ARG4
