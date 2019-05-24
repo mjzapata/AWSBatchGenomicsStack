@@ -32,6 +32,15 @@ Parameters:
     Description: Max number of vCPUs for Batch environments
     Type: Number
     Default: 256
+  EbsRootVolumeSizeBatchNode:
+    Description: Root Ebs Volume Size for batch nodes to 
+      modify AMZN Linux 1 AMIs, 22GB (+ 8GB). For AMZN Linux2 AMIs, which 
+      uses one partition of 30GB, /dev/xvdcz must be changed to /dev/xvda 
+      in the launch template(s) below and default value changed to 40GB.
+    Type: Number
+    MinValue: 22
+    MaxValue: 16000
+    Default: 32
   VolumeName:
     Description: The name to be used for the EFS volume
     Type: String
@@ -519,6 +528,11 @@ Resources:
             Tags:
               - Key: 'StackName'
                 Value: !Ref 'AWS::StackName'
+        BlockDeviceMappings:
+          -
+            DeviceName: /dev/xvdcz
+            Ebs: 
+              VolumeSize: !Ref EbsRootVolumeSizeBatchNode
         UserData:
           'Fn::Base64': !Sub >
             MIME-Version: 1.0

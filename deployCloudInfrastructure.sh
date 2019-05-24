@@ -112,7 +112,7 @@ else
     	   deployCloudFormation.sh $STACKNAME $SPOTPERCENT $SPOTMAXVCPUS $ONDEMANDMAXVCPUS \
                     $DEFAULTAMI $CUSTOMAMIFOREFS $EBSVOLUMESIZEGB $EFSPERFORMANCEMODE \
                     $NEXTFLOWCONFIGOUTPUTDIRECTORY $KEYNAME \
-                    || { echo "deploycloudinfastructure CREATE_FAILED"; exit 1; }
+                    || { echo "deploycloudinfastructure CREATE_FAILED"; aws cloudformation delete-stack --stack-name $STACKNAME; echo "deleting keypair"; awskeypair.sh delete $KEYNAME; exit 1; }
 
     	elif [ "$ARGUMENT" == "delete" ] && [ $# -gt 1 ]; then
             echo "this will take approximately three to five minutes:"

@@ -19,14 +19,21 @@ if [[ $# -eq 1 ]]; then
 	BATCHAWSCONFIGFILE=~/.batchawsdeploy/stack_${STACKNAME}.sh
 	source $BATCHAWSCONFIGFILE
 	#replace commas with pipe
-	DOCKERREPOSEARCHSTRING=$(echo "$DOCKERREPOSEARCHSTRING" | echo "$DOCKERREPOSEARCHSTRING" | sed 's/,/\|/')
+	#DOCKERREPOSEARCHSTRING
+	DOCKERREPOGREPSTRING=$(echo "$DOCKERREPOSEARCHSTRING" | echo "$DOCKERREPOSEARCHSTRING" | sed 's/,/\|/')
 	#find all associated batch jobs and register them
-	dockersearchoutput=$(docker search "$DOCKERREPOSEARCHSTRING" | grep -E "^$DOCKERREPOSEARCHSTRING") #| grep $DOCKERREPOSEARCHSTRING)
+	dockersearchoutput=$(docker search "$DOCKERREPOSEARCHSTRING" | grep -E "^$DOCKERREPOGREPSTRING") #| grep $DOCKERREPOSEARCHSTRING)
 	
 	#special case to exclude some of the biolockj images from having job definitions created
 #	if [ $DOCKERREPOSEARCHSTRING ?? 'biolockj' ]; then
 #		dockersearchoutput=$(docker search "$DOCKERREPOSEARCHSTRING" | grep -E "^$DOCKERREPOSEARCHSTRING" | grep -v _basic | grep -v _manager) 
 #	fi
+	
+	if [ -z "$dockersearchoutput" ]; then
+		echo "no results found for \"docker search $DOCKERREPOSEARCHSTRING\"" >&2
+		echo "dockersearchoutput is EMPTY!" >&2
+		exit 1
+	fi
 	
 	IFS=$'\t' #necessary to get tabs to parse correctly
 	repoimagelist=$(echo $dockersearchoutput | awk '//{print $1}')

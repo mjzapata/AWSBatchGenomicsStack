@@ -14,6 +14,9 @@
 
 SECONDS=0
 
+# exit when any command fails
+set -e
+
 if [ $# -eq 10 ]; then
 
 	STACKNAME=$1
@@ -197,6 +200,7 @@ if [ $# -eq 10 ]; then
 		echo "----------------------------------------------------------------------------------------------"
 		echo "3.) Create Job Definition  -------------------------------------------------------------------"
 		echo "----------------------------------------------------------------------------------------------"
+		echo "command: updateBatchJobDefinitions.sh $STACKNAME"
 		BatchJobsDeployOutput=$(updateBatchJobDefinitions.sh $STACKNAME)
 		echo "$BatchJobsDeployOutput"
 		echo "$BatchJobsDeployOutput" >> $BATCHAWSCONFIGFILE
@@ -205,6 +209,7 @@ if [ $# -eq 10 ]; then
 		echo "----------------------------------------------------------------------------------------------"
 		echo "4.) Print Nextflow Config   ------------------------------------------------------------------"
 		echo "----------------------------------------------------------------------------------------------"
+		echo "command: printnextflowconfig.sh $STACKNAME"
 		nextflowconfig=$(printnextflowconfig.sh $STACKNAME)
 		echo "$nextflowconfig"
 		echo "$nextflowconfig" > "${NEXTFLOWCONFIGOUTPUTDIRECTORY}config"
@@ -243,10 +248,10 @@ echo -n '
 
 	else
 		#delete stack just in case
-		aws cloudformation delete-stack --stack-name $STACKNAME
+		#aws cloudformation delete-stack --stack-name $STACKNAME
 		#deleting key
-		echo "deleting keypair:"
-		awskeypair.sh delete $KEYNAME
+		#echo "deleting keypair:"
+		#awskeypair.sh delete $KEYNAME
 		echo "CREATE_FAILED stack could not be created"
 		exit 1
 	fi
