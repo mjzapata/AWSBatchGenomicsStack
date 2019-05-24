@@ -52,6 +52,7 @@ Parameters:
     MinLength: '1'
     Default: myEFSvolume
   CloudformationTemplateName:
+    Description: Do not change this, it provides a way to categorize stacks
     Type: String
     Default: AWSBatchGenomicsStack
 Resources:
