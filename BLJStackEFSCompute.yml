@@ -533,6 +533,7 @@ Resources:
             DeviceName: /dev/xvdcz
             Ebs: 
               VolumeSize: !Ref EbsRootVolumeSizeBatchNode
+              VolumeType: gp2
         UserData:
           'Fn::Base64': !Sub >
             MIME-Version: 1.0
