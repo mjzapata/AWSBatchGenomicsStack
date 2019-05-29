@@ -11,10 +11,10 @@ num = Channel.from( 1, 2, 3, 4)
 
 process Createprojectdir {
   echo true //enable forward stdout 
-  label 'image_mjzapata2_ubuntu_latest'
+  label 'image_biolockj_humann2_classifier_latest'
   label 'DEMAND'
-  cpus 2
-  memory '4 GB'
+  cpus 8
+  memory '64 GB'
 
   output:
   val true into create_complete_ch
@@ -35,7 +35,7 @@ process Createprojectdir {
 
 process Gunzip {
 	echo true
-  label 'image_mjzapata2_ubuntu_latest'
+  label 'image_biolockj_humann2_classifier_latest'
   label 'DEMAND'
   cpus 2
   memory '4 GB'
@@ -71,7 +71,7 @@ process Gunzip {
 
 process echoGunzip {
   echo true
-  label 'image_mjzapata2_ubuntu_latest'
+  label 'image_biolockj_humann2_classifier_latest'
   label 'DEMAND'
   cpus 2
   memory '4 GB'
@@ -92,7 +92,7 @@ process echoGunzip {
 
 process listFilesAndDeleteProjectdir {
   echo true
-  label 'image_mjzapata2_ubuntu_latest'
+  label 'image_biolockj_humann2_classifier_latest'
   label 'DEMAND'
   cpus 4
   memory '6 GB'

@@ -38,9 +38,18 @@ Parameters:
       uses one partition of 30GB, /dev/xvdcz must be changed to /dev/xvda 
       in the launch template(s) below and default value changed to 40GB.
     Type: Number
-    MinValue: 22
+    MinValue: 32
     MaxValue: 16000
-    Default: 42
+    Default: 62
+  EbsRootVolumeSizeHeadNode:
+    Description: Root Ebs Volume Size for batch nodes to 
+      modify AMZN Linux 1 AMIs, 22GB (+ 8GB). For AMZN Linux2 AMIs, which 
+      uses one partition of 30GB, /dev/xvdcz must be changed to /dev/xvda 
+      in the launch template(s) below and default value changed to 40GB.
+    Type: Number
+    MinValue: 25
+    MaxValue: 16000
+    Default: 52
   VolumeName:
     Description: The name to be used for the EFS volume
     Type: String
@@ -268,6 +277,7 @@ Resources:
             Action:
               - 'sts:AssumeRole'
       ManagedPolicyArns:
+        - 'arn:aws:iam::aws:policy/CloudWatchLogsFullAccess'
         - 'arn:aws:iam::aws:policy/AmazonS3FullAccess'
         - 'arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy'
         - 'arn:aws:iam::aws:policy/AmazonElasticFileSystemFullAccess'
@@ -290,6 +300,7 @@ Resources:
               Service: ec2.amazonaws.com
             Action: 'sts:AssumeRole'
       ManagedPolicyArns:
+        - 'arn:aws:iam::aws:policy/CloudWatchLogsFullAccess'
         - 'arn:aws:iam::aws:policy/AmazonEC2FullAccess'
         - 'arn:aws:iam::aws:policy/AmazonS3FullAccess'
         - 'arn:aws:iam::aws:policy/AmazonElasticFileSystemFullAccess'
@@ -462,6 +473,12 @@ Resources:
             Tags:
               - Key: 'StackName'
                 Value: !Ref 'AWS::StackName'
+        BlockDeviceMappings:
+          -
+            DeviceName: /dev/xvda
+            Ebs: 
+              VolumeSize: !Ref EbsRootVolumeSizeHeadNode
+              VolumeType: gp2
         UserData:
           'Fn::Base64': !Sub >
             MIME-Version: 1.0
@@ -484,7 +501,11 @@ Resources:
 
             runcmd:
 
+            - echo 'DOCKER_STORAGE_OPTIONS="--storage-opt overlay2.size=50G"' >> /etc/sysconfig/docker-storage
+
             - yum update -y
+
+            - sudo yum downgrade -y docker-18.03.1ce-3.amzn2
 
             - file_system_id_01=${FileSystem}
 
@@ -552,12 +573,21 @@ Resources:
             Content-Type: text/cloud-config; charset="us-ascii"
 
 
+            package_update: true
+
+
             packages:
 
             - amazon-efs-utils
 
 
             runcmd:
+
+            - echo 'DOCKER_STORAGE_OPTIONS="--storage-opt overlay2.size=50G"' >> /etc/sysconfig/docker-storage
+
+            - yum update -y
+
+            - sudo yum downgrade -y docker-18.03.1ce-3.amzn2
 
             - file_system_id_01=${FileSystem}
 
@@ -583,8 +613,6 @@ Resources:
             - runuser -l  ec2-user -c '$HOME/miniconda/bin/conda install -c conda-forge -y awscli'
 
             - runuser -l  ec2-user -c 'rm Miniconda3-latest-Linux-x86_64.sh'
-
-            - echo 'DOCKER_STORAGE_OPTIONS="--storage-opt dm.basesize=50G"' >> /etc/sysconfig/docker-storage
 
 
             --==MYBOUNDARY==--

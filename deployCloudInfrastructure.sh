@@ -86,7 +86,7 @@ else
     	if [ "$ARGUMENT" == "create" ] && [ $# -gt 2 ] && [ $# -lt 5 ]; then
             echo "Finding Latest Amazon Linux AMI ID..."
             #TODO: if is-empty, set a default, in case this breaks in the future. 
-            DEFAULTAMI=ami-007571470797b8ffa
+            DEFAULTAMI=ami-00cf4737e238866a3 #ami-007571470797b8ffa 8GB size limit for docker containers, (docker 18.06)
             #DEFAULTAMI=$(getLatestAMI.sh $REGION amzn2-ami-ecs-hvm 2019 x86_64)
             echo "DEFAULTAMI=$DEFAULTAMI"
             echo ""

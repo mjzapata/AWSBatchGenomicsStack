@@ -10,7 +10,8 @@ if [ $# -eq 4 ]; then
 	ARCHITECTURE=$4
 
 	#aws --region $REGION ec2 describe-images --owner amazon --query 'Images[?Name!=`null`]|[?contains(Name, `'$QUERYSTRING'`) == `true`]|[?contains(Name, to_string(`'$YEAR'`)) == `true`]|[0:4].[Name,ImageId,CreationDate,Description]' --output text | sort -rk1
-	aws --region $REGION ec2 describe-images --owner amazon --query 'Images[?Name!=`null`]|[?contains(Name, `'$QUERYSTRING'`) == `true`]|[?contains(Name, `'$ARCHITECTURE'`) == `true`]|[?contains(Name, to_string(`'$YEAR'`)) == `true`]|[0:1].[ImageId]' --output text | sort -rk1
+	#aws --region $REGION ec2 describe-images --owner amazon --query 'Images[?Name!=`null`]|[?contains(Name, `'$QUERYSTRING'`) == `true`]|[?contains(Name, `'$ARCHITECTURE'`) == `true`]|[?contains(Name, to_string(`'$YEAR'`)) == `true`]|[0:1].[ImageId]' --output text | sort -rk1
+	aws --region $REGION ec2 describe-images --query 'Images[?Name!=`null`]|[?contains(Name, `'$QUERYSTRING'`) == `true`]|[?contains(Name, `'$ARCHITECTURE'`) == `true`]|[?contains(Name, to_string(`'$YEAR'`)) == `true`]|[0:1].[ImageId]' --output text | sort -rk1
 
 else
 
