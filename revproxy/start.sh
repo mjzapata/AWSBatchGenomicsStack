@@ -20,10 +20,10 @@ if [ $# -gt 0 ];then
 	source $environment_file_path
 
 #throw correct errors if running new instead of up
-
 	if [ "$1" == "new" ] || [ "$1" == "up" ]; then
 
 		if [ "$1" == "new" ]; then
+			mkdir -p data/auth
 			./certification_tools.sh $CERTIFICATION_METHOD
 			if [ ! -f "$PASSWD_FILEPATH" ]; then
 				rm "$PASSWD_FILEPATH"
