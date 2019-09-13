@@ -15,7 +15,6 @@ testscript.sh
 test*
 untitled
 samplelaunchtemplatecommands.sh
-*.env
 *.crt
 *.key
 *.htpasswd
