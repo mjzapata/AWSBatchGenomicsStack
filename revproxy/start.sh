@@ -35,7 +35,17 @@ if [ $# -gt 0 ];then
 			rm "$PASSWD_FILEPATH"
 		fi
 
-		./webuser_credentials.sh adduser "$DEFAULT_USER" "$DEFAULT_PASSWORD"
+		if [ "$DEFAULT_PASSWORD" == "changeme" ]; then
+			WEBPASS=$(openssl rand -base64 29 | tr -d "=+/" | cut -c1-25)
+			echo "**************************************************"
+			echo -e "no default password set in file \".env\"  Using password: $WEBPASS"
+			echo "**************************************************"
+			echo ""
+		else
+			WEBPASS="$DEFAULT_PASSWORD"
+		fi
+
+		./webuser_credentials.sh adduser "$DEFAULT_USER" "$WEBPASS"
 
 		#necessary on MacOS while MacOS still uses BASH as default shell instead of ZSH
 		docker run -it -v $(pwd):/app -w /app ubuntu bash -c "/app/generate_nginx_conf_file.sh"
