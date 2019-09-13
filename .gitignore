@@ -19,3 +19,5 @@ samplelaunchtemplatecommands.sh
 *.crt
 *.key
 *.htpasswd
+*.trouble*
+old_commands.sh

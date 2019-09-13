@@ -2,25 +2,29 @@ version: '3'
 services:
   webapp:
     image: amyerke/webapp
+    networks:
+      - revproxy
     volumes:
       - ~/.batchawsdeploy/:/root/.batchawsdeploy
       - /var/run/docker.sock:/var/run/docker.sock
     environment:
       - HOST_ENVIRONMENT='AWS'
+    depends_on:
+      - nginx
   nginx:
     image: nginx:1.15-alpine
-    depends_on: 
-      - webapp
-      - loginsrv
+    networks:
+      - revproxy
     ports:
       - "80:80"
       - "443:443"
     volumes:
       - ./data/nginx:/etc/nginx/conf.d
+      - ./${PASSWD_FILEPATH}:/etc/apache2/.htpasswd
+      - ./${CERT_DIRECTORY}:${container_cert_directory}
       - ./data/certbot/conf:/etc/letsencrypt
       - ./data/certbot/www:/var/www/certbot
-      - ./data/auth/.htpasswd:/etc/apache2/.htpasswd
+
     command: "/bin/sh -c 'while :; do sleep 6h & wait $${!}; nginx -s reload; done & nginx -g \"daemon off;\"'"
-  loginsrv:
-    image: tarent/loginsrv
-    env_file: .env
+networks:
+  revproxy:

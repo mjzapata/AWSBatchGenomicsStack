@@ -22,7 +22,7 @@ docker run -d -p ${EXTERNALPORT}:3000 \
 	-e HOST_ENVIRONMENT='AWS' \
 	-v ~/.batchawsdeploy/:/root/.batchawsdeploy \
 	-v /var/run/docker.sock:/var/run/docker.sock  \
-	--name webapp
+	--name webapp \
 	$DOCKERIMAGE
 
 echo ""
