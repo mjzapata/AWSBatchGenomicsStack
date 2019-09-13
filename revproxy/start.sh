@@ -26,6 +26,7 @@ if [ $# -gt 0 ];then
 			rm "$PASSWD_FILEPATH"
 		fi
 
+		# GENERATE RANDOM CREDENTIALS IF NONE EXIST
 		if [ "$DEFAULT_PASSWORD" == "changeme" ]; then
 			WEBPASS=$(openssl rand -base64 29 | tr -d "=+/" | cut -c1-25)
 			echo "**************************************************"
@@ -35,13 +36,10 @@ if [ $# -gt 0 ];then
 		else
 			WEBPASS="$DEFAULT_PASSWORD"
 		fi
-
 		./webuser_credentials.sh adduser "$DEFAULT_USER" "$WEBPASS"
 
-		#necessary on MacOS while MacOS still uses BASH as default shell instead of ZSH
-		docker run -it -v $(pwd):/app -w /app ubuntu bash -c "/app/generate_nginx_conf_file.sh"
-
 		docker-compose up -d
+
 	elif [ "$1" == "down" ]; then
 		docker-compose down
 	else

@@ -3,8 +3,9 @@
 ## edit the .env file
 
 ## start.sh new
+## start.sh up
 
-
+# ./webuser_credentials.sh
 
 ## to join a new container to the network use:
 # 1.) add the container to service definitions, docker-compose 

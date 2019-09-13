@@ -24,3 +24,13 @@ services:
       - HOST_ENVIRONMENT='AWS'
       - VIRTUAL_HOST=webapp.${COMMON_NAME}
       - VIRTUAL_PORT=3000
+  webdemo:
+    image: nginxdemos/hello
+    expose:
+      - 80
+    env_file:
+      - ./container_variables.env
+    environment:
+      - VIRTUAL_HOST=webdemo.${COMMON_NAME}
+      - VIRTUAL_PORT=3000
+
