@@ -20,3 +20,5 @@ samplelaunchtemplatecommands.sh
 *.htpasswd
 *.trouble*
 old_commands.sh
+container_variables.env
+revproxy/old_commands and EC2 tests.sh

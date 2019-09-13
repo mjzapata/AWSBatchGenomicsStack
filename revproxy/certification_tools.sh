@@ -25,18 +25,20 @@ mkdir -p ${CERT_DIRECTORY}
 
 #echo "CERT_DIRECTORY=$CERT_DIRECTORY"
 
-if [ "$COMMONNAME" == "AWSDEFINED" ]; then	
+if [ "$COMMON_NAME" == "AWSDEFINED" ]; then	
 	publichostname=$(curl http://169.254.169.254/latest/meta-data/public-hostname)
 	COMMONNAME="$publichostname"
 fi
+echo "COMMON_NAME=$COMMON_NAME" > container_variables.env
+
 
 # if no cert exists here, run this
 # if no argument to force certificate regeneration
-
+# https://unix.stackexchange.com/questions/104171/create-ssl-certificate-non-interactively
 if [ "$argument" == "self-signed" ]; then
 	openssl req -new -newkey rsa:4096 -days 365 -nodes -x509 \
-    	-subj "/C=${COUNTRY}/ST=${STATE}/L=${LOCATION}/O=${ORGANIZATION}/CN=www.${COMMONNAME}" \
-    	-keyout ${CERT_DIRECTORY}${COMMONNAME}.${key_suffix}  -out ${CERT_DIRECTORY}${COMMONNAME}.${cert_suffix}
+    	-subj "/C=${COUNTRY}/ST=${STATE}/L=${LOCATION}/O=${ORGANIZATION}/CN=www.${COMMON_NAME}" \
+    	-keyout ${CERT_DIRECTORY}${COMMON_NAME}.${key_suffix}  -out ${CERT_DIRECTORY}${COMMON_NAME}.${cert_suffix}
 fi
 
 #openssl
