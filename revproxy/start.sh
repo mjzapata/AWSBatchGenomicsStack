@@ -30,6 +30,11 @@ if [ $# -gt 0 ];then
 			fi
 		fi
 
+      	echo 'auth_basic "Admin Area";' > ${NGINX_CONF_FILE_PATH}
+      	echo 'auth_basic_user_file '"${passwd_container_filepath}"'.htpasswd;' >> ${NGINX_CONF_FILE_PATH}
+		
+		echo 'auth_basic_user_file '"${passwd_container_filepath}"'.htpasswd;'
+
 		# GENERATE RANDOM CREDENTIALS IF NONE EXIST
 		if [ "$DEFAULT_PASSWORD" == "changeme" ]; then
 			WEBPASS=$(openssl rand -base64 29 | tr -d "=+/" | cut -c1-25)

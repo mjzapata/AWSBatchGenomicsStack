@@ -2,10 +2,11 @@
 
 ## edit the .env file
 
-## start.sh new
-## start.sh up
+# ./start.sh new   (or ./start.sh up)
 
-# ./webuser_credentials.sh
+## Runs the following
+# ./webuser_credentials.sh   (creates the )
+# 
 
 ## to join a new container to the network use:
 # 1.) add the container to service definitions, docker-compose 

@@ -6,14 +6,12 @@ services:
       - "80:80"
       - "443:443"
     volumes:
-      - ./${PASSWD_FILEPATH}:/etc/nginx/htpassw
+      - ./${PASSWD_FILE_DIR}:/etc/nginx/htpassw
+      - ./${NGINX_CONF_FILE_DIR}:${nginx_conf_file_dir_container}
       - ./${CERT_DIRECTORY}:${container_cert_directory}
       - ./data/certbot/conf:/etc/letsencrypt
       - ./data/certbot/www:/var/www/certbot
       - /var/run/docker.sock:/tmp/docker.sock:ro
-      - type: bind
-        source: ./test123
-        target: /app2
   webapp:
     image: amyerke/webapp
     expose:
