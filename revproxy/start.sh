@@ -25,7 +25,7 @@ if [ $# -gt 0 ];then
 		if [ "$1" == "new" ]; then
 			mkdir -p data/auth
 			./certification_tools.sh $CERTIFICATION_METHOD
-			if [ ! -f "$PASSWD_FILEPATH" ]; then
+			if [ -f "$PASSWD_FILEPATH" ]; then
 				rm "$PASSWD_FILEPATH"
 			fi
 		fi
