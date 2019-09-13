@@ -31,9 +31,9 @@ if [ $# -gt 0 ];then
 		fi
 
       	echo 'auth_basic "Admin Area";' > ${NGINX_CONF_FILE_PATH}
-      	echo 'auth_basic_user_file '"${passwd_container_filepath}"'.htpasswd;' >> ${NGINX_CONF_FILE_PATH}
+      	echo 'auth_basic_user_file '"${passwd_container_filepath}"';' >> ${NGINX_CONF_FILE_PATH}
 		
-		echo 'auth_basic_user_file '"${passwd_container_filepath}"'.htpasswd;'
+		echo 'auth_basic_user_file '"${passwd_container_filepath}"';'
 
 		# GENERATE RANDOM CREDENTIALS IF NONE EXIST
 		if [ "$DEFAULT_PASSWORD" == "changeme" ]; then
@@ -46,17 +46,17 @@ if [ $# -gt 0 ];then
 			WEBPASS="$DEFAULT_PASSWORD"
 		fi
 		./webuser_credentials.sh adduser "$DEFAULT_USER" "$WEBPASS"
-
-		docker-compose up -d
+		
+		if [ "$VERBOSE_MODE" == "TRUE" ]; then
+			docker-compose up 
+		else
+			docker-compose up -d
+		fi
 
 	elif [ "$1" == "down" ]; then
 		docker-compose down
 	else
 		print_help
-	fi
-
-	if [ "$VERBOSE_MODE" == "TRUE" ]; then
-		docker-compose up 
 	fi
 else
 	print_help
