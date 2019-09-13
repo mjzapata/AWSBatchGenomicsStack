@@ -3,10 +3,10 @@
 set -e
 
 function print_help {
-echo "usage: ./start.sh up"
-echo "usage: ./start.sh up <mycustom.envfile>"
 echo "usage: ./start.sh new"
 echo "usage: ./start.sh new <mycustom.envfile>"
+echo "usage: ./start.sh up"
+echo "usage: ./start.sh up <mycustom.envfile>"
 echo "usage: ./start.sh down"
 }
 
@@ -19,11 +19,15 @@ if [ $# -gt 0 ];then
 	fi
 	source $environment_file_path
 
+#throw correct errors if running new instead of up
+
 	if [ "$1" == "new" ] || [ "$1" == "up" ]; then
 
 		if [ "$1" == "new" ]; then
 			./certification_tools.sh $CERTIFICATION_METHOD
-			rm "$PASSWD_FILEPATH"
+			if [ ! -f "$PASSWD_FILEPATH" ]; then
+				rm "$PASSWD_FILEPATH"
+			fi
 		fi
 
 		# GENERATE RANDOM CREDENTIALS IF NONE EXIST
