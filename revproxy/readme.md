@@ -34,3 +34,8 @@
  add the specifications to service definitions
  and re-run generate nginx config and restart nginx
  #docker restart revproxy_nginx_1
+
+ ### echo 'auth_basic_user_file '"${passwd_container_filepath}"';' >> ${NGINX_CONF_FILE_PATH}
+ location /files {
+    auth_basic off;
+}
