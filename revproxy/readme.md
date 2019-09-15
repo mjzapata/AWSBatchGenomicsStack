@@ -19,17 +19,17 @@
 ### docker-compose up -d  (or docker-compose up if VERBOSE_MODE=TRUE)
 
 # to join a new container to the network use:
-## 1.) add the container to service definitions in docker-compose.yml
-## with the following values:
-## networks:
-##      - frontend
-##    expose:
-##      - 3000
-##    env_file:
-##      - ./container_variables.env
-##    environment:
-##      - VIRTUAL_HOST=webapp.${COMMON_NAME}
-##      - VIRTUAL_PORT=3000
+### 1.) add the container to service definitions in docker-compose.yml
+### with the following values:
+### networks:
+###      - frontend
+###    expose:
+###      - 3000
+###    env_file:
+###      - ./container_variables.env
+###    environment:
+###      - VIRTUAL_HOST=webapp.${COMMON_NAME}
+###      - VIRTUAL_PORT=3000
 # 2.) docker run ..... --network revproxy_frontend  <myimagename>
  add the specifications to service definitions
  and re-run generate nginx config and restart nginx
