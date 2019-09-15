@@ -39,7 +39,8 @@ if [ $# -gt 0 ];then
 		if [ "$DEFAULT_PASSWORD" == "changeme" ]; then
 			WEBPASS=$(openssl rand -base64 29 | tr -d "=+/" | cut -c1-25)
 			echo "**************************************************"
-			echo -e "no default password set in file \".env\"  Using password: $WEBPASS"
+			echo -e "WARNING: no default password set in file \".env\"  
+			Using auto-generated password: $WEBPASS"
 			echo "**************************************************"
 			echo ""
 		else
