@@ -2,8 +2,8 @@
 
 # 1.) edit the .env file
 ### change the default password or a randomly generated password will be used and printed to the terminal:
-### DEFAULT_USER=biolockjuser
-### DEFAULT_PASSWORD=changeme
+```DEFAULT_USER=biolockjuser
+DEFAULT_PASSWORD=changeme```
 
 ### decide whether the domain name is local-host or determined by the AWS DNS servers (AWSDEFINED)
 
