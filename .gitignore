@@ -21,4 +21,4 @@ samplelaunchtemplatecommands.sh
 *.trouble*
 old_commands.sh
 container_variables.env
-revproxy/old_commands and EC2 tests.sh
+revproxy/old*
